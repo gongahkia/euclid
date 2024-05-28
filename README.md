@@ -2,7 +2,7 @@
 
 # `euclid`
 
-* Intuitive extended syntax for beautiful $\LaTeX$-style mathematical expressions rendered with [MathJax](https://www.mathjax.org/).
+* Intuitive extended syntax for beautiful $\LaTeX$-style mathematical expressions in Markdown, rendered with [MathJax](https://www.mathjax.org/).
 
 ![](https://science4fun.info/wp-content/uploads/2021/06/Euclid.jpg)
 
