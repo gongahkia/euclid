@@ -1,0 +1,5 @@
+* work out entire project stucture
+* formalise plans here
+* follow workflow from writing an interpreter in Go to write this
+* update Makefile
+* update README.md
