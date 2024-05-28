@@ -1,4 +1,4 @@
-![](https://img.shields.io/badge/eucid_1.0-WIP-orange)
+![](https://img.shields.io/badge/euclid_1.0-WIP-orange)
 
 # `Euclid`
 
