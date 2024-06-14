@@ -19,7 +19,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 ## Purpose
 
 > [!WARNING]
-> OI continue add here as per [here](https://github.com/gongahkia/judgeman)
+> WIP
 
 ## Installation
 
@@ -38,4 +38,4 @@ $ make
 ## Syntax guide
 
 > [!WARNING]
-> OI continue adding here
+> WIP
