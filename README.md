@@ -32,5 +32,7 @@ $ make config
 ## Usage 
 
 ```console
-$ make 
+$ make euclid_transpiler 
+$ make euclid_repl
+$ make clean
 ```
