@@ -9,7 +9,7 @@
 5. [Trigonometric and Hyperbolic functions](#trigonometric-and-hyperbolic-functions)
 6. [Logarithmic and Exponential functions](#logarithmic-and-exponential-functions)
 7. [Roots and Fractions](#roots-and-fractions)
-8. [Limits, Derivatives and Integrals](#limits,-derivatives-and-integrals)
+8. [Limits, Derivatives and Integrals](#limits%2C-derivatives-and-integrals)
 9. [Summation and Product notation](#summation-and-product-notation)
 10. [Matrices and Vectors](#matrices-and-vectors)
 11. [Set notation](#set-notation)
@@ -111,7 +111,7 @@ Commonly used constants are specified in Uppercase by default.
 
 | Euclid lang syntax | MathJax equivalent |
 | :--- | :--- |
-| `log(x, base)` | $\log_base(x)$ |
+| `log(x, base)` | $\log_{base}(x)$ |
 | `ln(x)` | $\ln(x)$ |
 | `exp(x)` | $e^x$ |
 
@@ -143,8 +143,8 @@ Commonly used constants are specified in Uppercase by default.
 
 | Euclid lang syntax | MathJax equivalent |
 | :--- | :--- |
-| `vector([a, b, c])` | $\begin{pmatrix} a \\ b \\ c \end{pmatrix}$ |
-| `matrix([[a, b], [c, d]])` | $\begin{matrix} a & b \\ c & d \end{matrix}$ |
+| `vector([a, b, c])` | $\begin{pmatrix} a \ b \ c \end{pmatrix}$ |
+| `matrix([[a, b], [c, d]])` | $\begin{matrix} a & b \ c & d \end{matrix}$ |
 
 ## Set notation
 
