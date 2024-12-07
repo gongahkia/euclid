@@ -36,3 +36,7 @@ $ make euclid_transpiler
 $ make euclid_repl
 $ make clean
 ```
+
+## References
+
+* [Symbolica](https://github.com/benruijl/symbolica) by [benruijl](https://github.com/benruijl)
