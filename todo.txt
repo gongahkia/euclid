@@ -1,0 +1,485 @@
+EUCLID PROJECT TODO - Comprehensive Improvement Plan
+=====================================================
+
+This file contains actionable improvements to make Euclid production-ready and useful for practitioners.
+Items are organized by priority and category, aligned with the project's philosophy of accessibility.
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL PRIORITY - Core Implementation (Currently ~5% Complete)
+═══════════════════════════════════════════════════════════════════════════════
+
+## 1. PARSER & AST ARCHITECTURE
+───────────────────────────────
+[CRITICAL] Design and implement proper Abstract Syntax Tree (AST) module
+  - Current token-to-string approach cannot handle nested expressions
+  - Need AST types for: literals, identifiers, function calls, binary ops, unary ops
+  - Reference: src/token.ml needs corresponding AST structures
+
+[CRITICAL] Implement recursive descent parser (new src/parser.ml)
+  - Parse function calls: pow(x, y), sqrt(n, x), log(x, base)
+  - Handle operator precedence for arithmetic operations
+  - Support nested expressions: pow(sqrt(2, x), 3)
+  - Parse inline vs block math contexts
+  - Proper error recovery and reporting
+
+[CRITICAL] Extend token.ml to include function-related tokens
+  - LPAREN, RPAREN, COMMA, LBRACKET, RBRACKET tokens
+  - Function identifier tokens: POW, SQRT, LOG, SIN, COS, etc.
+  - Number and identifier literal tokens
+
+## 2. LEXER COMPLETION
+──────────────────────
+[CRITICAL] Complete lexer.ml implementation (currently only handles PI, E, I)
+  - Implement ALL Greek letter constants (lines 9-28 in token.ml)
+  - Add function name recognition (pow, sin, cos, log, integral, etc.)
+  - Tokenize delimiters: (), [], {}, comma
+  - Handle number literals (integers, floats, scientific notation)
+  - Recognize identifiers (variable names like x, y, theta)
+  - Support the backslash-backslash fraction operator: a \\ b
+  - Preserve whitespace context for markdown integration
+
+[CRITICAL] Implement proper string/text mode vs math mode detection
+  - Detect when we're inside vs outside mathematical expressions
+  - Preserve regular markdown text unchanged
+  - Only parse Euclid syntax within appropriate contexts
+
+## 3. TRANSPILER COMPLETION
+───────────────────────────
+[CRITICAL] Complete transpiler.ml (currently handles only PI, E, EOF)
+  - Transpile ALL constants to LaTeX symbols (reference: doc/syntax.md lines 24-56)
+  - Implement basic operations: pow, abs, ceil, floor, mod, gcd, lcm
+  - Implement all binary symbols: lt, gt, leq, geq, approx, neq, equiv, pm, times, div, etc.
+  - Implement trig functions: sin, cos, tan, csc, sec, cot, sinh, cosh, tanh
+  - Implement log/exp: log(x, base), ln(x), exp(x)
+  - Implement roots and fractions: sqrt(n, x), a \\ b, partial derivatives
+  - Implement calculus: limit, diff, partial, integral
+  - Implement summation/product notation: sum, prod
+  - Implement matrices and vectors: vector([...]), matrix([[...]])
+  - Implement set notation: emptyset, subset, union, intersection, element_of
+  - Implement logic symbols: AND, OR, NOT, implies, iff, forall, exists
+
+[CRITICAL] Add proper LaTeX formatting
+  - Wrap inline math expressions in $...$
+  - Detect block-level math for $$...$$
+  - Handle special characters escaping
+
+## 4. ERROR HANDLING & VALIDATION
+─────────────────────────────────
+[HIGH] Implement comprehensive error handling
+  - Lexer errors: invalid characters, unterminated strings
+  - Parser errors: unmatched parentheses, invalid syntax, unexpected EOF
+  - Semantic errors: wrong number of function arguments
+  - Provide helpful error messages with line/column numbers
+  - Add "did you mean?" suggestions for common mistakes
+
+[HIGH] Add input validation
+  - Validate function argument counts match specification
+  - Check for balanced delimiters
+  - Validate matrix/vector dimensions are consistent
+
+═══════════════════════════════════════════════════════════════════════════════
+HIGH PRIORITY - Build System & Testing
+═══════════════════════════════════════════════════════════════════════════════
+
+## 5. BUILD SYSTEM FIXES
+───────────────────────
+[HIGH] Fix Makefile issues
+  - Add missing 'config' target referenced in README installation instructions
+  - Fix module naming: lexer.ml should expose Lexer module, not Euclid_lexer
+  - Clean target should remove *.cmo and *.cmi from src/ subdirectory
+  - Add proper dependency management
+
+[HIGH] Modernize build system
+  - Consider migrating to Dune (modern OCaml build system)
+  - Add opam package definition (.opam file) for easy installation
+  - Support multiple OCaml versions (specify minimum version requirement)
+
+[MEDIUM] Add installation automation
+  - Check for OCaml installation in config target
+  - Provide clear error messages if dependencies missing
+  - Add opam installation option as alternative to manual setup
+
+## 6. TEST SUITE IMPLEMENTATION
+───────────────────────────────
+[HIGH] Fix existing test file (test/1.ml)
+  - Correct module names: Token not Euclid_token, Lexer not Euclid_lexer
+  - Ensure test actually compiles and runs
+  - Add test make target to run OUnit tests
+
+[HIGH] Expand test coverage to match specification
+  - Add tests for all constants (all Greek letters)
+  - Test all basic operations with various inputs
+  - Test all symbol operations (comparison, logical, etc.)
+  - Test all trigonometric and hyperbolic functions
+  - Test logarithmic and exponential functions
+  - Test roots, fractions, and partial derivatives
+  - Test calculus operations: limits, derivatives, integrals
+  - Test summation and product notation
+  - Test matrix and vector creation
+  - Test set notation operations
+  - Test logic symbols
+
+[HIGH] Add integration tests
+  - Test complete .ed file transpilation (not just individual expressions)
+  - Test markdown preservation (text should pass through unchanged)
+  - Test mixed content (markdown + math expressions)
+  - Compare output with expected .md files
+
+[MEDIUM] Add property-based testing
+  - Use QCheck for fuzzing with random inputs
+  - Test that transpiled LaTeX is valid
+  - Test round-trip properties where applicable
+
+[MEDIUM] Add regression tests
+  - Save example inputs/outputs to prevent breaking changes
+  - Test edge cases and previously found bugs
+
+═══════════════════════════════════════════════════════════════════════════════
+HIGH PRIORITY - Documentation & Examples
+═══════════════════════════════════════════════════════════════════════════════
+
+## 7. DOCUMENTATION FIXES
+────────────────────────
+[HIGH] Fix errors in doc/syntax.md
+  - Line 139: "sum_{i=1}^n" missing backslash, should be "\sum_{i=1}^n"
+  - Line 140: "prod_{i=1}^n" missing backslash, should be "\prod_{i=1}^n"
+  - Verify all MathJax examples render correctly
+  - Add missing backslashes in matrix/vector examples (lines 146-147)
+
+[HIGH] Expand README.md
+  - Add "Prerequisites" section (OCaml version, OPAM, etc.)
+  - Add proper installation instructions for different platforms
+  - Include troubleshooting section for common issues
+  - Add "Quick Start" tutorial showing simple example
+  - Add comparison with raw LaTeX to show benefits
+  - Include animated GIF or screenshot showing REPL usage
+
+[HIGH] Create comprehensive examples
+  - Basic arithmetic and algebra examples
+  - Calculus examples (derivatives, integrals, limits)
+  - Linear algebra examples (matrices, vectors)
+  - Set theory examples
+  - Logic and proof examples
+  - Real-world use cases (physics equations, statistics formulas)
+  - Side-by-side .ed and .md files for each example
+
+## 8. API DOCUMENTATION
+──────────────────────
+[MEDIUM] Add module documentation
+  - Document Token module and all token types
+  - Document Lexer module with usage examples
+  - Document Parser module (to be created) with examples
+  - Document Transpiler module with examples
+  - Use ocamldoc format for generating HTML docs
+
+[MEDIUM] Create developer guide
+  - Explain architecture (lexer → parser → AST → transpiler)
+  - Document how to add new functions/operators
+  - Provide contributing guidelines
+  - Include coding standards and style guide
+
+═══════════════════════════════════════════════════════════════════════════════
+MEDIUM PRIORITY - Developer Experience
+═══════════════════════════════════════════════════════════════════════════════
+
+## 9. PROJECT INFRASTRUCTURE
+────────────────────────────
+[MEDIUM] Add missing project files
+  - Create .gitignore with OCaml artifacts (*.cmo, *.cmi, *.cmx, *.o, _build/, executables)
+  - Add LICENSE file (choose appropriate open source license)
+  - Create CONTRIBUTING.md with contribution guidelines
+  - Add CODE_OF_CONDUCT.md for community standards
+  - Create CHANGELOG.md to track version changes
+
+[MEDIUM] Set up CI/CD pipeline
+  - Add GitHub Actions workflow for automated testing
+  - Test on multiple OCaml versions (4.12+, 5.x)
+  - Test on multiple platforms (Linux, macOS, Windows/WSL)
+  - Add code coverage reporting
+  - Automate ocamldoc generation and deployment
+
+[MEDIUM] Add code quality tools
+  - Configure ocamlformat for consistent code style
+  - Add .ocamlformat configuration file
+  - Set up pre-commit hooks to run formatter and tests
+  - Add linting with tools like OCamlformat or ocp-indent
+
+## 10. REPL IMPROVEMENTS
+────────────────────────
+[MEDIUM] Fix REPL (src/repl.ml)
+  - Fix reference to undefined 'transpile' function
+  - Add proper error handling (don't crash on invalid input)
+  - Show both Euclid input and transpiled LaTeX output
+  - Add REPL commands: :help, :quit, :clear, :load <file>
+  - Support multi-line input for complex expressions
+  - Add syntax highlighting if terminal supports it
+  - Show LaTeX rendering preview if possible
+
+[MEDIUM] Add REPL history
+  - Use up/down arrows to navigate previous inputs
+  - Save history to ~/.euclid_history
+  - Add :history command to show past inputs
+
+═══════════════════════════════════════════════════════════════════════════════
+MEDIUM PRIORITY - Extended Features
+═══════════════════════════════════════════════════════════════════════════════
+
+## 11. SYNTAX ENHANCEMENTS
+─────────────────────────
+[MEDIUM] Add support for additional mathematical constructs
+  - Piecewise functions
+  - Systems of equations
+  - Aligned equation environments
+  - Big operators with complex bounds
+  - Accents and decorations (hat, tilde, bar, dot, etc.)
+  - Text within math mode for labels
+
+[MEDIUM] Support inline comments in .ed files
+  - Allow # or // style comments that don't appear in output
+  - Preserve markdown comments <!--...-->
+
+[LOW] Add configurable output modes
+  - Flag for inline ($...$) vs display ($$...$$) math
+  - Option for AMS math packages
+  - Support for different LaTeX math modes
+
+## 12. USABILITY FEATURES
+────────────────────────
+[MEDIUM] Add watch mode for transpiler
+  - Auto-recompile .ed files when they change
+  - Useful for live preview during editing
+  - Flag: euclid_transpiler --watch input.ed -o output.md
+
+[MEDIUM] Better error messages
+  - Show snippet of problematic input with caret pointing to error
+  - Suggest corrections for common mistakes
+  - Link to relevant documentation section
+
+[LOW] Add verbose/debug mode
+  - Show tokenization output
+  - Display AST if flag provided
+  - Useful for debugging and learning
+
+═══════════════════════════════════════════════════════════════════════════════
+LOW PRIORITY - Nice-to-Have Features
+═══════════════════════════════════════════════════════════════════════════════
+
+## 13. TOOLING INTEGRATIONS
+──────────────────────────
+[LOW] Create editor plugins
+  - VSCode extension for .ed syntax highlighting
+  - VSCode extension for live preview
+  - Vim syntax file
+  - Emacs major mode
+
+[LOW] Web interface
+  - Create simple web app for trying Euclid online
+  - Uses js_of_ocaml to compile to JavaScript
+  - Side-by-side editor with live preview
+  - Examples gallery
+
+[LOW] Language server protocol (LSP) implementation
+  - Real-time error checking in editors
+  - Auto-completion for functions
+  - Hover tooltips showing LaTeX output
+  - Go-to-definition for custom macros
+
+## 14. PERFORMANCE & OPTIMIZATION
+─────────────────────────────────
+[LOW] Performance optimization
+  - Benchmark transpilation speed
+  - Optimize for large documents
+  - Implement streaming parser for huge files
+  - Parallelize processing where applicable
+
+[LOW] Add caching
+  - Cache transpilation results
+  - Only reprocess changed sections
+  - Incremental compilation support
+
+## 15. ADVANCED FEATURES
+───────────────────────
+[LOW] Add macro/variable system
+  - Define custom shortcuts: let myvar = integral(f(x), x, 0, 1)
+  - Reuse complex expressions
+  - Import definitions from external files
+
+[LOW] Support for chemical equations
+  - Extend syntax for chemistry notation
+  - Integrate with mhchem LaTeX package
+
+[LOW] Support for commutative diagrams
+  - Syntax for category theory diagrams
+  - Integrate with tikz-cd package
+
+═══════════════════════════════════════════════════════════════════════════════
+DOCUMENTATION IMPROVEMENTS - Practitioner Focus
+═══════════════════════════════════════════════════════════════════════════════
+
+## 16. LEARNING RESOURCES
+────────────────────────
+[MEDIUM] Create tutorial series
+  - "Getting Started with Euclid" - basic expressions
+  - "Writing Calculus in Euclid" - derivatives, integrals
+  - "Linear Algebra with Euclid" - matrices, vectors
+  - "Typesetting Proofs with Euclid" - logic symbols
+  - "Advanced Euclid Techniques" - complex expressions
+
+[MEDIUM] Create comparison guides
+  - Euclid vs raw LaTeX - show side-by-side differences
+  - Migration guide from LaTeX to Euclid
+  - Common LaTeX patterns and their Euclid equivalents
+
+[LOW] Create video tutorials
+  - Introduction to Euclid
+  - Writing your first mathematical document
+  - Tips and tricks
+
+## 17. COMMUNITY & ECOSYSTEM
+───────────────────────────
+[LOW] Create community resources
+  - Set up discussion forum or Discord
+  - Create example gallery/cookbook
+  - Add "Share your Euclid code" section
+  - Showcase projects using Euclid
+
+[LOW] Add telemetry (opt-in)
+  - Collect usage statistics to improve tool
+  - Understand most-used features
+  - Privacy-respecting analytics
+
+═══════════════════════════════════════════════════════════════════════════════
+TECHNICAL DEBT & CODE QUALITY
+═══════════════════════════════════════════════════════════════════════════════
+
+## 18. CODE REFACTORING
+──────────────────────
+[MEDIUM] Improve code organization
+  - Split large modules if they grow too big
+  - Create utility modules for common functions
+  - Use functors for generic parsing patterns
+  - Document all public functions
+
+[MEDIUM] Type safety improvements
+  - Use phantom types to distinguish parsed vs unparsed content
+  - Make illegal states unrepresentable
+  - Leverage OCaml's type system for correctness
+
+[LOW] Benchmark and optimize
+  - Profile to find bottlenecks
+  - Optimize hot paths
+  - Consider using better data structures if needed
+
+## 19. COMPATIBILITY & PORTABILITY
+──────────────────────────────────
+[MEDIUM] Cross-platform testing
+  - Ensure works on Linux, macOS, Windows
+  - Test with different terminal emulators
+  - Handle line ending differences (CRLF vs LF)
+
+[LOW] Alternative build systems
+  - Support for both Make and Dune
+  - Docker container for reproducible builds
+  - Nix package for NixOS users
+
+═══════════════════════════════════════════════════════════════════════════════
+VALIDATION & CORRECTNESS
+═══════════════════════════════════════════════════════════════════════════════
+
+## 20. CORRECTNESS VERIFICATION
+──────────────────────────────
+[MEDIUM] Validate LaTeX output
+  - Ensure generated LaTeX is syntactically valid
+  - Test rendering with actual LaTeX processor
+  - Verify output displays correctly in common markdown viewers
+  - Test with GitHub's markdown renderer specifically
+
+[MEDIUM] Add specification tests
+  - For each item in doc/syntax.md, ensure implementation matches
+  - Create test matrix covering all documented features
+  - Verify examples in documentation are accurate
+
+[LOW] Formal verification
+  - Consider using formal methods for critical parser logic
+  - Property-based testing for correctness properties
+  - Prove parser termination and correctness
+
+═══════════════════════════════════════════════════════════════════════════════
+LONG-TERM VISION
+═══════════════════════════════════════════════════════════════════════════════
+
+## 21. ECOSYSTEM GROWTH
+──────────────────────
+[LOW] Create plugin system
+  - Allow users to add custom transpilation rules
+  - Extension API for new mathematical notation
+  - Plugin repository/marketplace
+
+[LOW] Alternative output formats
+  - Generate MathML in addition to LaTeX
+  - Support for AsciiMath output
+  - PDF generation directly from .ed files
+  - HTML with MathJax rendering
+
+[LOW] Integration with publishing tools
+  - Jupyter notebook support
+  - Pandoc filter for .ed files
+  - Integration with Hugo/Jekyll static site generators
+  - Obsidian plugin
+
+## 22. ACADEMIC & RESEARCH USE
+─────────────────────────────
+[LOW] Citation support
+  - BibTeX integration
+  - Equation numbering and references
+  - Theorem environments
+  - Cross-referencing support
+
+[LOW] Collaborative features
+  - Diff-friendly format for version control
+  - Commenting system for peer review
+  - Multi-author support
+
+═══════════════════════════════════════════════════════════════════════════════
+IMMEDIATE ACTION ITEMS (Start Here)
+═══════════════════════════════════════════════════════════════════════════════
+
+To make Euclid minimally viable and useful:
+
+1. ✓ Design AST module (src/ast.ml)
+2. ✓ Implement basic parser for function calls (src/parser.ml)
+3. ✓ Complete lexer for all constants and basic functions
+4. ✓ Implement transpilation for most common operations (pow, sqrt, fractions)
+5. ✓ Fix test suite to run successfully
+6. ✓ Add .gitignore file
+7. ✓ Fix documentation errors in doc/syntax.md
+8. ✓ Add 3-5 comprehensive examples
+9. ✓ Fix Makefile and ensure project builds
+10. ✓ Add basic error handling
+
+After these 10 items, the project will have a working MVP that practitioners can use.
+
+═══════════════════════════════════════════════════════════════════════════════
+NOTES & PHILOSOPHY
+═══════════════════════════════════════════════════════════════════════════════
+
+The Euclid project aims to reduce barriers to entry for mathematical writing in
+markdown. All improvements should maintain this philosophy:
+
+- Simplicity: Keep syntax intuitive and learnable
+- Familiarity: Mirror popular programming language conventions
+- Accessibility: Lower the barrier for beginners
+- Correctness: Generate valid, standard-compliant LaTeX
+- Usefulness: Prioritize features that help real practitioners
+- Documentation: Excellent docs are as important as code
+- Error messages: Guide users to solutions, don't just report failures
+
+When implementing features, ask:
+- Does this make math in markdown easier?
+- Would a beginner understand this?
+- Is this the simplest way to express this concept?
+- Does this align with Python/JavaScript syntax conventions?
+
+═══════════════════════════════════════════════════════════════════════════════
+END OF TODO LIST
+═══════════════════════════════════════════════════════════════════════════════
