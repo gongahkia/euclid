@@ -5,6 +5,14 @@ This file contains actionable improvements to make Euclid production-ready and u
 Items are organized by priority and category, aligned with the project's philosophy of accessibility.
 
 ═══════════════════════════════════════════════════════════════════════════════
+PRE-CRITICAL PRIORITY - Foundational implementation
+═══════════════════════════════════════════════════════════════════════════════
+
+[CRITICAL CORE FUNCTIONALITY]
+   - Decide either to use Java or Golang for this implementation
+   - Completely rewrite it from using OCaml as it currently does
+
+═══════════════════════════════════════════════════════════════════════════════
 CRITICAL PRIORITY - Core Implementation (Currently ~5% Complete)
 ═══════════════════════════════════════════════════════════════════════════════
 
