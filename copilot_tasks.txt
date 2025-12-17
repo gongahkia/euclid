@@ -156,13 +156,14 @@ HIGH PRIORITY - Documentation & Examples
   - Fixed double backslashes in matrix/vector line breaks
   - All MathJax examples now render correctly
 
-[MEDIUM] Expand README.md
-  - Add "Prerequisites" section (OCaml version, OPAM, etc.)
-  - Add proper installation instructions for different platforms
-  - Include troubleshooting section for common issues
-  - Add "Quick Start" tutorial showing simple example
-  - Add comparison with raw LaTeX to show benefits
-  - Include animated GIF or screenshot showing REPL usage
+✓ [COMPLETED] Expand README.md
+  - Added "Prerequisites" section (Java 21+, Maven 3.8+, Git)
+  - Added proper installation instructions with quick install and build from source
+  - Included comprehensive troubleshooting section with common issues and solutions
+  - Added "Quick Start" tutorial showing Euclid vs raw LaTeX comparison
+  - Added comparison table highlighting syntax differences
+  - Added usage examples for both file transpilation and REPL
+  - Commit: 06541f1
 
 ✓ [COMPLETED] Create comprehensive examples
   - Created 01_arithmetic.ed: Basic arithmetic, algebra, and constants
@@ -194,12 +195,20 @@ MEDIUM PRIORITY - Developer Experience
 
 ## 9. PROJECT INFRASTRUCTURE
 ────────────────────────────
-[MEDIUM] Add missing project files
-  - Create .gitignore with OCaml artifacts (*.cmo, *.cmi, *.cmx, *.o, _build/, executables)
-  - Add LICENSE file (choose appropriate open source license)
-  - Create CONTRIBUTING.md with contribution guidelines
-  - Add CODE_OF_CONDUCT.md for community standards
-  - Create CHANGELOG.md to track version changes
+✓ [COMPLETED] Add missing project files
+  - .gitignore already exists with comprehensive Java/Maven/IDE exclusions
+  - Added LICENSE file (MIT License)
+  - Created CONTRIBUTING.md with:
+    * Bug reporting guidelines
+    * Feature suggestion process
+    * Pull request workflow
+    * Development setup instructions
+    * Coding standards (Java style guide)
+    * Documentation requirements
+    * Testing guidelines
+    * Guide for adding new features (functions/operators)
+  - Created CHANGELOG.md tracking version history from 1.0 (OCaml) to 2.0 (Java)
+  - Commit: 193b189
 
 [MEDIUM] Set up CI/CD pipeline
   - Add GitHub Actions workflow for automated testing
