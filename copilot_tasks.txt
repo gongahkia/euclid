@@ -212,12 +212,15 @@ MEDIUM PRIORITY - Developer Experience
   - Created CHANGELOG.md tracking version history from 1.0 (OCaml) to 2.0 (Java)
   - Commit: 193b189
 
-[MEDIUM] Set up CI/CD pipeline
-  - Add GitHub Actions workflow for automated testing
-  - Test on multiple OCaml versions (4.12+, 5.x)
-  - Test on multiple platforms (Linux, macOS, Windows/WSL)
-  - Add code coverage reporting
-  - Automate ocamldoc generation and deployment
+✓ [COMPLETED] Set up CI/CD pipeline
+  - Added GitHub Actions workflow (.github/workflows/ci.yml)
+  - Automated testing on Java 21
+  - Multi-platform testing (Ubuntu, macOS, Windows)
+  - Added JaCoCo code coverage plugin to pom.xml
+  - Coverage reports uploaded to Codecov
+  - Build artifacts uploaded for Ubuntu runs
+  - Tests run on every push to main/develop and on pull requests
+  - Commit: 5bccdef
 
 [MEDIUM] Add code quality tools
   - Configure ocamlformat for consistent code style
