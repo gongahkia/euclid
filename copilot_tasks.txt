@@ -367,10 +367,23 @@ MEDIUM PRIORITY - Extended Features
   - Location: src/test/java/com/euclid/LatexValidationTest.java
   - Commit: b7df0e1
 
-[MEDIUM] Add watch mode for transpiler
-  - Auto-recompile .ed files when they change
-  - Useful for live preview during editing
-  - Flag: euclid_transpiler --watch input.ed -o output.md
+✓ [COMPLETED] Add watch mode for transpiler
+  - Implemented watchFile() method using Java WatchService API
+  - Monitors .ed files for changes and automatically retranspiles
+  - CLI flags: --watch or -w to enable watch mode
+  - Features:
+    * Initial transpilation on start
+    * Real-time file change detection using StandardWatchEventKinds.ENTRY_MODIFY
+    * Automatic retranspilation with timestamp logging (HH:mm:ss format)
+    * Graceful handling of transpilation errors in watch loop
+    * 100ms delay to ensure file write completion before retranspiling
+    * Clean interrupt handling (Ctrl+C to exit)
+  - Updated usage message with watch mode examples
+  - Created test-watch-mode.sh demonstrating functionality
+  - Usage: java -jar euclid-transpiler.jar --watch example.ed
+  - Tested and working: file change detection, automatic retranspilation, error handling
+  - Location: src/main/java/com/euclid/Transpiler.java
+  - Commit: b9b15f4
 
 ✓ [COMPLETED] Better error messages
   - Enhanced LexerException and ParserException with source context display
