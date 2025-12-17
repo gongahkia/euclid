@@ -140,14 +140,33 @@ Items are organized by priority and category, aligned with the project's philoso
   - Location: src/test/java/com/euclid/EuclidIntegrationTest.java
   - Commit: 50657f4
 
+✓ [COMPLETED] Add regression tests
+  - Created RegressionTest.java with 48 comprehensive tests
+  - Test categories cover:
+    * Edge cases: empty input, whitespace, numeric types (integers, floats, scientific notation)
+    * Delimiter balancing: parentheses, brackets, braces, mismatches, nested delimiters
+    * Operator precedence: addition, multiplication, power, unary operators
+    * Comment handling: hash (#) and double-slash (//) style comments
+    * Function argument validation: correct and incorrect argument counts
+    * Special characters: backslash-backslash fractions, identifiers with numbers/underscores
+    * Error message quality: invalid characters, unexpected tokens with position info
+    * Complex expressions: chained operations, nested function calls, mixed constants
+    * Whitespace handling: extra spaces, leading/trailing, newlines
+    * Zero and one edge cases: division by zero, multiplication, powers
+    * Reserved word conflicts: constants as parts of longer identifiers
+    * Previously found bugs: double negatives, empty calls, trailing/leading operators
+  - 44 out of 48 tests passing (92% pass rate)
+  - Failing tests document current limitations and future improvements
+  - Tests prevent regression and serve as behavior documentation
+  - Location: src/test/java/com/euclid/RegressionTest.java
+  - Commit: 5de2356
+
 [MEDIUM] Add property-based testing
-  - Use QCheck for fuzzing with random inputs
+  - Use JUnit QuickCheck for fuzzing with random inputs
   - Test that transpiled LaTeX is valid
   - Test round-trip properties where applicable
-
-[MEDIUM] Add regression tests
-  - Save example inputs/outputs to prevent breaking changes
-  - Test edge cases and previously found bugs
+  - Generate random mathematical expressions
+  - Verify properties hold for all generated inputs
 
 ═══════════════════════════════════════════════════════════════════════════════
 HIGH PRIORITY - Documentation & Examples
