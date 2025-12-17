@@ -11,14 +11,53 @@ import java.util.stream.Collectors;
  * Implements the Visitor pattern for AST traversal.
  */
 public class LatexTranspiler implements AstVisitor<String> {
+    private final MathMode mathMode;
+
+    /**
+     * Creates a new LatexTranspiler with default math mode (NONE).
+     */
+    public LatexTranspiler() {
+        this(MathMode.NONE);
+    }
+
+    /**
+     * Creates a new LatexTranspiler with the specified math mode.
+     *
+     * @param mathMode The math mode for wrapping LaTeX output
+     */
+    public LatexTranspiler(MathMode mathMode) {
+        this.mathMode = mathMode;
+    }
 
     @Override
     public String visitDocumentNode(DocumentNode node) {
         StringBuilder result = new StringBuilder();
         for (AstNode n : node.getNodes()) {
-            result.append(n.accept(this));
+            String latex = n.accept(this);
+
+            // Apply math mode wrapping for each expression
+            if (n instanceof TextExpr) {
+                // Don't wrap text expressions
+                result.append(latex);
+            } else {
+                result.append(wrapMathMode(latex));
+            }
         }
         return result.toString();
+    }
+
+    /**
+     * Wraps the LaTeX code with appropriate math mode delimiters.
+     *
+     * @param latex The raw LaTeX code
+     * @return The wrapped LaTeX code
+     */
+    private String wrapMathMode(String latex) {
+        return switch (mathMode) {
+            case INLINE -> "$" + latex + "$";
+            case DISPLAY -> "$$" + latex + "$$";
+            case NONE -> latex;
+        };
     }
 
     @Override
