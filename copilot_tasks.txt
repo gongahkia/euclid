@@ -312,12 +312,15 @@ MEDIUM PRIORITY - Developer Experience
   - Location: src/main/java/com/euclid/Repl.java
   - Commit: b8b5a31
 
-[LOW] Add REPL history (optional enhancement)
-  - Use up/down arrows to navigate previous inputs (requires JLine library)
-  - Save history to ~/.euclid_history
-  - Add :history command to show past inputs
-  - Note: Current implementation is fully functional without history
-  - History would require adding JLine dependency to pom.xml
+✓ [COMPLETED] Add REPL history
+  - Integrated JLine 3.25.0 for enhanced REPL experience
+  - Persistent history saved to ~/.euclid_history
+  - Up/Down arrow key navigation through command history
+  - Added :history/:hist command to view past commands
+  - Ctrl+C (interrupt) and Ctrl+D (EOF) handling
+  - Line editing with arrow keys and standard shortcuts
+  - Improved error handling for terminal initialization
+  - Commit: a56cc49
 
 ═══════════════════════════════════════════════════════════════════════════════
 MEDIUM PRIORITY - Extended Features
@@ -341,10 +344,14 @@ MEDIUM PRIORITY - Extended Features
   - Comments can appear at end of lines or on dedicated comment lines
   - Commit: 5e921a0
 
-[LOW] Add configurable output modes
-  - Flag for inline ($...$) vs display ($$...$$) math
-  - Option for AMS math packages
-  - Support for different LaTeX math modes
+✓ [COMPLETED] Add configurable output modes
+  - Created MathMode enum with INLINE, DISPLAY, and NONE options
+  - Added --inline/-i flag to wrap output in $...$ for inline math
+  - Added --display/-D flag to wrap output in $$...$$ for display math
+  - Updated LatexTranspiler to accept MathMode parameter
+  - Math mode wrapping applied per expression (not to text nodes)
+  - Works with all transpiler modes: file, watch, and verbose
+  - Commit: 7de5b80
 
 ## 12. USABILITY FEATURES
 ────────────────────────
@@ -394,10 +401,13 @@ MEDIUM PRIORITY - Extended Features
   - Added tests demonstrating improved error messages
   - Commit: c36c93c
 
-[LOW] Add verbose/debug mode
-  - Show tokenization output
-  - Display AST if flag provided
-  - Useful for debugging and learning
+✓ [COMPLETED] Add verbose/debug mode
+  - Added --verbose/-v and --debug/-d flags
+  - Shows tokenization output with token types, positions
+  - Displays AST structure with pretty printing
+  - Shows input file and transpiled output
+  - Works with file transpilation and watch mode
+  - Commit: f96ec47
 
 ═══════════════════════════════════════════════════════════════════════════════
 LOW PRIORITY - Nice-to-Have Features
@@ -468,10 +478,15 @@ DOCUMENTATION IMPROVEMENTS - Practitioner Focus
   - Location: doc/tutorial/
   - Commit: 1f0fe41
 
-[MEDIUM] Create comparison guides
-  - Euclid vs raw LaTeX - show side-by-side differences
-  - Migration guide from LaTeX to Euclid
-  - Common LaTeX patterns and their Euclid equivalents
+✓ [COMPLETED] Create comparison guides
+  - Created comprehensive Euclid vs LaTeX comparison guide (doc/EUCLID_VS_LATEX.md)
+  - Side-by-side syntax comparisons for all major features
+  - Guidance on when to use Euclid vs when to stick with LaTeX
+  - Covers constants, operations, trig, calculus, matrices, sets, logic
+  - Migration tips for LaTeX users
+  - Quick reference summary table
+  - Philosophy and use-case recommendations
+  - Commit: 47b91dc
 
 [LOW] Create video tutorials
   - Introduction to Euclid
