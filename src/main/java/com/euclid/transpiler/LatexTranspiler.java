@@ -2,6 +2,7 @@ package com.euclid.transpiler;
 
 import com.euclid.ast.*;
 import com.euclid.token.TokenType;
+import com.euclid.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -428,10 +429,8 @@ public class LatexTranspiler implements AstVisitor<String> {
         if (args.size() != 1) return "ERROR";
         // The argument should be a string literal
         String text = args.get(0).accept(this);
-        // Remove quotes if present
-        if (text.startsWith("\"") && text.endsWith("\"")) {
-            text = text.substring(1, text.length() - 1);
-        }
+        // Remove quotes if present using StringUtils
+        text = StringUtils.removeQuotes(text);
         return "\\text{" + text + "}";
     }
 
