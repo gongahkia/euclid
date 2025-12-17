@@ -4,6 +4,7 @@ import com.euclid.ast.*;
 import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.ParserException;
+import com.euclid.util.ValidationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,9 @@ public class Parser {
      * @throws ParserException if a parsing error occurs
      */
     public DocumentNode parse() throws ParserException {
+        // Validate balanced delimiters before parsing
+        ValidationHelper.validateBalancedDelimiters(tokens);
+        
         List<AstNode> nodes = new ArrayList<>();
 
         while (!isAtEnd()) {
@@ -142,6 +146,10 @@ public class Parser {
             }
 
             consume(TokenType.RPAREN, "Expected ')' after function arguments");
+            
+            // Validate argument count
+            ValidationHelper.validateArgumentCount(function, arguments.size());
+            
             return new CallExpr(function, arguments);
         }
 
