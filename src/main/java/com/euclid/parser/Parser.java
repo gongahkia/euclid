@@ -264,7 +264,11 @@ public class Parser {
                type == TokenType.SUPSETEQ || type == TokenType.UNION || type == TokenType.INTERSECTION ||
                type == TokenType.SET_DIFF || type == TokenType.ELEMENT_OF || type == TokenType.NOT_ELEMENT_OF ||
                type == TokenType.IMPLIES || type == TokenType.IFF || type == TokenType.FORALL ||
-               type == TokenType.EXISTS || isConstantToken(token);
+               type == TokenType.EXISTS || type == TokenType.HAT || type == TokenType.TILDE ||
+               type == TokenType.BAR || type == TokenType.VEC || type == TokenType.DOT ||
+               type == TokenType.DDOT || type == TokenType.OVERLINE || type == TokenType.UNDERLINE ||
+               type == TokenType.MATHTEXT || type == TokenType.PIECEWISE || type == TokenType.CASES ||
+               type == TokenType.ALIGN || type == TokenType.SYSTEM || isConstantToken(token);
     }
 
     /**

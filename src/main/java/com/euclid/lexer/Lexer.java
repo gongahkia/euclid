@@ -147,6 +147,27 @@ public class Lexer {
         // Keywords for structured expressions
         keywords.put("from", TokenType.FROM);
         keywords.put("to", TokenType.TO);
+
+        // Accents and decorations
+        keywords.put("hat", TokenType.HAT);
+        keywords.put("tilde", TokenType.TILDE);
+        keywords.put("bar", TokenType.BAR);
+        keywords.put("vec", TokenType.VEC);
+        keywords.put("dot", TokenType.DOT);
+        keywords.put("ddot", TokenType.DDOT);
+        keywords.put("overline", TokenType.OVERLINE);
+        keywords.put("underline", TokenType.UNDERLINE);
+
+        // Text in math mode
+        keywords.put("mathtext", TokenType.MATHTEXT);
+
+        // Piecewise and cases
+        keywords.put("piecewise", TokenType.PIECEWISE);
+        keywords.put("cases", TokenType.CASES);
+
+        // Aligned equations
+        keywords.put("align", TokenType.ALIGN);
+        keywords.put("system", TokenType.SYSTEM);
     }
 
     /**

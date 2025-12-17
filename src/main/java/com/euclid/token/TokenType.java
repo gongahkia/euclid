@@ -154,6 +154,27 @@ public enum TokenType {
     TO,             // Used in sum/prod: to n
     EQUALS,         // = (for equations in sum/prod bounds)
 
+    // Accents and decorations
+    HAT,            // hat(x) → \\hat{x}
+    TILDE,          // tilde(x) → \\tilde{x}
+    BAR,            // bar(x) → \\bar{x}
+    VEC,            // vec(x) → \\vec{x}
+    DOT,            // dot(x) → \\dot{x}
+    DDOT,           // ddot(x) → \\ddot{x}
+    OVERLINE,       // overline(x) → \\overline{x}
+    UNDERLINE,      // underline(x) → \\underline{x}
+
+    // Text in math mode
+    MATHTEXT,       // mathtext("label") → \\text{label}
+
+    // Piecewise and cases
+    PIECEWISE,      // piecewise() for piecewise functions
+    CASES,          // cases() for case environments
+
+    // Aligned equations
+    ALIGN,          // align() for aligned equations
+    SYSTEM,         // system() for systems of equations
+
     // Math mode delimiters
     DOLLAR,         // $ (inline math)
     DOUBLE_DOLLAR   // $$ (display math)

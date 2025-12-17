@@ -235,6 +235,27 @@ public class LatexTranspiler implements AstVisitor<String> {
             case FORALL -> transpileForall(args);
             case EXISTS -> transpileExists(args);
 
+            // Accents and decorations
+            case HAT -> transpileAccent("\\hat", args);
+            case TILDE -> transpileAccent("\\tilde", args);
+            case BAR -> transpileAccent("\\bar", args);
+            case VEC -> transpileAccent("\\vec", args);
+            case DOT -> transpileAccent("\\dot", args);
+            case DDOT -> transpileAccent("\\ddot", args);
+            case OVERLINE -> transpileAccent("\\overline", args);
+            case UNDERLINE -> transpileAccent("\\underline", args);
+
+            // Text in math mode
+            case MATHTEXT -> transpileMathtext(args);
+
+            // Piecewise and cases
+            case PIECEWISE -> transpilePiecewise(args);
+            case CASES -> transpileCases(args);
+
+            // Aligned equations
+            case ALIGN -> transpileAlign(args);
+            case SYSTEM -> transpileSystem(args);
+
             default -> "UNKNOWN_FUNCTION(" + function + ")";
         };
     }
@@ -394,5 +415,86 @@ public class LatexTranspiler implements AstVisitor<String> {
     private String transpileExists(List<AstNode> args) {
         if (args.size() != 2) return "ERROR";
         return "\\exists " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
+    }
+
+    // Accents and decorations
+    private String transpileAccent(String command, List<AstNode> args) {
+        if (args.size() != 1) return "ERROR";
+        return command + "{" + args.get(0).accept(this) + "}";
+    }
+
+    // Text in math mode
+    private String transpileMathtext(List<AstNode> args) {
+        if (args.size() != 1) return "ERROR";
+        // The argument should be a string literal
+        String text = args.get(0).accept(this);
+        // Remove quotes if present
+        if (text.startsWith("\"") && text.endsWith("\"")) {
+            text = text.substring(1, text.length() - 1);
+        }
+        return "\\text{" + text + "}";
+    }
+
+    // Piecewise functions
+    private String transpilePiecewise(List<AstNode> args) {
+        // piecewise(expr1, cond1, expr2, cond2, ...)
+        // Generates: \begin{cases} expr1 & cond1 \\ expr2 & cond2 \\ ... \end{cases}
+        if (args.size() % 2 != 0) return "ERROR: piecewise requires even number of arguments";
+
+        StringBuilder result = new StringBuilder("\\begin{cases}\n");
+        for (int i = 0; i < args.size(); i += 2) {
+            String expr = args.get(i).accept(this);
+            String cond = args.get(i + 1).accept(this);
+            result.append(expr).append(" & \\text{if } ").append(cond);
+            if (i + 2 < args.size()) {
+                result.append(" \\\\");
+            }
+            result.append("\n");
+        }
+        result.append("\\end{cases}");
+        return result.toString();
+    }
+
+    // Cases environment
+    private String transpileCases(List<AstNode> args) {
+        // Similar to piecewise but more flexible
+        // cases(expr1, cond1, expr2, cond2, ...)
+        return transpilePiecewise(args);
+    }
+
+    // Aligned equations
+    private String transpileAlign(List<AstNode> args) {
+        // align(eq1, eq2, eq3, ...)
+        // Generates: \begin{align*} eq1 \\ eq2 \\ eq3 \\ ... \end{align*}
+        if (args.isEmpty()) return "ERROR: align requires at least one equation";
+
+        StringBuilder result = new StringBuilder("\\begin{align*}\n");
+        for (int i = 0; i < args.size(); i++) {
+            result.append(args.get(i).accept(this));
+            if (i < args.size() - 1) {
+                result.append(" \\\\");
+            }
+            result.append("\n");
+        }
+        result.append("\\end{align*}");
+        return result.toString();
+    }
+
+    // Systems of equations
+    private String transpileSystem(List<AstNode> args) {
+        // system(eq1, eq2, eq3, ...)
+        // Generates: \begin{cases} eq1 \\ eq2 \\ eq3 \\ ... \end{cases}
+        if (args.isEmpty()) return "ERROR: system requires at least one equation";
+
+        StringBuilder result = new StringBuilder("\\begin{cases}\n");
+        for (int i = 0; i < args.size(); i++) {
+            result.append(args.get(i).accept(this));
+            if (i < args.size() - 1) {
+                result.append(" \\\\");
+            }
+            result.append("\n");
+        }
+        result.append("\\end{cases}");
+        return result.toString();
     }
 }
