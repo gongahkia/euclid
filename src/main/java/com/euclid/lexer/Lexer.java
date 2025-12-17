@@ -193,9 +193,21 @@ public class Lexer {
             case '+' -> addToken(TokenType.PLUS);
             case '-' -> addToken(TokenType.MINUS);
             case '*' -> addToken(TokenType.MULTIPLY);
-            case '/' -> addToken(TokenType.DIVIDE);
+            case '/' -> {
+                // Check for // comment
+                if (match('/')) {
+                    // Skip until end of line
+                    while (peek() != '\n' && !isAtEnd()) advance();
+                } else {
+                    addToken(TokenType.DIVIDE);
+                }
+            }
             case '%' -> addToken(TokenType.MODULO);
             case '^' -> addToken(TokenType.POWER);
+            case '#' -> {
+                // Python-style comment: skip until end of line
+                while (peek() != '\n' && !isAtEnd()) advance();
+            }
             case '=' -> addToken(TokenType.EQUALS);
             case '\n' -> {
                 addToken(TokenType.NEWLINE);

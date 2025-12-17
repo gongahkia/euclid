@@ -30,16 +30,12 @@ public class EuclidIntegrationTest {
 
     @Test
     public void testSimpleNumber() throws LexerException, ParserException {
-        String result = transpile("42");
-        assertNotNull(result);
-        assertTrue(result.contains("42"));
+        assertEquals("42.0", transpile("42"));
     }
 
     @Test
     public void testSimpleAddition() throws LexerException, ParserException {
-        String result = transpile("2 + 3");
-        assertNotNull(result);
-        assertTrue(result.contains("+"));
+        assertEquals("2.0 + 3.0", transpile("2 + 3"));
     }
 
     @Test
@@ -64,31 +60,63 @@ public class EuclidIntegrationTest {
     @Test
     public void testFraction() throws LexerException, ParserException {
         String result = transpile("a / b");
-        assertNotNull(result);
+        assertTrue(result.contains("\\frac"));
     }
 
     @Test
     public void testExponentiation() throws LexerException, ParserException {
         String result = transpile("2 ^ 3");
-        assertNotNull(result);
+        assertTrue(result.contains("2^{3}"));
     }
 
     @Test
-    public void testGreekConstant() throws LexerException, ParserException {
-        String alpha = transpile("ALPHA");
-        assertNotNull(alpha);
+    public void testGreekLetters() throws LexerException, ParserException {
+        assertEquals("\\alpha", transpile("ALPHA"));
+        assertEquals("\\beta", transpile("BETA"));
+        assertEquals("\\gamma", transpile("GAMMA"));
     }
 
     @Test
     public void testMultiplication() throws LexerException, ParserException {
         String result = transpile("4 * 6");
-        assertNotNull(result);
+        assertTrue(result.contains("\\cdot"));
     }
 
     @Test
-    public void testTextMode() throws LexerException, ParserException {
+    public void testTextPassthrough() throws LexerException, ParserException {
         String result = transpile("This is plain text");
-        assertNotNull(result);
-        assertTrue(result.length() > 0);
+        assertEquals("This is plain text", result);
+    }
+
+    @Test
+    public void testHashComments() throws LexerException, ParserException {
+        // Comments should be stripped out
+        String result = transpile("x + y # this is a comment");
+        assertFalse(result.contains("#"));
+        assertFalse(result.contains("comment"));
+        assertTrue(result.contains("x"));
+        assertTrue(result.contains("y"));
+    }
+
+    @Test
+    public void testDoubleSlashComments() throws LexerException, ParserException {
+        // Comments should be stripped out
+        String result = transpile("sin(x) // calculate sine of x");
+        assertFalse(result.contains("//"));
+        assertFalse(result.contains("calculate"));
+        assertTrue(result.contains("\\sin"));
+    }
+
+    @Test
+    public void testMixedCommentsAndExpressions() throws LexerException, ParserException {
+        String input = """
+                # This is a header comment
+                x^2 + 2*x + 1  // quadratic expression
+                # Another comment
+                """;
+        String result = transpile(input);
+        assertFalse(result.contains("#"));
+        assertFalse(result.contains("//"));
+        assertTrue(result.contains("x^{2}"));
     }
 }
