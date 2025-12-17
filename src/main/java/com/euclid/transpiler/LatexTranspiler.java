@@ -249,6 +249,20 @@ public class LatexTranspiler implements AstVisitor<String> {
         return expr.getText();
     }
 
+    @Override
+    public String visitInlineMathExpr(InlineMathExpr expr) {
+        // Transpile the inner expression and wrap in $ delimiters
+        String latex = expr.getExpression().accept(this);
+        return "$" + latex + "$";
+    }
+
+    @Override
+    public String visitDisplayMathExpr(DisplayMathExpr expr) {
+        // Transpile the inner expression and wrap in $$ delimiters
+        String latex = expr.getExpression().accept(this);
+        return "$$" + latex + "$$";
+    }
+
     // Helper methods for specific function transpilation
 
     private String transpilePow(List<AstNode> args) {

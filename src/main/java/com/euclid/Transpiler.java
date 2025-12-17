@@ -5,6 +5,7 @@ import com.euclid.ast.DocumentNode;
 import com.euclid.exception.EuclidException;
 import com.euclid.lexer.Lexer;
 import com.euclid.parser.Parser;
+import com.euclid.processor.MixedContentProcessor;
 import com.euclid.token.Token;
 import com.euclid.transpiler.LatexTranspiler;
 import com.euclid.transpiler.MathMode;
@@ -53,6 +54,26 @@ public class Transpiler {
      * @throws EuclidException if an error occurs during transpilation
      */
     public static String transpile(String source, boolean verbose, MathMode mathMode) throws EuclidException {
+        return transpile(source, verbose, mathMode, false);
+    }
+
+    /**
+     * Transpiles Euclid source code to LaTeX/Markdown with full options.
+     *
+     * @param source    The Euclid source code
+     * @param verbose   Whether to print debug information
+     * @param mathMode  The math mode for wrapping output
+     * @param mixedMode Whether to use mixed content mode (auto-detect inline math)
+     * @return The transpiled LaTeX/Markdown
+     * @throws EuclidException if an error occurs during transpilation
+     */
+    public static String transpile(String source, boolean verbose, MathMode mathMode, boolean mixedMode) throws EuclidException {
+        // If mixed mode, use the mixed content processor
+        if (mixedMode) {
+            return MixedContentProcessor.processDocument(source);
+        }
+
+        // Otherwise, use regular transpilation
         // Lex: Convert source to tokens
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.tokenize();
@@ -139,6 +160,21 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void transpileFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode) throws IOException, EuclidException {
+        transpileFile(inputPath, outputPath, verbose, mathMode, false);
+    }
+
+    /**
+     * Transpiles a file from .ed to .md format with full options.
+     *
+     * @param inputPath  The input .ed file path
+     * @param outputPath The output .md file path
+     * @param verbose    Whether to print debug information
+     * @param mathMode   The math mode for wrapping output
+     * @param mixedMode  Whether to use mixed content mode
+     * @throws IOException     if an I/O error occurs
+     * @throws EuclidException if a transpilation error occurs
+     */
+    public static void transpileFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode, boolean mixedMode) throws IOException, EuclidException {
         // Read input file
         String source = Files.readString(Paths.get(inputPath));
 
@@ -151,7 +187,7 @@ public class Transpiler {
         }
 
         // Transpile
-        String result = transpile(source, verbose, mathMode);
+        String result = transpile(source, verbose, mathMode, mixedMode);
 
         if (verbose) {
             System.out.println("═══════════════════════════════════════════════════════════");
@@ -201,6 +237,21 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void watchFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode) throws IOException, EuclidException {
+        watchFile(inputPath, outputPath, verbose, mathMode, false);
+    }
+
+    /**
+     * Watches a file for changes and automatically retranspiles with full options.
+     *
+     * @param inputPath  The input .ed file path to watch
+     * @param outputPath The output .md file path
+     * @param verbose    Whether to print debug information
+     * @param mathMode   The math mode for wrapping output
+     * @param mixedMode  Whether to use mixed content mode
+     * @throws IOException     if an I/O error occurs
+     * @throws EuclidException if a transpilation error occurs
+     */
+    public static void watchFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode, boolean mixedMode) throws IOException, EuclidException {
         Path path = Paths.get(inputPath);
         Path dir = path.getParent();
         String fileName = path.getFileName().toString();
@@ -211,7 +262,7 @@ public class Transpiler {
 
         // Initial transpilation
         System.out.println("Initial transpilation of " + inputPath + " to " + outputPath + "...");
-        transpileFile(inputPath, outputPath, verbose, mathMode);
+        transpileFile(inputPath, outputPath, verbose, mathMode, mixedMode);
         System.out.println("✓ Transpilation complete!");
         System.out.println();
         System.out.println("Watching " + inputPath + " for changes... (Press Ctrl+C to stop)");
@@ -249,7 +300,7 @@ public class Transpiler {
                         try {
                             // Small delay to ensure file write is complete
                             Thread.sleep(100);
-                            transpileFile(inputPath, outputPath, verbose, mathMode);
+                            transpileFile(inputPath, outputPath, verbose, mathMode, mixedMode);
                             System.out.println("✓ Retranspilation complete!");
                         } catch (EuclidException e) {
                             System.err.println("✗ Transpilation Error: " + e.getMessage());
@@ -282,6 +333,7 @@ public class Transpiler {
         // Check for flags
         boolean watchMode = false;
         boolean verboseMode = false;
+        boolean mixedMode = false;
         MathMode mathMode = MathMode.NONE;
         String inputFile = null;
         String outputFile = null;
@@ -292,6 +344,8 @@ public class Transpiler {
             } else if (args[i].equals("--verbose") || args[i].equals("-v") ||
                        args[i].equals("--debug") || args[i].equals("-d")) {
                 verboseMode = true;
+            } else if (args[i].equals("--mixed") || args[i].equals("-m")) {
+                mixedMode = true;
             } else if (args[i].equals("--inline") || args[i].equals("-i")) {
                 mathMode = MathMode.INLINE;
             } else if (args[i].equals("--display") || args[i].equals("-D")) {
@@ -320,12 +374,12 @@ public class Transpiler {
 
         try {
             if (watchMode) {
-                watchFile(inputFile, outputFile, verboseMode, mathMode);
+                watchFile(inputFile, outputFile, verboseMode, mathMode, mixedMode);
             } else {
                 if (!verboseMode) {
                     System.out.println("Transpiling " + inputFile + " to " + outputFile + "...");
                 }
-                transpileFile(inputFile, outputFile, verboseMode, mathMode);
+                transpileFile(inputFile, outputFile, verboseMode, mathMode, mixedMode);
                 if (!verboseMode) {
                     System.out.println("Transpilation complete!");
                 }
@@ -349,6 +403,7 @@ public class Transpiler {
         System.out.println("  --watch, -w      Watch mode: automatically retranspile when file changes");
         System.out.println("  --verbose, -v    Verbose mode: show tokenization output and AST");
         System.out.println("  --debug, -d      Debug mode: same as --verbose");
+        System.out.println("  --mixed, -m      Mixed mode: auto-detect and transpile inline math in prose");
         System.out.println("  --inline, -i     Wrap output in inline math mode ($...$)");
         System.out.println("  --display, -D    Wrap output in display math mode ($$...$$)");
         System.out.println();

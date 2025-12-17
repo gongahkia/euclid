@@ -201,6 +201,20 @@ public class Parser {
             return new GroupingExpr(expr);
         }
 
+        // Inline math mode ($ ... $)
+        if (match(TokenType.DOLLAR)) {
+            AstNode expr = expression();
+            consume(TokenType.DOLLAR, "Expected '$' to close inline math");
+            return new InlineMathExpr(expr);
+        }
+
+        // Display math mode ($$ ... $$)
+        if (match(TokenType.DOUBLE_DOLLAR)) {
+            AstNode expr = expression();
+            consume(TokenType.DOUBLE_DOLLAR, "Expected '$$' to close display math");
+            return new DisplayMathExpr(expr);
+        }
+
         // Text (plain markdown)
         if (match(TokenType.TEXT)) {
             return new TextExpr(previous().getLexeme());

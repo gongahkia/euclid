@@ -13,5 +13,7 @@ public interface AstVisitor<R> {
     R visitCallExpr(CallExpr expr);
     R visitGroupingExpr(GroupingExpr expr);
     R visitTextExpr(TextExpr expr);
+    R visitInlineMathExpr(InlineMathExpr expr);
+    R visitDisplayMathExpr(DisplayMathExpr expr);
     R visitDocumentNode(DocumentNode node);
 }
