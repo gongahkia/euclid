@@ -55,6 +55,13 @@
             <version>1.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- JLine 3 for REPL with history and line editing -->
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>3.25.0</version>
+        </dependency>
     </dependencies>
 
     <build>

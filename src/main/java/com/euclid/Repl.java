@@ -1,6 +1,9 @@
 package com.euclid;
 
 import com.euclid.exception.EuclidException;
+import org.jline.reader.*;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Interactive REPL (Read-Eval-Print-Loop) for Euclid.
@@ -22,19 +24,39 @@ public class Repl {
     private static final List<String> inputBuffer = new ArrayList<>();
 
     public static void main(String[] args) {
-        printWelcome();
+        try {
+            // Set up JLine terminal and reader with history support
+            Terminal terminal = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
 
-        Scanner scanner = new Scanner(System.in);
-        boolean running = true;
+            // Configure history file
+            Path historyPath = Paths.get(System.getProperty("user.home"), ".euclid_history");
 
-        while (running) {
-            System.out.print(multilineMode ? CONTINUATION_PROMPT : PROMPT);
+            LineReader reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .variable(LineReader.HISTORY_FILE, historyPath)
+                    .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                    .build();
 
-            if (!scanner.hasNextLine()) {
-                break;
-            }
+            printWelcome();
 
-            String input = scanner.nextLine().trim();
+            boolean running = true;
+
+            while (running) {
+                String prompt = multilineMode ? CONTINUATION_PROMPT : PROMPT;
+                String input;
+
+                try {
+                    input = reader.readLine(prompt).trim();
+                } catch (UserInterruptException e) {
+                    // Ctrl+C pressed
+                    System.out.println();
+                    continue;
+                } catch (EndOfFileException e) {
+                    // Ctrl+D pressed
+                    break;
+                }
 
             // Handle empty input
             if (input.isEmpty()) {
@@ -88,6 +110,11 @@ public class Repl {
                     continue;
                 }
 
+                if (input.equals(":history") || input.equals(":hist")) {
+                    printHistory(reader);
+                    continue;
+                }
+
                 System.err.println("Unknown command: " + input);
                 System.err.println("Type ':help' for available commands.");
                 continue;
@@ -110,8 +137,17 @@ public class Repl {
             executeInput(input);
         }
 
-        System.out.println("Goodbye!");
-        scanner.close();
+            System.out.println("Goodbye!");
+
+            try {
+                terminal.close();
+            } catch (IOException e) {
+                // Ignore close errors
+            }
+        } catch (IOException e) {
+            System.err.println("Error initializing terminal: " + e.getMessage());
+            System.exit(1);
+        }
     }
 
     private static void printWelcome() {
@@ -134,6 +170,7 @@ public class Repl {
         System.out.println("  :clear, :c        - Clear the screen");
         System.out.println("  :multiline, :m    - Enter multiline mode for complex expressions");
         System.out.println("  :load <file>, :l  - Load and execute a .ed file");
+        System.out.println("  :history, :hist   - Show command history");
         System.out.println();
         System.out.println("Multiline Input:");
         System.out.println("  - Unclosed delimiters automatically enter multiline mode");
@@ -243,5 +280,35 @@ public class Repl {
             System.err.println("Error reading file: " + e.getMessage());
             System.out.println();
         }
+    }
+
+    /**
+     * Prints the command history.
+     *
+     * @param reader The LineReader instance with history
+     */
+    private static void printHistory(LineReader reader) {
+        History history = reader.getHistory();
+
+        if (history.isEmpty()) {
+            System.out.println("No history available.");
+            System.out.println();
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Command History:");
+        System.out.println("─────────────────────────────────────────────────────────────────");
+
+        int count = 1;
+        for (History.Entry entry : history) {
+            System.out.printf("%4d  %s%n", count++, entry.line());
+        }
+
+        System.out.println("─────────────────────────────────────────────────────────────────");
+        System.out.println("Total: " + history.size() + " commands");
+        System.out.println();
+        System.out.println("Tip: Use Up/Down arrow keys to navigate history");
+        System.out.println();
     }
 }
