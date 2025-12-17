@@ -287,10 +287,14 @@ MEDIUM PRIORITY - Extended Features
   - Useful for live preview during editing
   - Flag: euclid_transpiler --watch input.ed -o output.md
 
-[MEDIUM] Better error messages
-  - Show snippet of problematic input with caret pointing to error
-  - Suggest corrections for common mistakes
-  - Link to relevant documentation section
+✓ [COMPLETED] Better error messages
+  - Enhanced LexerException and ParserException with source context display
+  - Errors now show the problematic line with a caret (^) pointing to error location
+  - Added box-drawing characters for visually appealing error display
+  - Parser provides context-aware suggestions (e.g., "Check for unbalanced parentheses")
+  - Parser accepts optional source parameter for enhanced error reporting
+  - Added tests demonstrating improved error messages
+  - Commit: c36c93c
 
 [LOW] Add verbose/debug mode
   - Show tokenization output
