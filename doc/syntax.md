@@ -136,15 +136,15 @@ Commonly used constants are specified in Uppercase by default.
 
 | Euclid lang syntax | MathJax equivalent |
 | :--- | :--- |
-| `sum(from i=1 to n) f(i)` | $sum_{i=1}^n f(i)$ |
-| `prod(from i=1 to n) f(i)` | $prod_{i=1}^n f(i)$ |
+| `sum(from i=1 to n) f(i)` | $\sum_{i=1}^n f(i)$ |
+| `prod(from i=1 to n) f(i)` | $\prod_{i=1}^n f(i)$ |
 
 ## Matrices and Vectors
 
 | Euclid lang syntax | MathJax equivalent |
 | :--- | :--- |
-| `vector([a, b, c])` | $\begin{pmatrix} a \ b \ c \end{pmatrix}$ |
-| `matrix([[a, b], [c, d]])` | $\begin{matrix} a & b \ c & d \end{matrix}$ |
+| `vector([a, b, c])` | $\begin{pmatrix} a \\ b \\ c \end{pmatrix}$ |
+| `matrix([[a, b], [c, d]])` | $\begin{matrix} a & b \\ c & d \end{matrix}$ |
 
 ## Set notation
 
