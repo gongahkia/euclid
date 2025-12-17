@@ -1,5 +1,6 @@
 package com.euclid;
 
+import com.euclid.ast.AstNode;
 import com.euclid.ast.DocumentNode;
 import com.euclid.exception.EuclidException;
 import com.euclid.lexer.Lexer;
@@ -26,17 +27,66 @@ public class Transpiler {
      * @throws EuclidException if an error occurs during transpilation
      */
     public static String transpile(String source) throws EuclidException {
+        return transpile(source, false);
+    }
+
+    /**
+     * Transpiles Euclid source code to LaTeX/Markdown with optional verbose output.
+     *
+     * @param source  The Euclid source code
+     * @param verbose Whether to print debug information
+     * @return The transpiled LaTeX/Markdown
+     * @throws EuclidException if an error occurs during transpilation
+     */
+    public static String transpile(String source, boolean verbose) throws EuclidException {
         // Lex: Convert source to tokens
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.tokenize();
+
+        if (verbose) {
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println("TOKENIZATION OUTPUT");
+            System.out.println("═══════════════════════════════════════════════════════════");
+            for (int i = 0; i < tokens.size(); i++) {
+                Token token = tokens.get(i);
+                System.out.printf("[%3d] %s%n", i, token.toDebugString());
+            }
+            System.out.println("Total tokens: " + tokens.size());
+            System.out.println();
+        }
 
         // Parse: Convert tokens to AST
         Parser parser = new Parser(tokens);
         DocumentNode ast = parser.parse();
 
+        if (verbose) {
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println("ABSTRACT SYNTAX TREE (AST)");
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println(prettyPrintAst(ast, 0));
+            System.out.println();
+        }
+
         // Transpile: Convert AST to LaTeX
         LatexTranspiler transpiler = new LatexTranspiler();
         return ast.accept(transpiler);
+    }
+
+    /**
+     * Pretty prints the AST with indentation.
+     *
+     * @param node   The AST node to print
+     * @param indent The current indentation level
+     * @return The formatted AST string
+     */
+    private static String prettyPrintAst(AstNode node, int indent) {
+        String indentation = "  ".repeat(indent);
+        StringBuilder sb = new StringBuilder();
+
+        String nodeStr = node.toString();
+        sb.append(indentation).append(nodeStr);
+
+        return sb.toString();
     }
 
     /**
@@ -48,11 +98,40 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void transpileFile(String inputPath, String outputPath) throws IOException, EuclidException {
+        transpileFile(inputPath, outputPath, false);
+    }
+
+    /**
+     * Transpiles a file from .ed to .md format with optional verbose output.
+     *
+     * @param inputPath  The input .ed file path
+     * @param outputPath The output .md file path
+     * @param verbose    Whether to print debug information
+     * @throws IOException     if an I/O error occurs
+     * @throws EuclidException if a transpilation error occurs
+     */
+    public static void transpileFile(String inputPath, String outputPath, boolean verbose) throws IOException, EuclidException {
         // Read input file
         String source = Files.readString(Paths.get(inputPath));
 
+        if (verbose) {
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println("INPUT FILE: " + inputPath);
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println(source);
+            System.out.println();
+        }
+
         // Transpile
-        String result = transpile(source);
+        String result = transpile(source, verbose);
+
+        if (verbose) {
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println("TRANSPILED OUTPUT");
+            System.out.println("═══════════════════════════════════════════════════════════");
+            System.out.println(result);
+            System.out.println();
+        }
 
         // Write output file
         Files.writeString(Paths.get(outputPath), result);
@@ -67,6 +146,19 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void watchFile(String inputPath, String outputPath) throws IOException, EuclidException {
+        watchFile(inputPath, outputPath, false);
+    }
+
+    /**
+     * Watches a file for changes and automatically retranspiles with optional verbose output.
+     *
+     * @param inputPath  The input .ed file path to watch
+     * @param outputPath The output .md file path
+     * @param verbose    Whether to print debug information
+     * @throws IOException     if an I/O error occurs
+     * @throws EuclidException if a transpilation error occurs
+     */
+    public static void watchFile(String inputPath, String outputPath, boolean verbose) throws IOException, EuclidException {
         Path path = Paths.get(inputPath);
         Path dir = path.getParent();
         String fileName = path.getFileName().toString();
@@ -77,7 +169,7 @@ public class Transpiler {
 
         // Initial transpilation
         System.out.println("Initial transpilation of " + inputPath + " to " + outputPath + "...");
-        transpileFile(inputPath, outputPath);
+        transpileFile(inputPath, outputPath, verbose);
         System.out.println("✓ Transpilation complete!");
         System.out.println();
         System.out.println("Watching " + inputPath + " for changes... (Press Ctrl+C to stop)");
@@ -115,7 +207,7 @@ public class Transpiler {
                         try {
                             // Small delay to ensure file write is complete
                             Thread.sleep(100);
-                            transpileFile(inputPath, outputPath);
+                            transpileFile(inputPath, outputPath, verbose);
                             System.out.println("✓ Retranspilation complete!");
                         } catch (EuclidException e) {
                             System.err.println("✗ Transpilation Error: " + e.getMessage());
@@ -145,14 +237,18 @@ public class Transpiler {
             System.exit(1);
         }
 
-        // Check for --watch flag
+        // Check for flags
         boolean watchMode = false;
+        boolean verboseMode = false;
         String inputFile = null;
         String outputFile = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--watch") || args[i].equals("-w")) {
                 watchMode = true;
+            } else if (args[i].equals("--verbose") || args[i].equals("-v") ||
+                       args[i].equals("--debug") || args[i].equals("-d")) {
+                verboseMode = true;
             } else if (inputFile == null) {
                 inputFile = args[i];
             } else if (outputFile == null) {
@@ -177,11 +273,15 @@ public class Transpiler {
 
         try {
             if (watchMode) {
-                watchFile(inputFile, outputFile);
+                watchFile(inputFile, outputFile, verboseMode);
             } else {
-                System.out.println("Transpiling " + inputFile + " to " + outputFile + "...");
-                transpileFile(inputFile, outputFile);
-                System.out.println("Transpilation complete!");
+                if (!verboseMode) {
+                    System.out.println("Transpiling " + inputFile + " to " + outputFile + "...");
+                }
+                transpileFile(inputFile, outputFile, verboseMode);
+                if (!verboseMode) {
+                    System.out.println("Transpilation complete!");
+                }
             }
         } catch (IOException e) {
             System.err.println("I/O Error: " + e.getMessage());
@@ -196,19 +296,22 @@ public class Transpiler {
         System.out.println("Euclid Transpiler - Convert .ed files to Markdown with LaTeX");
         System.out.println();
         System.out.println("Usage:");
-        System.out.println("  java -jar euclid-transpiler.jar [--watch] <input.ed> [output.md]");
+        System.out.println("  java -jar euclid-transpiler.jar [options] <input.ed> [output.md]");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --watch, -w  Watch mode: automatically retranspile when file changes");
+        System.out.println("  --watch, -w      Watch mode: automatically retranspile when file changes");
+        System.out.println("  --verbose, -v    Verbose mode: show tokenization output and AST");
+        System.out.println("  --debug, -d      Debug mode: same as --verbose");
         System.out.println();
         System.out.println("Arguments:");
-        System.out.println("  input.ed     Input Euclid file");
-        System.out.println("  output.md    Output Markdown file (optional, defaults to input.md)");
+        System.out.println("  input.ed         Input Euclid file");
+        System.out.println("  output.md        Output Markdown file (optional, defaults to input.md)");
         System.out.println();
         System.out.println("Examples:");
         System.out.println("  java -jar euclid-transpiler.jar example.ed");
         System.out.println("  java -jar euclid-transpiler.jar example.ed output.md");
         System.out.println("  java -jar euclid-transpiler.jar --watch example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar -w example.ed output.md");
+        System.out.println("  java -jar euclid-transpiler.jar -v example.ed");
+        System.out.println("  java -jar euclid-transpiler.jar --watch --verbose example.ed");
     }
 }
