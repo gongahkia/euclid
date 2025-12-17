@@ -15,6 +15,7 @@ import java.util.List;
  */
 public class Parser {
     private final List<Token> tokens;
+    private final String source;
     private int current = 0;
 
     /**
@@ -23,7 +24,18 @@ public class Parser {
      * @param tokens The tokens to parse
      */
     public Parser(List<Token> tokens) {
+        this(tokens, null);
+    }
+
+    /**
+     * Creates a new parser for the given tokens with source context.
+     *
+     * @param tokens The tokens to parse
+     * @param source The source code for error reporting
+     */
+    public Parser(List<Token> tokens, String source) {
         this.tokens = tokens;
+        this.source = source;
     }
 
     /**
@@ -196,11 +208,22 @@ public class Parser {
 
         // If we reach here, we have an unexpected token
         Token token = peek();
-        throw new ParserException(
-            "Unexpected token '" + token.getLexeme() + "'",
-            token.getLine(),
-            token.getColumn()
-        );
+        String suggestion = "Try using a number, identifier, or function call here";
+        if (source != null) {
+            throw new ParserException(
+                "Unexpected token '" + token.getLexeme() + "'",
+                token.getLine(),
+                token.getColumn(),
+                source,
+                suggestion
+            );
+        } else {
+            throw new ParserException(
+                "Unexpected token '" + token.getLexeme() + "'",
+                token.getLine(),
+                token.getColumn()
+            );
+        }
     }
 
     /**
@@ -283,7 +306,22 @@ public class Parser {
         if (check(type)) return advance();
 
         Token token = peek();
-        throw new ParserException(message, token.getLine(), token.getColumn());
+        String suggestion = null;
+        
+        // Provide helpful suggestions based on context
+        if (type == TokenType.RPAREN) {
+            suggestion = "Check for unbalanced parentheses - every '(' needs a matching ')'";
+        } else if (type == TokenType.RBRACKET) {
+            suggestion = "Check for unbalanced brackets - every '[' needs a matching ']'";
+        } else if (type == TokenType.COMMA) {
+            suggestion = "Function arguments should be separated by commas";
+        }
+        
+        if (source != null && suggestion != null) {
+            throw new ParserException(message, token.getLine(), token.getColumn(), source, suggestion);
+        } else {
+            throw new ParserException(message, token.getLine(), token.getColumn());
+        }
     }
 
     /**

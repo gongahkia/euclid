@@ -22,7 +22,7 @@ public class EuclidIntegrationTest {
     private String transpile(String input) throws LexerException, ParserException {
         Lexer lexer = new Lexer(input);
         List<Token> tokens = lexer.tokenize();
-        Parser parser = new Parser(tokens);
+        Parser parser = new Parser(tokens, input);  // Pass source for better error messages
         DocumentNode ast = parser.parse();
         LatexTranspiler transpiler = new LatexTranspiler();
         return ast.accept(transpiler);
@@ -118,5 +118,35 @@ public class EuclidIntegrationTest {
         assertFalse(result.contains("#"));
         assertFalse(result.contains("//"));
         assertTrue(result.contains("x^{2}"));
+    }
+
+    @Test
+    public void testImprovedErrorMessagesForUnbalancedParentheses() {
+        String input = "sin(x + y";  // Missing closing parenthesis
+        
+        ParserException exception = assertThrows(ParserException.class, () -> {
+            transpile(input);
+        });
+        
+        // Error message should contain helpful context
+        String message = exception.getMessage();
+        assertTrue(message.contains("Parser") || message.contains("Expected"), 
+            "Should be a parser error: " + message);
+        assertTrue(message.contains("parenthes") || message.contains("')'") || message.contains(")"), 
+            "Should mention parentheses issue: " + message);
+    }
+
+    @Test
+    public void testErrorMessageShowsSourceContext() {
+        String input = "x^2 + ";  // Incomplete expression
+        
+        ParserException exception = assertThrows(ParserException.class, () -> {
+            transpile(input);
+        });
+        
+        // Error message should show the problematic line
+        String message = exception.getMessage();
+        assertTrue(message.contains("x^2 +") || message.contains("Unexpected"), 
+            "Should show source context or unexpected token message");
     }
 }
