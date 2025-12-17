@@ -41,6 +41,20 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- JUnit QuickCheck for property-based testing -->
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-core</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-generators</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
