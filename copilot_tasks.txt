@@ -178,18 +178,24 @@ HIGH PRIORITY - Documentation & Examples
 
 ## 8. API DOCUMENTATION
 ──────────────────────
-[MEDIUM] Add module documentation
-  - Document Token module and all token types
-  - Document Lexer module with usage examples
-  - Document Parser module (to be created) with examples
-  - Document Transpiler module with examples
-  - Use ocamldoc format for generating HTML docs
+✓ [COMPLETED] Add module documentation
+  - Added comprehensive doc/DEVELOPER_GUIDE.md (513 lines)
+  - Documented architecture: Lexer → Parser → AST → Transpiler
+  - Explained Token system and TokenType enum
+  - Documented AST node types with visitor pattern
+  - Provided Javadoc examples and conventions
+  - Commit: 8cdf984
 
-[MEDIUM] Create developer guide
-  - Explain architecture (lexer → parser → AST → transpiler)
-  - Document how to add new functions/operators
-  - Provide contributing guidelines
-  - Include coding standards and style guide
+✓ [COMPLETED] Create developer guide
+  - Created detailed DEVELOPER_GUIDE.md covering:
+    * Architecture overview with pipeline flow
+    * Module documentation for all components
+    * Step-by-step guide for adding new functions and operators
+    * Development workflow and debugging tips
+    * Testing strategy with naming conventions
+    * Performance considerations
+    * Common pitfalls and solutions
+  - Commit: 8cdf984
 
 ═══════════════════════════════════════════════════════════════════════════════
 MEDIUM PRIORITY - Developer Experience
@@ -261,9 +267,13 @@ MEDIUM PRIORITY - Extended Features
   - Accents and decorations (hat, tilde, bar, dot, etc.)
   - Text within math mode for labels
 
-[MEDIUM] Support inline comments in .ed files
-  - Allow # or // style comments that don't appear in output
-  - Preserve markdown comments <!--...-->
+✓ [COMPLETED] Support inline comments in .ed files
+  - Implemented # style comments (Python-style)
+  - Implemented // style comments (C/Java-style)
+  - Lexer skips comments entirely - they don't reach parser
+  - Added 3 integration tests to verify comment stripping
+  - Comments can appear at end of lines or on dedicated comment lines
+  - Commit: 5e921a0
 
 [LOW] Add configurable output modes
   - Flag for inline ($...$) vs display ($$...$$) math
