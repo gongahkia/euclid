@@ -413,27 +413,7 @@ MEDIUM PRIORITY - Extended Features
 LOW PRIORITY - Nice-to-Have Features
 ═══════════════════════════════════════════════════════════════════════════════
 
-## 13. TOOLING INTEGRATIONS
-──────────────────────────
-[LOW] Create editor plugins
-  - VSCode extension for .ed syntax highlighting
-  - VSCode extension for live preview
-  - Vim syntax file
-  - Emacs major mode
-
-[LOW] Web interface
-  - Create simple web app for trying Euclid online
-  - Uses js_of_ocaml to compile to JavaScript
-  - Side-by-side editor with live preview
-  - Examples gallery
-
-[LOW] Language server protocol (LSP) implementation
-  - Real-time error checking in editors
-  - Auto-completion for functions
-  - Hover tooltips showing LaTeX output
-  - Go-to-definition for custom macros
-
-## 14. PERFORMANCE & OPTIMIZATION
+## 13. PERFORMANCE & OPTIMIZATION
 ─────────────────────────────────
 [LOW] Performance optimization
   - Benchmark transpilation speed
@@ -446,7 +426,7 @@ LOW PRIORITY - Nice-to-Have Features
   - Only reprocess changed sections
   - Incremental compilation support
 
-## 15. ADVANCED FEATURES
+## 14. ADVANCED FEATURES
 ───────────────────────
 [LOW] Add macro/variable system
   - Define custom shortcuts: let myvar = integral(f(x), x, 0, 1)
@@ -465,7 +445,7 @@ LOW PRIORITY - Nice-to-Have Features
 DOCUMENTATION IMPROVEMENTS - Practitioner Focus
 ═══════════════════════════════════════════════════════════════════════════════
 
-## 16. ✓ LEARNING RESOURCES
+## 15. ✓ LEARNING RESOURCES
 ────────────────────────
 ✓ [COMPLETED] Create tutorial series
   - Created 01_getting_started.md: Basic expressions, constants, arithmetic operations
@@ -488,29 +468,11 @@ DOCUMENTATION IMPROVEMENTS - Practitioner Focus
   - Philosophy and use-case recommendations
   - Commit: 47b91dc
 
-[LOW] Create video tutorials
-  - Introduction to Euclid
-  - Writing your first mathematical document
-  - Tips and tricks
-
-## 17. COMMUNITY & ECOSYSTEM
-───────────────────────────
-[LOW] Create community resources
-  - Set up discussion forum or Discord
-  - Create example gallery/cookbook
-  - Add "Share your Euclid code" section
-  - Showcase projects using Euclid
-
-[LOW] Add telemetry (opt-in)
-  - Collect usage statistics to improve tool
-  - Understand most-used features
-  - Privacy-respecting analytics
-
 ═══════════════════════════════════════════════════════════════════════════════
 TECHNICAL DEBT & CODE QUALITY
 ═══════════════════════════════════════════════════════════════════════════════
 
-## 18. CODE REFACTORING
+## 16. CODE REFACTORING
 ──────────────────────
 [MEDIUM] Improve code organization
   - Split large modules if they grow too big
@@ -535,7 +497,7 @@ TECHNICAL DEBT & CODE QUALITY
   - Automatic performance validation
   - Commit: dd8b8e5
 
-## 19. ✓ COMPATIBILITY & PORTABILITY
+## 17. ✓ COMPATIBILITY & PORTABILITY
 ──────────────────────────────────
 ✓ [COMPLETED] Cross-platform testing
   - CI/CD pipeline tests on Linux (Ubuntu), macOS, and Windows via GitHub Actions
@@ -563,7 +525,7 @@ TECHNICAL DEBT & CODE QUALITY
 VALIDATION & CORRECTNESS
 ═══════════════════════════════════════════════════════════════════════════════
 
-## 20. CORRECTNESS VERIFICATION
+## 18. CORRECTNESS VERIFICATION
 ──────────────────────────────
 ✓ [COMPLETED] Validate LaTeX output
   - Created LatexCompilationTest with 15 comprehensive tests
@@ -603,7 +565,7 @@ VALIDATION & CORRECTNESS
 LONG-TERM VISION
 ═══════════════════════════════════════════════════════════════════════════════
 
-## 21. ECOSYSTEM GROWTH
+## 19. ECOSYSTEM GROWTH
 ──────────────────────
 [LOW] Create plugin system
   - Allow users to add custom transpilation rules
@@ -622,7 +584,7 @@ LONG-TERM VISION
   - Integration with Hugo/Jekyll static site generators
   - Obsidian plugin
 
-## 22. ACADEMIC & RESEARCH USE
+## 20. ACADEMIC & RESEARCH USE
 ─────────────────────────────
 [LOW] Citation support
   - BibTeX integration
