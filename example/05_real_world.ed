@@ -1,0 +1,72 @@
+# Euclid Example: Real-World Applications
+
+This example demonstrates how to use Euclid for real-world mathematical expressions.
+
+## Physics
+
+### Kinetic Energy
+KE = (1 / 2) * m * pow(v, 2)
+
+### Einstein's Mass-Energy Equivalence
+E = m * pow(c, 2)
+
+### Ohm's Law
+V = I * R
+
+### Gravitational Force
+F = G * (m1 * m2) / pow(r, 2)
+
+## Statistics
+
+### Sample Mean
+mean = (sum(from i=1 to n) xi) / n
+
+### Sample Variance
+variance = (sum(from i=1 to n) pow((xi - mean), 2)) / (n - 1)
+
+### Standard Deviation
+std_dev = sqrt(variance)
+
+### Normal Distribution Probability Density
+f(x) = (1 / (sigma * sqrt(2 * PI))) * exp(-pow((x - mu), 2) / (2 * pow(sigma, 2)))
+
+## Geometry
+
+### Pythagorean Theorem
+pow(a, 2) + pow(b, 2) = pow(c, 2)
+
+### Area of Circle
+A = PI * pow(r, 2)
+
+### Volume of Sphere
+V = (4 / 3) * PI * pow(r, 3)
+
+### Distance Formula in 2D
+d = sqrt(pow((x2 - x1), 2) + pow((y2 - y1), 2))
+
+## Finance
+
+### Compound Interest
+A = P * pow((1 + r / n), (n * t))
+
+### Present Value
+PV = FV / pow((1 + r), t)
+
+## Trigonometry
+
+### Law of Cosines
+pow(c, 2) = pow(a, 2) + pow(b, 2) - 2 * a * b * cos(GAMMA)
+
+### Sine Rule
+a / sin(ALPHA) = b / sin(BETA) = c / sin(GAMMA)
+
+## Computer Science
+
+### Big O Notation (logarithmic)
+T(n) = O(log(n, 2))
+
+### Big O Notation (polynomial)
+T(n) = O(pow(n, 2))
+
+### Fibonacci Sequence (closed form)
+F(n) = (pow(PHI, n) - pow((1 - PHI), n)) / sqrt(5)

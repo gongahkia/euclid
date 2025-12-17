@@ -1,0 +1,48 @@
+# Euclid Example: Calculus
+
+This example demonstrates calculus operations in Euclid.
+
+## Trigonometric Functions
+
+Sine: sin(x)
+Cosine: cos(x)
+Tangent: tan(x)
+Cosecant: csc(x)
+Secant: sec(x)
+Cotangent: cot(x)
+
+## Hyperbolic Functions
+
+Hyperbolic sine: sinh(x)
+Hyperbolic cosine: cosh(x)
+Hyperbolic tangent: tanh(x)
+
+## Logarithms and Exponentials
+
+Natural logarithm: ln(x)
+Exponential: exp(x)
+Logarithm base 2: log(x, 2)
+Logarithm base 10: log(x, 10)
+
+## Roots
+
+Square root: sqrt(x)
+Cube root: sqrt(3, x)
+Fourth root: sqrt(4, x)
+
+## Calculus Operations
+
+Limit as x approaches 0: limit(x -> 0) f(x)
+Derivative: diff(f(x), x)
+Partial derivative: partial(f(x, y), x)
+Definite integral: integral(f(x), x, 0, 1)
+
+## Summation and Products
+
+Sum from i=1 to n: sum(from i=1 to n) f(i)
+Product from i=1 to n: prod(from i=1 to n) f(i)
+
+## Complex Expressions
+
+Euler's identity: exp(I * PI) + 1 = 0
+Taylor series for e^x: sum(from n=0 to INFINITY) (pow(x, n) / n!)

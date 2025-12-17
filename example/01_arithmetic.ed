@@ -1,0 +1,44 @@
+# Euclid Example: Basic Arithmetic and Algebra
+
+This example demonstrates basic arithmetic operations and algebraic expressions in Euclid.
+
+## Simple Arithmetic
+
+Addition: 2 + 3
+Subtraction: 5 - 2
+Multiplication: 4 * 6  
+Division: 8 / 2
+
+## Exponentiation
+
+Power notation: 2 ^ 3
+Using pow function: pow(2, 10)
+
+## Mathematical Constants
+
+Pi: PI
+Euler's number: E
+Imaginary unit: I
+Golden ratio: PHI
+Infinity: INFINITY
+
+## Fractions
+
+Simple fraction: a \\ b
+Complex fraction: (a + b) / (c - d)
+
+## Greek Letters
+
+Alpha: ALPHA
+Beta: BETA
+Gamma: GAMMA
+Delta: DELTA
+Epsilon: EPSILON
+Theta: THETA
+Lambda: LAMBDA
+Pi (constant): PI
+Omega: OMEGA
+
+## Expressions
+
+Quadratic formula: (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a)

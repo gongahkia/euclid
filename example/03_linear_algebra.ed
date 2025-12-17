@@ -1,0 +1,29 @@
+# Euclid Example: Linear Algebra
+
+This example demonstrates linear algebra operations in Euclid.
+
+## Vectors
+
+2D vector: vector([1, 2])
+3D vector: vector([a, b, c])
+Column vector: vector([x, y, z])
+
+## Matrices
+
+2x2 matrix: matrix([[a, b], [c, d]])
+3x3 identity matrix: matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+## Matrix Operations
+
+Determinant of 2x2 matrix: a * d - b * c
+Trace of matrix: a + d
+
+## Vector Operations
+
+Dot product: vector([a, b]) * vector([c, d]) = a*c + b*d
+Cross product in 3D: vector([a1, a2, a3]) times vector([b1, b2, b3])
+
+## Norms
+
+Euclidean norm: sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
+Manhattan norm: abs(x) + abs(y) + abs(z)

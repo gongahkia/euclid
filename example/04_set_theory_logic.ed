@@ -1,0 +1,54 @@
+# Euclid Example: Set Theory and Logic
+
+This example demonstrates set theory and logic operations in Euclid.
+
+## Set Notation
+
+Empty set: emptyset
+Element of: element_of(x, A)
+Subset: subset(A, B)
+Union: union(A, B)
+Intersection: intersection(A, B)
+
+## Comparison Operators
+
+Less than: lt(a, b) means a < b
+Greater than: gt(a, b) means a > b
+Less than or equal: leq(a, b) means a <= b
+Greater than or equal: geq(a, b) means a >= b
+Approximately equal: approx(a, b) means a ≈ b
+Not equal: neq(a, b) means a ≠ b
+Equivalent: equiv(a, b) means a ≡ b
+
+## Logical Operators
+
+AND: AND(P, Q)
+OR: OR(P, Q)
+NOT: NOT(P)
+Implies: implies(P, Q)
+If and only if: iff(P, Q)
+
+## Quantifiers
+
+For all: forall(x)
+There exists: exists(x)
+
+## Logic Examples
+
+De Morgan's law: NOT(AND(P, Q)) equiv OR(NOT(P), NOT(Q))
+Contrapositive: implies(P, Q) equiv implies(NOT(Q), NOT(P))
+
+## Number Theory
+
+Greatest common divisor: gcd(a, b)
+Least common multiple: lcm(a, b)
+Modulo: mod(a, b)
+Plus-minus: pm(a, b)
+Times symbol: times(a, b)
+Division symbol: div(a, b)
+
+## Floor and Ceiling
+
+Floor: floor(x)
+Ceiling: ceil(x)
+Absolute value: abs(x)
