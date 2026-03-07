@@ -264,6 +264,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             // Matrices and vectors
             case VECTOR -> transpileVector(args);
             case MATRIX -> transpileMatrix(args);
+            case LBRACKET -> args.stream().map(a -> a.accept(this)).collect(Collectors.joining(", "));
 
             // Set operations
             case SUBSET -> transpileBinarySymbol(args, "\\subset");
@@ -501,11 +502,21 @@ public class LatexTranspiler implements AstVisitor<String> {
     }
 
     private String transpileMatrix(List<AstNode> args) {
-        // Simplified version - assumes each arg is a row
-        String rows = args.stream()
-                .map(arg -> arg.accept(this))
-                .collect(Collectors.joining(" \\\\ "));
-        return "\\begin{matrix} " + rows + " \\end{matrix}";
+        StringBuilder sb = new StringBuilder("\\begin{pmatrix} ");
+        for (int i = 0; i < args.size(); i++) {
+            AstNode arg = args.get(i);
+            if (arg instanceof CallExpr row && row.getFunction().getType() == TokenType.LBRACKET) {
+                // row node: join elements with &
+                sb.append(row.getArguments().stream()
+                    .map(e -> e.accept(this))
+                    .collect(Collectors.joining(" & ")));
+            } else {
+                sb.append(arg.accept(this));
+            }
+            if (i < args.size() - 1) sb.append(" \\\\ ");
+        }
+        sb.append(" \\end{pmatrix}");
+        return sb.toString();
     }
 
     private String transpileForall(List<AstNode> args) {

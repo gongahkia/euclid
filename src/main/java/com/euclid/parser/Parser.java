@@ -222,6 +222,20 @@ public class Parser {
             return new IdentifierExpr(previous().getLexeme());
         }
 
+        // Bracket groups [a, b, c] — used for matrix rows
+        if (match(TokenType.LBRACKET)) {
+            Token bracket = previous();
+            List<AstNode> elements = new ArrayList<>();
+            if (!check(TokenType.RBRACKET)) {
+                do {
+                    elements.add(expression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RBRACKET, "Expected ']' after bracket group");
+            Token rowToken = new Token(TokenType.LBRACKET, "[]", bracket.getLine(), bracket.getColumn());
+            return new CallExpr(rowToken, elements);
+        }
+
         // Grouped expressions
         if (match(TokenType.LPAREN)) {
             AstNode expr = expression();
