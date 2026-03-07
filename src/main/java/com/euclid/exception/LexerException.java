@@ -90,7 +90,7 @@ public class LexerException extends EuclidException {
         sb.append(String.format("║ %s\n", message));
         sb.append("╠══════════════════════════════════════════════════════════╣\n");
         
-        String[] lines = source.split("\n");
+        String[] lines = source.split("\\r?\\n");
         if (line > 0 && line <= lines.length) {
             String errorLine = lines[line - 1];
             sb.append(String.format("║ %s\n", errorLine));
@@ -99,6 +99,8 @@ public class LexerException extends EuclidException {
                 sb.append(" ");
             }
             sb.append("^\n");
+        } else {
+            sb.append("║ <end of input>\n");
         }
         sb.append("╚══════════════════════════════════════════════════════════╝\n");
         return sb.toString();
@@ -108,10 +110,10 @@ public class LexerException extends EuclidException {
      * Extracts source context around the error.
      */
     private static String extractSourceContext(String source, int line, int column) {
-        String[] lines = source.split("\n");
-        if (line > 0 && line <= lines.length) {
-            return lines[line - 1];
+        String[] splitLines = source.split("\\r?\\n");
+        if (line > 0 && line <= splitLines.length) {
+            return splitLines[line - 1];
         }
-        return null;
+        return "<end of input>";
     }
 }
