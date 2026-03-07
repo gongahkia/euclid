@@ -2,6 +2,8 @@ package com.euclid;
 
 import com.euclid.ast.AstNode;
 import com.euclid.ast.DocumentNode;
+import com.euclid.exception.Diagnostic;
+import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.EuclidException;
 import com.euclid.lexer.Lexer;
 import com.euclid.parser.Parser;
@@ -105,6 +107,20 @@ public class Transpiler {
         // Transpile: Convert AST to LaTeX
         LatexTranspiler transpiler = new LatexTranspiler(mathMode);
         return ast.accept(transpiler);
+    }
+
+    /**
+     * Transpiles with diagnostic collection instead of throwing exceptions.
+     */
+    public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode, boolean mixedMode) {
+        DiagnosticCollector collector = new DiagnosticCollector();
+        try {
+            String output = transpile(source, verbose, mathMode, mixedMode);
+            return new TranspileResult(output, collector.getAll());
+        } catch (EuclidException e) {
+            collector.addError(e.getMessage(), 1, 1);
+            return new TranspileResult(null, collector.getAll());
+        }
     }
 
     /**
