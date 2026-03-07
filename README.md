@@ -62,6 +62,85 @@ $ LaTeX: \int x^{2} \, dx
 $ euclid> exit
 ```
 
+## What's New
+
+### Subscripts & Factorial
+
+Use `_` for subscripts and `!` for factorials — no LaTeX boilerplate needed.
+
+| Euclid Syntax | LaTeX Output |
+|---|---|
+| `x_1 + x_2` | `x_{1} + x_{2}` |
+| `a_i^2` | `a_{i}^{2}` |
+| `n!` | `n!` |
+| `binom(n, k)` | `\binom{n}{k}` |
+
+### Implicit Multiplication
+
+Euclid now infers multiplication from context, just like mathematical notation.
+
+| Euclid Syntax | LaTeX Output |
+|---|---|
+| `2x` | `2x` |
+| `2(x + 1)` | `2(x + 1)` |
+| `(a)(b)` | `(a)(b)` |
+
+### Expanded Vocabulary
+
+60+ new tokens across several categories:
+
+| Category | Examples |
+|---|---|
+| Number sets | `NATURALS`, `INTEGERS`, `RATIONALS`, `REALS`, `COMPLEXES` |
+| Greek letters | `ALPHA` through `OMEGA` (all 19 lowercase) |
+| Arrows | `rightarrow`, `leftarrow`, `mapsto`, `Rightarrow` |
+| Dot sequences | `ldots`, `cdots`, `vdots`, `ddots` |
+| Proof notation | `therefore`, `because`, `qed` |
+| Geometry | `perp`, `parallel`, `angle`, `triangle`, `cong`, `sim` |
+| Inverse trig | `arcsin`, `arccos`, `arctan`, `arccsc`, `arcsec`, `arccot` |
+| Extrema | `min`, `max`, `sup`, `inf`, `limsup`, `liminf` |
+| Norms | `norm(x)`, `inner(x, y)` |
+| Vector calculus | `grad`, `divergence`, `curl`, `laplacian` |
+| Probability | `prob(A)`, `expect(X)`, `var(X)`, `cov(X, Y)` |
+| Linear algebra | `det`, `trace`, `dim`, `rank`, `ker`, `transpose` |
+| Visual | `boxed(x)`, `cancel(x)`, `underbrace(x, label)`, `overbrace(x, label)` |
+
+### Matrix Syntax
+
+Matrices now support bracket-row notation with proper column separators.
+
+```
+matrix([1, 2], [3, 4])
+```
+
+Transpiles to:
+
+```latex
+\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
+```
+
+### LSP Server
+
+Euclid ships with a built-in [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) server for editor integration.
+
+```console
+$ java -jar target/euclid-lsp.jar
+```
+
+**Features:**
+
+* **Diagnostics** — red squiggles for syntax errors as you type
+* **Hover** — see the LaTeX output for the expression under your cursor
+* **Completion** — auto-complete function names, constants, and Greek letters
+* **Signature help** — parameter hints for functions like `integral(expr, var, lower, upper)`
+* **Semantic tokens** — syntax highlighting for `.ed` files (functions, constants, operators, numbers, variables)
+
+Connect any LSP-compatible editor (VS Code, Neovim, Emacs, etc.) to the server on stdin/stdout.
+
+### Error Recovery
+
+The transpiler no longer aborts on the first error. Valid expressions still transpile while errors are reported as diagnostics with graduated severity (error, warning, info).
+
 ## References
 
 * [Symbolica](https://github.com/benruijl/symbolica) by [benruijl](https://github.com/benruijl)
