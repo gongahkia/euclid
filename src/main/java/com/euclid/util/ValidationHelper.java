@@ -69,8 +69,8 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.NOT, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.IMPLIES, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.IFF, 2);
-        FUNCTION_ARG_COUNTS.put(TokenType.FORALL, 1);
-        FUNCTION_ARG_COUNTS.put(TokenType.EXISTS, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.FORALL, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.EXISTS, 2);
         
         // Calculus operations (variable arguments)
         FUNCTION_ARG_COUNTS.put(TokenType.LIMIT, -1);
