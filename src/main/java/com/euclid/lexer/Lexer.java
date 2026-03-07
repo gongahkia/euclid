@@ -5,9 +5,11 @@ import com.euclid.token.TokenType;
 import com.euclid.exception.LexerException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Lexer for the Euclid language.
@@ -262,6 +264,14 @@ public class Lexer {
         keywords.put("cancel", TokenType.CANCEL);
         keywords.put("underbrace", TokenType.UNDERBRACE);
         keywords.put("overbrace", TokenType.OVERBRACE);
+    }
+
+    public static Set<String> getKeywordNames() {
+        return Collections.unmodifiableSet(keywords.keySet());
+    }
+
+    public static TokenType getKeywordType(String name) {
+        return keywords.get(name);
     }
 
     /**
