@@ -89,13 +89,27 @@ public class Parser {
     private AstNode multiplication() throws ParserException {
         AstNode expr = power();
 
-        while (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BACKSLASH_BACKSLASH)) {
-            Token operator = previous();
-            AstNode right = power();
-            expr = new BinaryExpr(expr, operator, right);
+        while (true) {
+            if (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BACKSLASH_BACKSLASH)) {
+                Token operator = previous();
+                AstNode right = power();
+                expr = new BinaryExpr(expr, operator, right);
+            } else if (isImplicitMultiplyStart(peek())) {
+                Token synth = new Token(TokenType.IMPLICIT_MULTIPLY, "", peek().getLine(), peek().getColumn());
+                AstNode right = power();
+                expr = new BinaryExpr(expr, synth, right);
+            } else {
+                break;
+            }
         }
 
         return expr;
+    }
+
+    private boolean isImplicitMultiplyStart(Token token) {
+        TokenType t = token.getType();
+        return t == TokenType.NUMBER || t == TokenType.IDENTIFIER || t == TokenType.LPAREN ||
+               isFunctionToken(token) || isGreekLetter(token);
     }
 
     /**
