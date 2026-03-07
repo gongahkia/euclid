@@ -286,8 +286,13 @@ public class Lexer {
         }
 
         String text = source.substring(start, current);
-        double value = Double.parseDouble(text);
-        addToken(TokenType.NUMBER, value);
+        if (text.contains(".") || text.contains("e") || text.contains("E")) {
+            double value = Double.parseDouble(text);
+            addToken(TokenType.NUMBER, value);
+        } else {
+            long value = Long.parseLong(text);
+            addToken(TokenType.NUMBER, value);
+        }
     }
 
     /**

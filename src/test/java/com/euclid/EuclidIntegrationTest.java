@@ -30,12 +30,12 @@ public class EuclidIntegrationTest {
 
     @Test
     public void testSimpleNumber() throws LexerException, ParserException {
-        assertEquals("42.0", transpile("42"));
+        assertEquals("42", transpile("42"));
     }
 
     @Test
     public void testSimpleAddition() throws LexerException, ParserException {
-        assertEquals("2.0 + 3.0", transpile("2 + 3"));
+        assertEquals("2 + 3", transpile("2 + 3"));
     }
 
     @Test

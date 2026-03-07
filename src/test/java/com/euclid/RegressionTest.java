@@ -30,13 +30,13 @@ public class RegressionTest {
     @Test
     public void testSingleNumber() throws Exception {
         // Single numeric literal
-        assertEquals("42.0", Transpiler.transpile("42"));
+        assertEquals("42", Transpiler.transpile("42"));
     }
 
     @Test
     public void testNegativeNumber() throws Exception {
         // Negative numbers
-        assertEquals("-5.0", Transpiler.transpile("-5"));
+        assertEquals("-5", Transpiler.transpile("-5"));
     }
 
     @Test
@@ -113,7 +113,7 @@ public class RegressionTest {
         // 2 + 3 * 4 should be 2 + (3 * 4), not (2 + 3) * 4
         String result = Transpiler.transpile("2 + 3 * 4");
         // Result should maintain proper order
-        assertTrue(result.contains("2.0 + 3.0 * 4.0"));
+        assertTrue(result.contains("2 + 3 * 4"));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class RegressionTest {
     public void testPow_CorrectArgCount() throws Exception {
         // pow should accept exactly 2 arguments
         String result = Transpiler.transpile("pow(x, 2)");
-        assertEquals("x^{2.0}", result);
+        assertEquals("x^{2}", result);
     }
 
     @Test
