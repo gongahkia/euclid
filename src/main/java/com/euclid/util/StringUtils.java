@@ -35,8 +35,9 @@ public final class StringUtils {
     public static String escapeLaTeX(String text) {
         Objects.requireNonNull(text, "Text cannot be null");
 
+        String placeholder = "\0BACKSLASH\0";
         return text
-            .replace("\\", "\\textbackslash{}")
+            .replace("\\", placeholder)
             .replace("&", "\\&")
             .replace("%", "\\%")
             .replace("$", "\\$")
@@ -45,7 +46,8 @@ public final class StringUtils {
             .replace("{", "\\{")
             .replace("}", "\\}")
             .replace("~", "\\textasciitilde{}")
-            .replace("^", "\\textasciicircum{}");
+            .replace("^", "\\textasciicircum{}")
+            .replace(placeholder, "\\textbackslash{}");
     }
 
     /**
