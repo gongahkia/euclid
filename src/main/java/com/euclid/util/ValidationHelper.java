@@ -82,8 +82,58 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.PROD, -1);
         
         // Matrix/vector operations (variable arguments)
-        FUNCTION_ARG_COUNTS.put(TokenType.VECTOR, 1);
-        FUNCTION_ARG_COUNTS.put(TokenType.MATRIX, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.VECTOR, -1);
+        FUNCTION_ARG_COUNTS.put(TokenType.MATRIX, -1);
+
+        // Inverse trig (1 arg)
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCSIN, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCCOS, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCTAN, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCCSC, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCSEC, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.ARCCOT, 1);
+
+        // Extrema (1 arg)
+        FUNCTION_ARG_COUNTS.put(TokenType.MIN, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.MAX, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.SUP, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.INF, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.LIMSUP, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.LIMINF, 1);
+
+        // Binomial (2 args)
+        FUNCTION_ARG_COUNTS.put(TokenType.BINOM, 2);
+
+        // Norm (1 or 2), inner (2)
+        FUNCTION_ARG_COUNTS.put(TokenType.NORM, -2);
+        FUNCTION_ARG_COUNTS.put(TokenType.INNER, 2);
+
+        // Vector calculus (1 arg)
+        FUNCTION_ARG_COUNTS.put(TokenType.GRAD, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.DIVERGENCE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.CURL, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.LAPLACIAN, 1);
+
+        // Probability
+        FUNCTION_ARG_COUNTS.put(TokenType.PROB, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.EXPECT, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.VAR, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.COV, 2);
+
+        // Linear algebra
+        FUNCTION_ARG_COUNTS.put(TokenType.DET, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.TRACE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.DIM, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.RANK, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.KER, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.TRANSPOSE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.INVERSE, 1);
+
+        // Visual decorations
+        FUNCTION_ARG_COUNTS.put(TokenType.BOXED, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.CANCEL, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.UNDERBRACE, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.OVERBRACE, 2);
     }
 
     /**

@@ -168,6 +168,100 @@ public class Lexer {
         // Aligned equations
         keywords.put("align", TokenType.ALIGN);
         keywords.put("system", TokenType.SYSTEM);
+
+        // Number sets
+        keywords.put("NATURALS", TokenType.NATURALS);
+        keywords.put("INTEGERS", TokenType.INTEGERS);
+        keywords.put("RATIONALS", TokenType.RATIONALS);
+        keywords.put("REALS", TokenType.REALS);
+        keywords.put("COMPLEXES", TokenType.COMPLEXES);
+
+        // Arrow symbols
+        keywords.put("rightarrow", TokenType.RIGHTARROW);
+        keywords.put("leftarrow", TokenType.LEFTARROW);
+        keywords.put("leftrightarrow", TokenType.LEFTRIGHTARROW);
+        keywords.put("mapsto", TokenType.MAPSTO);
+        keywords.put("uparrow", TokenType.UPARROW);
+        keywords.put("downarrow", TokenType.DOWNARROW);
+        keywords.put("Rightarrow", TokenType.DARROW_RIGHT);
+        keywords.put("Leftarrow", TokenType.DARROW_LEFT);
+        keywords.put("Leftrightarrow", TokenType.DARROW_LEFTRIGHT);
+
+        // Dot sequences
+        keywords.put("ldots", TokenType.LDOTS);
+        keywords.put("cdots", TokenType.CDOTS);
+        keywords.put("vdots", TokenType.VDOTS);
+        keywords.put("ddots", TokenType.DDOTS);
+
+        // Proof notation
+        keywords.put("therefore", TokenType.THEREFORE);
+        keywords.put("because", TokenType.BECAUSE);
+        keywords.put("qed", TokenType.QED);
+
+        // Geometry symbols
+        keywords.put("perp", TokenType.PERP);
+        keywords.put("parallel", TokenType.PARALLEL);
+        keywords.put("angle", TokenType.ANGLE);
+        keywords.put("triangle", TokenType.TRIANGLE);
+        keywords.put("cong", TokenType.CONG);
+        keywords.put("sim", TokenType.SIM);
+        keywords.put("propto", TokenType.PROPTO);
+
+        // Physics constants
+        keywords.put("hbar", TokenType.HBAR);
+        keywords.put("nabla", TokenType.NABLA);
+        keywords.put("ell", TokenType.ELL);
+
+        // Inverse trig
+        keywords.put("arcsin", TokenType.ARCSIN);
+        keywords.put("arccos", TokenType.ARCCOS);
+        keywords.put("arctan", TokenType.ARCTAN);
+        keywords.put("arccsc", TokenType.ARCCSC);
+        keywords.put("arcsec", TokenType.ARCSEC);
+        keywords.put("arccot", TokenType.ARCCOT);
+
+        // Extrema and bounds
+        keywords.put("min", TokenType.MIN);
+        keywords.put("max", TokenType.MAX);
+        keywords.put("sup", TokenType.SUP);
+        keywords.put("inf", TokenType.INF);
+        keywords.put("limsup", TokenType.LIMSUP);
+        keywords.put("liminf", TokenType.LIMINF);
+
+        // Binomial coefficient
+        keywords.put("binom", TokenType.BINOM);
+        keywords.put("choose", TokenType.BINOM);
+
+        // Norm and inner product
+        keywords.put("norm", TokenType.NORM);
+        keywords.put("inner", TokenType.INNER);
+
+        // Vector calculus
+        keywords.put("grad", TokenType.GRAD);
+        keywords.put("divergence", TokenType.DIVERGENCE);
+        keywords.put("curl", TokenType.CURL);
+        keywords.put("laplacian", TokenType.LAPLACIAN);
+
+        // Probability and statistics
+        keywords.put("prob", TokenType.PROB);
+        keywords.put("expect", TokenType.EXPECT);
+        keywords.put("var", TokenType.VAR);
+        keywords.put("cov", TokenType.COV);
+
+        // Linear algebra extended
+        keywords.put("det", TokenType.DET);
+        keywords.put("trace", TokenType.TRACE);
+        keywords.put("dim", TokenType.DIM);
+        keywords.put("rank", TokenType.RANK);
+        keywords.put("ker", TokenType.KER);
+        keywords.put("transpose", TokenType.TRANSPOSE);
+        keywords.put("inverse", TokenType.INVERSE);
+
+        // Visual decorations
+        keywords.put("boxed", TokenType.BOXED);
+        keywords.put("cancel", TokenType.CANCEL);
+        keywords.put("underbrace", TokenType.UNDERBRACE);
+        keywords.put("overbrace", TokenType.OVERBRACE);
     }
 
     /**
@@ -229,6 +323,7 @@ public class Lexer {
                 // Python-style comment: skip until end of line
                 while (peek() != '\n' && !isAtEnd()) advance();
             }
+            case '!' -> addToken(TokenType.BANG);
             case '=' -> addToken(TokenType.EQUALS);
             case '\n' -> {
                 addToken(TokenType.NEWLINE);

@@ -175,6 +175,63 @@ public enum TokenType {
     ALIGN,          // align() for aligned equations
     SYSTEM,         // system() for systems of equations
 
+    // Number sets
+    NATURALS,       // N
+    INTEGERS,       // Z
+    RATIONALS,      // Q
+    REALS,          // R
+    COMPLEXES,      // C
+
+    // Arrow symbols
+    RIGHTARROW, LEFTARROW, LEFTRIGHTARROW, MAPSTO,
+    UPARROW, DOWNARROW,
+    DARROW_RIGHT, DARROW_LEFT, DARROW_LEFTRIGHT,
+
+    // Dot sequences
+    LDOTS, CDOTS, VDOTS, DDOTS,
+
+    // Proof notation
+    THEREFORE, BECAUSE, QED,
+
+    // Geometry symbols
+    PERP, PARALLEL, ANGLE, TRIANGLE, CONG, SIM, PROPTO,
+
+    // Physics constants
+    HBAR, NABLA, ELL,
+
+    // Inverse trig functions
+    ARCSIN, ARCCOS, ARCTAN, ARCCSC, ARCSEC, ARCCOT,
+
+    // Extrema and bounds
+    MIN, MAX, SUP, INF, LIMSUP, LIMINF,
+
+    // Binomial coefficient
+    BINOM,
+
+    // Norm and inner product
+    NORM, INNER,
+
+    // Vector calculus operators
+    GRAD, DIVERGENCE, CURL, LAPLACIAN,
+
+    // Probability and statistics
+    PROB, EXPECT, VAR, COV,
+
+    // Linear algebra extended
+    DET, TRACE, DIM, RANK, KER, TRANSPOSE, INVERSE,
+
+    // Visual decorations
+    BOXED, CANCEL, UNDERBRACE, OVERBRACE,
+
+    // Factorial
+    BANG,           // !
+
+    // Implicit multiplication
+    IMPLICIT_MULTIPLY,
+
+    // Subscript
+    UNDERSCORE,     // _
+
     // Math mode delimiters
     DOLLAR,         // $ (inline math)
     DOUBLE_DOLLAR   // $$ (display math)

@@ -178,9 +178,9 @@ public class Parser {
         }
 
         // Constants
-        if (match(TokenType.PI, TokenType.E, TokenType.I, TokenType.GAMMA, TokenType.PHI,
-                  TokenType.INFINITY, TokenType.EMPTYSET, TokenType.AND, TokenType.OR, TokenType.NOT)) {
-            return new LiteralExpr(previous().getType());
+        if (isConstantToken(peek()) && !isFunctionToken(peek())) {
+            Token constant = advance();
+            return new LiteralExpr(constant.getType());
         }
 
         // Greek letters (treated as identifiers)
@@ -268,7 +268,27 @@ public class Parser {
                type == TokenType.BAR || type == TokenType.VEC || type == TokenType.DOT ||
                type == TokenType.DDOT || type == TokenType.OVERLINE || type == TokenType.UNDERLINE ||
                type == TokenType.MATHTEXT || type == TokenType.PIECEWISE || type == TokenType.CASES ||
-               type == TokenType.ALIGN || type == TokenType.SYSTEM || isConstantToken(token);
+               type == TokenType.ALIGN || type == TokenType.SYSTEM ||
+               // Inverse trig
+               type == TokenType.ARCSIN || type == TokenType.ARCCOS || type == TokenType.ARCTAN ||
+               type == TokenType.ARCCSC || type == TokenType.ARCSEC || type == TokenType.ARCCOT ||
+               // Extrema
+               type == TokenType.MIN || type == TokenType.MAX || type == TokenType.SUP ||
+               type == TokenType.INF || type == TokenType.LIMSUP || type == TokenType.LIMINF ||
+               // Binomial
+               type == TokenType.BINOM ||
+               // Norm/inner
+               type == TokenType.NORM || type == TokenType.INNER ||
+               // Vector calculus
+               type == TokenType.GRAD || type == TokenType.DIVERGENCE || type == TokenType.CURL || type == TokenType.LAPLACIAN ||
+               // Probability
+               type == TokenType.PROB || type == TokenType.EXPECT || type == TokenType.VAR || type == TokenType.COV ||
+               // Linear algebra
+               type == TokenType.DET || type == TokenType.TRACE || type == TokenType.DIM || type == TokenType.RANK ||
+               type == TokenType.KER || type == TokenType.TRANSPOSE || type == TokenType.INVERSE ||
+               // Visual decorations
+               type == TokenType.BOXED || type == TokenType.CANCEL || type == TokenType.UNDERBRACE || type == TokenType.OVERBRACE ||
+               isConstantToken(token);
     }
 
     /**
@@ -279,7 +299,23 @@ public class Parser {
         return type == TokenType.PI || type == TokenType.E || type == TokenType.I ||
                type == TokenType.GAMMA || type == TokenType.PHI || type == TokenType.INFINITY ||
                type == TokenType.EMPTYSET || type == TokenType.AND || type == TokenType.OR ||
-               type == TokenType.NOT;
+               type == TokenType.NOT ||
+               // Number sets
+               type == TokenType.NATURALS || type == TokenType.INTEGERS || type == TokenType.RATIONALS ||
+               type == TokenType.REALS || type == TokenType.COMPLEXES ||
+               // Arrows
+               type == TokenType.RIGHTARROW || type == TokenType.LEFTARROW || type == TokenType.LEFTRIGHTARROW ||
+               type == TokenType.MAPSTO || type == TokenType.UPARROW || type == TokenType.DOWNARROW ||
+               type == TokenType.DARROW_RIGHT || type == TokenType.DARROW_LEFT || type == TokenType.DARROW_LEFTRIGHT ||
+               // Dots
+               type == TokenType.LDOTS || type == TokenType.CDOTS || type == TokenType.VDOTS || type == TokenType.DDOTS ||
+               // Proof
+               type == TokenType.THEREFORE || type == TokenType.BECAUSE || type == TokenType.QED ||
+               // Geometry
+               type == TokenType.PERP || type == TokenType.PARALLEL || type == TokenType.ANGLE ||
+               type == TokenType.TRIANGLE || type == TokenType.CONG || type == TokenType.SIM || type == TokenType.PROPTO ||
+               // Physics
+               type == TokenType.HBAR || type == TokenType.NABLA || type == TokenType.ELL;
     }
 
     /**

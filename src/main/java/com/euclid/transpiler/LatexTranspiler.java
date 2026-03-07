@@ -106,6 +106,49 @@ public class LatexTranspiler implements AstVisitor<String> {
                 case OR -> "\\lor";
                 case NOT -> "\\neg";
 
+                // Number sets
+                case NATURALS -> "\\mathbb{N}";
+                case INTEGERS -> "\\mathbb{Z}";
+                case RATIONALS -> "\\mathbb{Q}";
+                case REALS -> "\\mathbb{R}";
+                case COMPLEXES -> "\\mathbb{C}";
+
+                // Arrows
+                case RIGHTARROW -> "\\rightarrow";
+                case LEFTARROW -> "\\leftarrow";
+                case LEFTRIGHTARROW -> "\\leftrightarrow";
+                case MAPSTO -> "\\mapsto";
+                case UPARROW -> "\\uparrow";
+                case DOWNARROW -> "\\downarrow";
+                case DARROW_RIGHT -> "\\Rightarrow";
+                case DARROW_LEFT -> "\\Leftarrow";
+                case DARROW_LEFTRIGHT -> "\\Leftrightarrow";
+
+                // Dots
+                case LDOTS -> "\\ldots";
+                case CDOTS -> "\\cdots";
+                case VDOTS -> "\\vdots";
+                case DDOTS -> "\\ddots";
+
+                // Proof
+                case THEREFORE -> "\\therefore";
+                case BECAUSE -> "\\because";
+                case QED -> "\\blacksquare";
+
+                // Geometry
+                case PERP -> "\\perp";
+                case PARALLEL -> "\\parallel";
+                case ANGLE -> "\\angle";
+                case TRIANGLE -> "\\triangle";
+                case CONG -> "\\cong";
+                case SIM -> "\\sim";
+                case PROPTO -> "\\propto";
+
+                // Physics
+                case HBAR -> "\\hbar";
+                case NABLA -> "\\nabla";
+                case ELL -> "\\ell";
+
                 default -> value.toString();
             };
         }
@@ -257,6 +300,56 @@ public class LatexTranspiler implements AstVisitor<String> {
             case ALIGN -> transpileAlign(args);
             case SYSTEM -> transpileSystem(args);
 
+            // Inverse trig
+            case ARCSIN -> transpileTrigFunction("\\arcsin", args);
+            case ARCCOS -> transpileTrigFunction("\\arccos", args);
+            case ARCTAN -> transpileTrigFunction("\\arctan", args);
+            case ARCCSC -> transpileTrigFunction("\\operatorname{arccsc}", args);
+            case ARCSEC -> transpileTrigFunction("\\operatorname{arcsec}", args);
+            case ARCCOT -> transpileTrigFunction("\\operatorname{arccot}", args);
+
+            // Extrema
+            case MIN -> transpileTrigFunction("\\min", args);
+            case MAX -> transpileTrigFunction("\\max", args);
+            case SUP -> transpileTrigFunction("\\sup", args);
+            case INF -> transpileTrigFunction("\\inf", args);
+            case LIMSUP -> transpileTrigFunction("\\limsup", args);
+            case LIMINF -> transpileTrigFunction("\\liminf", args);
+
+            // Binomial
+            case BINOM -> transpileBinom(args);
+
+            // Norm / inner product
+            case NORM -> transpileNorm(args);
+            case INNER -> transpileInner(args);
+
+            // Vector calculus
+            case GRAD -> "\\nabla " + args.get(0).accept(this);
+            case DIVERGENCE -> "\\nabla \\cdot " + args.get(0).accept(this);
+            case CURL -> "\\nabla \\times " + args.get(0).accept(this);
+            case LAPLACIAN -> "\\nabla^{2} " + args.get(0).accept(this);
+
+            // Probability
+            case PROB -> "P(" + args.get(0).accept(this) + ")";
+            case EXPECT -> "\\mathbb{E}[" + args.get(0).accept(this) + "]";
+            case VAR -> "\\text{Var}(" + args.get(0).accept(this) + ")";
+            case COV -> "\\text{Cov}(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
+
+            // Linear algebra
+            case DET -> transpileTrigFunction("\\det", args);
+            case TRACE -> transpileTrigFunction("\\text{tr}", args);
+            case DIM -> transpileTrigFunction("\\dim", args);
+            case RANK -> transpileTrigFunction("\\text{rank}", args);
+            case KER -> transpileTrigFunction("\\ker", args);
+            case TRANSPOSE -> args.get(0).accept(this) + "^{T}";
+            case INVERSE -> args.get(0).accept(this) + "^{-1}";
+
+            // Visual decorations
+            case BOXED -> transpileAccent("\\boxed", args);
+            case CANCEL -> transpileAccent("\\cancel", args);
+            case UNDERBRACE -> transpileUnderbrace(args);
+            case OVERBRACE -> transpileOverbrace(args);
+
             default -> "UNKNOWN_FUNCTION(" + function + ")";
         };
     }
@@ -382,15 +475,19 @@ public class LatexTranspiler implements AstVisitor<String> {
     }
 
     private String transpileSum(List<AstNode> args) {
-        // Simplified version - full implementation would parse "from i=1 to n" syntax
         if (args.isEmpty()) return "ERROR";
-        return "\\sum " + args.get(0).accept(this);
+        if (args.size() == 1) return "\\sum " + args.get(0).accept(this);
+        if (args.size() == 3) return "\\sum_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
+        if (args.size() == 4) return "\\sum_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
+        return "ERROR";
     }
 
     private String transpileProd(List<AstNode> args) {
-        // Simplified version - full implementation would parse "from i=1 to n" syntax
         if (args.isEmpty()) return "ERROR";
-        return "\\prod " + args.get(0).accept(this);
+        if (args.size() == 1) return "\\prod " + args.get(0).accept(this);
+        if (args.size() == 3) return "\\prod_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
+        if (args.size() == 4) return "\\prod_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
+        return "ERROR";
     }
 
     private String transpileVector(List<AstNode> args) {
@@ -477,6 +574,32 @@ public class LatexTranspiler implements AstVisitor<String> {
         }
         result.append("\\end{align*}");
         return result.toString();
+    }
+
+    private String transpileBinom(List<AstNode> args) {
+        if (args.size() != 2) return "ERROR";
+        return "\\binom{" + args.get(0).accept(this) + "}{" + args.get(1).accept(this) + "}";
+    }
+
+    private String transpileNorm(List<AstNode> args) {
+        if (args.size() == 1) return "\\|" + args.get(0).accept(this) + "\\|";
+        if (args.size() == 2) return "\\|" + args.get(0).accept(this) + "\\|_{" + args.get(1).accept(this) + "}";
+        return "ERROR";
+    }
+
+    private String transpileInner(List<AstNode> args) {
+        if (args.size() != 2) return "ERROR";
+        return "\\langle " + args.get(0).accept(this) + ", " + args.get(1).accept(this) + " \\rangle";
+    }
+
+    private String transpileUnderbrace(List<AstNode> args) {
+        if (args.size() != 2) return "ERROR";
+        return "\\underbrace{" + args.get(0).accept(this) + "}_{" + args.get(1).accept(this) + "}";
+    }
+
+    private String transpileOverbrace(List<AstNode> args) {
+        if (args.size() != 2) return "ERROR";
+        return "\\overbrace{" + args.get(0).accept(this) + "}^{" + args.get(1).accept(this) + "}";
     }
 
     // Systems of equations
