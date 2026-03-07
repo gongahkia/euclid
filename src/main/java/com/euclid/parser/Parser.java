@@ -125,10 +125,10 @@ public class Parser {
     private AstNode power() throws ParserException {
         AstNode expr = unary();
 
-        if (match(TokenType.POWER)) {
+        while (match(TokenType.POWER, TokenType.UNDERSCORE)) {
             Token operator = previous();
-            AstNode right = power(); // Right-associative
-            return new BinaryExpr(expr, operator, right);
+            AstNode right = unary(); // right operand (allow chaining x_1^2)
+            expr = new BinaryExpr(expr, operator, right);
         }
 
         return expr;
@@ -171,13 +171,9 @@ public class Parser {
                 return new LiteralExpr(function.getType());
             }
 
-            // Parse function arguments
+            // if no '(' follows, treat as plain identifier (e.g. var in x_var)
             if (!check(TokenType.LPAREN)) {
-                throw new ParserException(
-                    "Expected '(' after function name '" + function.getLexeme() + "'",
-                    function.getLine(),
-                    function.getColumn()
-                );
+                return new IdentifierExpr(function.getLexeme());
             }
 
             consume(TokenType.LPAREN, "Expected '('");

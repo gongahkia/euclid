@@ -174,6 +174,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             case MULTIPLY -> left + " * " + right;
             case DIVIDE -> left + " / " + right;
             case POWER -> left + "^{" + right + "}";
+            case UNDERSCORE -> left + "_{" + right + "}";
             case IMPLICIT_MULTIPLY -> left + right;
             case BACKSLASH_BACKSLASH -> "\\frac{" + left + "}{" + right + "}";
             default -> left + " " + expr.getOperator().getLexeme() + " " + right;

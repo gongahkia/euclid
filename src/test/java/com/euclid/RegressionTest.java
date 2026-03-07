@@ -220,10 +220,10 @@ public class RegressionTest {
     }
 
     @Test
-    public void testIdentifierWithUnderscore() throws Exception {
-        // Identifiers can contain underscores
-        String result = Transpiler.transpile("my_var + your_var");
-        assertTrue(result.contains("my_var") && result.contains("your_var"));
+    public void testSubscriptNotation() throws Exception {
+        // _ is now a subscript operator: x_1 -> x_{1}
+        String result = Transpiler.transpile("x_1 + y_2");
+        assertTrue(result.contains("x_{1}") && result.contains("y_{2}"));
     }
 
     // ========== ERROR MESSAGE QUALITY ==========

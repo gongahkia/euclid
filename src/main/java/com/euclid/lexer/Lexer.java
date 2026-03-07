@@ -334,6 +334,7 @@ public class Lexer {
                 while (peek() != '\n' && !isAtEnd()) advance();
             }
             case '!' -> addToken(TokenType.BANG);
+            case '_' -> addToken(TokenType.UNDERSCORE);
             case '=' -> addToken(TokenType.EQUALS);
             case '\n' -> {
                 addToken(TokenType.NEWLINE);
@@ -406,10 +407,17 @@ public class Lexer {
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
 
-        // Check for underscore in identifiers (e.g., set_diff, not_element_of)
+        // speculatively consume underscore if the result is a keyword (set_diff, not_element_of)
         if (peek() == '_') {
-            advance();
+            int saved = current;
+            int savedCol = column;
+            advance(); // consume _
             while (isAlphaNumeric(peek()) || peek() == '_') advance();
+            String full = source.substring(start, current);
+            if (!keywords.containsKey(full)) {
+                current = saved; // backtrack: _ is a subscript, not part of keyword
+                column = savedCol;
+            }
         }
 
         String text = source.substring(start, current);
@@ -471,8 +479,7 @@ public class Lexer {
      */
     private boolean isAlpha(char c) {
         return (c >= 'a' && c <= 'z') ||
-               (c >= 'A' && c <= 'Z') ||
-               c == '_';
+               (c >= 'A' && c <= 'Z');
     }
 
     /**
