@@ -3,6 +3,7 @@ package com.euclid.parser;
 import com.euclid.ast.*;
 import com.euclid.token.Token;
 import com.euclid.token.TokenType;
+import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.ParserException;
 import com.euclid.util.ValidationHelper;
 
@@ -16,26 +17,21 @@ import java.util.List;
 public class Parser {
     private final List<Token> tokens;
     private final String source;
+    private final DiagnosticCollector diagnostics;
     private int current = 0;
 
-    /**
-     * Creates a new parser for the given tokens.
-     *
-     * @param tokens The tokens to parse
-     */
     public Parser(List<Token> tokens) {
-        this(tokens, null);
+        this(tokens, null, null);
     }
 
-    /**
-     * Creates a new parser for the given tokens with source context.
-     *
-     * @param tokens The tokens to parse
-     * @param source The source code for error reporting
-     */
     public Parser(List<Token> tokens, String source) {
+        this(tokens, source, null);
+    }
+
+    public Parser(List<Token> tokens, String source, DiagnosticCollector diagnostics) {
         this.tokens = tokens;
         this.source = source;
+        this.diagnostics = diagnostics;
     }
 
     /**
@@ -47,15 +43,26 @@ public class Parser {
     public DocumentNode parse() throws ParserException {
         // Validate balanced delimiters before parsing
         ValidationHelper.validateBalancedDelimiters(tokens);
-        
+
         List<AstNode> nodes = new ArrayList<>();
 
         while (!isAtEnd()) {
-            // Skip newlines
             if (match(TokenType.NEWLINE)) {
                 continue;
             }
-            nodes.add(expression());
+            if (diagnostics != null) {
+                try {
+                    nodes.add(expression());
+                } catch (ParserException e) {
+                    diagnostics.addError(e.getMessage(), e.getLine(), e.getColumn());
+                    nodes.add(new TextExpr("[ERROR: " + e.getMessage() + "]"));
+                    while (!isAtEnd() && !check(TokenType.NEWLINE) && !check(TokenType.EOF)) {
+                        advance();
+                    }
+                }
+            } else {
+                nodes.add(expression());
+            }
         }
 
         return new DocumentNode(nodes);

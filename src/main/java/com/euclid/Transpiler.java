@@ -115,7 +115,16 @@ public class Transpiler {
     public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode, boolean mixedMode) {
         DiagnosticCollector collector = new DiagnosticCollector();
         try {
-            String output = transpile(source, verbose, mathMode, mixedMode);
+            if (mixedMode) {
+                String output = MixedContentProcessor.processDocument(source);
+                return new TranspileResult(output, collector.getAll());
+            }
+            Lexer lexer = new Lexer(source);
+            List<Token> tokens = lexer.tokenize();
+            Parser parser = new Parser(tokens, source, collector);
+            DocumentNode ast = parser.parse();
+            LatexTranspiler transpiler = new LatexTranspiler(mathMode);
+            String output = ast.accept(transpiler);
             return new TranspileResult(output, collector.getAll());
         } catch (EuclidException e) {
             collector.addError(e.getMessage(), 1, 1);
