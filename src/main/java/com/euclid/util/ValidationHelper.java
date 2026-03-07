@@ -4,10 +4,11 @@ import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.ParserException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for validating function calls and arguments in the Euclid parser.
@@ -202,85 +203,54 @@ public class ValidationHelper {
      * @throws ParserException if delimiters are unbalanced
      */
     public static void validateBalancedDelimiters(List<Token> tokens) throws ParserException {
-        int parenCount = 0;
-        int bracketCount = 0;
-        int braceCount = 0;
-        
-        Token lastOpenParen = null;
-        Token lastOpenBracket = null;
-        Token lastOpenBrace = null;
-        
+        ArrayDeque<Token> stack = new ArrayDeque<>();
         for (Token token : tokens) {
             switch (token.getType()) {
-                case LPAREN:
-                    parenCount++;
-                    if (lastOpenParen == null) lastOpenParen = token;
-                    break;
-                case RPAREN:
-                    parenCount--;
-                    if (parenCount < 0) {
+                case LPAREN, LBRACKET, LBRACE -> stack.push(token);
+                case RPAREN -> {
+                    if (stack.isEmpty() || stack.peek().getType() != TokenType.LPAREN) {
                         throw new ParserException(
-                            "Unmatched closing parenthesis ')'",
-                            token.getLine(),
-                            token.getColumn()
-                        );
+                            stack.isEmpty() ? "Unmatched closing parenthesis ')'"
+                                : "Mismatched delimiter: expected '" + closingFor(stack.peek()) + "' but found ')'",
+                            token.getLine(), token.getColumn());
                     }
-                    break;
-                case LBRACKET:
-                    bracketCount++;
-                    if (lastOpenBracket == null) lastOpenBracket = token;
-                    break;
-                case RBRACKET:
-                    bracketCount--;
-                    if (bracketCount < 0) {
+                    stack.pop();
+                }
+                case RBRACKET -> {
+                    if (stack.isEmpty() || stack.peek().getType() != TokenType.LBRACKET) {
                         throw new ParserException(
-                            "Unmatched closing bracket ']'",
-                            token.getLine(),
-                            token.getColumn()
-                        );
+                            stack.isEmpty() ? "Unmatched closing bracket ']'"
+                                : "Mismatched delimiter: expected '" + closingFor(stack.peek()) + "' but found ']'",
+                            token.getLine(), token.getColumn());
                     }
-                    break;
-                case LBRACE:
-                    braceCount++;
-                    if (lastOpenBrace == null) lastOpenBrace = token;
-                    break;
-                case RBRACE:
-                    braceCount--;
-                    if (braceCount < 0) {
+                    stack.pop();
+                }
+                case RBRACE -> {
+                    if (stack.isEmpty() || stack.peek().getType() != TokenType.LBRACE) {
                         throw new ParserException(
-                            "Unmatched closing brace '}'",
-                            token.getLine(),
-                            token.getColumn()
-                        );
+                            stack.isEmpty() ? "Unmatched closing brace '}'"
+                                : "Mismatched delimiter: expected '" + closingFor(stack.peek()) + "' but found '}'",
+                            token.getLine(), token.getColumn());
                     }
-                    break;
-                default:
-                    break;
+                    stack.pop();
+                }
+                default -> {}
             }
         }
-        
-        if (parenCount > 0) {
+        if (!stack.isEmpty()) {
+            Token unclosed = stack.peekLast(); // bottom-most unclosed
             throw new ParserException(
-                "Unclosed parenthesis '(' - missing closing ')'",
-                lastOpenParen.getLine(),
-                lastOpenParen.getColumn()
-            );
+                "Unclosed '" + stack.peekLast().getLexeme() + "' - missing '" + closingFor(unclosed) + "'",
+                unclosed.getLine(), unclosed.getColumn());
         }
-        
-        if (bracketCount > 0) {
-            throw new ParserException(
-                "Unclosed bracket '[' - missing closing ']'",
-                lastOpenBracket.getLine(),
-                lastOpenBracket.getColumn()
-            );
-        }
-        
-        if (braceCount > 0) {
-            throw new ParserException(
-                "Unclosed brace '{' - missing closing '}'",
-                lastOpenBrace.getLine(),
-                lastOpenBrace.getColumn()
-            );
-        }
+    }
+
+    private static String closingFor(Token open) {
+        return switch (open.getType()) {
+            case LPAREN -> ")";
+            case LBRACKET -> "]";
+            case LBRACE -> "}";
+            default -> "?";
+        };
     }
 }
