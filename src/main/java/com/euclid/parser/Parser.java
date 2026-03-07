@@ -123,7 +123,18 @@ public class Parser {
             return new UnaryExpr(operator, right);
         }
 
-        return call();
+        return postfix();
+    }
+
+    /**
+     * Parses postfix operators (n!, n!!).
+     */
+    private AstNode postfix() throws ParserException {
+        AstNode expr = call();
+        while (match(TokenType.BANG)) {
+            expr = new UnaryExpr(previous(), expr);
+        }
+        return expr;
     }
 
     /**

@@ -187,6 +187,7 @@ public class LatexTranspiler implements AstVisitor<String> {
         return switch (op) {
             case MINUS -> "-" + operand;
             case PLUS -> "+" + operand;
+            case BANG -> operand + "!";
             default -> expr.getOperator().getLexeme() + operand;
         };
     }
