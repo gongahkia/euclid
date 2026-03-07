@@ -50,6 +50,46 @@ pow(cosh(x), 2) - pow(sinh(x), 2) = 1
 
 $$\cosh^{2}(x) - \sinh^{2}(x) = 1$$
 
+### Inverse Trigonometric Functions
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Arcsine | `arcsin(x)` | `\arcsin(x)` |
+| Arccosine | `arccos(x)` | `\arccos(x)` |
+| Arctangent | `arctan(x)` | `\arctan(x)` |
+| Arccosecant | `arccsc(x)` | `\text{arccsc}(x)` |
+| Arcsecant | `arcsec(x)` | `\text{arcsec}(x)` |
+| Arccotangent | `arccot(x)` | `\text{arccot}(x)` |
+
+### Example: Inverse Trig Identity
+
+**Euclid:**
+```euclid
+arcsin(x) + arccos(x) = PI \\ 2
+```
+
+**Rendered:**
+
+$$\arcsin(x) + \arccos(x) = \frac{\pi}{2}$$
+
+## Extrema Functions
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Minimum | `min` | `\min` |
+| Maximum | `max` | `\max` |
+| Supremum | `sup` | `\sup` |
+| Infimum | `inf` | `\inf` |
+| Limit superior | `limsup` | `\limsup` |
+| Limit inferior | `liminf` | `\liminf` |
+
+### Example: Bounded Sequence
+
+**Euclid:**
+```euclid
+limsup a_n = inf(n, sup(k, geq(k, n), a_k))
+```
+
 ## Logarithms and Exponentials
 
 ### Natural Logarithm

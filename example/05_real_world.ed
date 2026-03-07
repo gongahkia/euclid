@@ -60,6 +60,21 @@ pow(c, 2) = pow(a, 2) + pow(b, 2) - 2 * a * b * cos(GAMMA)
 ### Sine Rule
 a / sin(ALPHA) = b / sin(BETA) = c / sin(GAMMA)
 
+## Probability and Statistics
+
+Probability: prob(A)
+Expected value: expect(X)
+Variance: var(X)
+Covariance: cov(X, Y)
+Bayes' theorem: prob(A | B) = (prob(B | A) * prob(A)) / prob(B)
+
+## Visual Notation
+
+Boxed result: boxed(E = m * c^2)
+Cancelled term: cancel(x)
+Underbrace: underbrace(a + b + c, n terms)
+Overbrace: overbrace(x_1 + x_2 + ldots + x_n, n terms)
+
 ## Computer Science
 
 ### Big O Notation (logarithmic)

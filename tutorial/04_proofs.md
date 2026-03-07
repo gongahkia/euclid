@@ -175,6 +175,95 @@ element_of(x, intersection(A, B)) = AND(element_of(x, A), element_of(x, B))
 
 $$x \in A \cap B = (x \in A) \land (x \in B)$$
 
+## Number Sets
+
+Euclid provides tokens for standard number sets:
+
+| Set | Euclid | LaTeX |
+|-----|--------|-------|
+| Natural numbers | `NATURALS` | `\mathbb{N}` |
+| Integers | `INTEGERS` | `\mathbb{Z}` |
+| Rationals | `RATIONALS` | `\mathbb{Q}` |
+| Reals | `REALS` | `\mathbb{R}` |
+| Complex numbers | `COMPLEXES` | `\mathbb{C}` |
+
+### Example: Number Set Inclusions
+
+**Euclid:**
+```euclid
+subset(NATURALS, INTEGERS) AND subset(INTEGERS, RATIONALS) AND subset(RATIONALS, REALS) AND subset(REALS, COMPLEXES)
+```
+
+## Arrows
+
+| Arrow | Euclid | LaTeX |
+|-------|--------|-------|
+| Right arrow | `rightarrow` | `\rightarrow` |
+| Left arrow | `leftarrow` | `\leftarrow` |
+| Double right arrow | `Rightarrow` | `\Rightarrow` |
+| Maps to | `mapsto` | `\mapsto` |
+
+### Example: Function Mapping
+
+**Euclid:**
+```euclid
+f: REALS rightarrow REALS, x mapsto x^2
+```
+
+## Dot Sequences
+
+| Dots | Euclid | LaTeX |
+|------|--------|-------|
+| Horizontal (baseline) | `ldots` | `\ldots` |
+| Horizontal (centered) | `cdots` | `\cdots` |
+| Vertical | `vdots` | `\vdots` |
+| Diagonal | `ddots` | `\ddots` |
+
+### Example: Sequence Notation
+
+**Euclid:**
+```euclid
+a_1, a_2, ldots, a_n
+```
+
+## Proof Notation
+
+| Symbol | Euclid | LaTeX |
+|--------|--------|-------|
+| Therefore | `therefore` | `\therefore` |
+| Because | `because` | `\because$ |
+| QED | `qed` | `\blacksquare` |
+
+### Example: Simple Proof Conclusion
+
+**Euclid:**
+```euclid
+because p AND implies(p, q)
+therefore q
+qed
+```
+
+## Geometry
+
+| Symbol | Euclid | LaTeX |
+|--------|--------|-------|
+| Perpendicular | `perp` | `\perp` |
+| Parallel | `parallel` | `\parallel` |
+| Angle | `angle` | `\angle$ |
+| Triangle | `triangle` | `\triangle` |
+| Congruent | `cong` | `\cong` |
+| Similar | `sim` | `\sim$ |
+
+### Example: Geometric Relationships
+
+**Euclid:**
+```euclid
+triangle ABC cong triangle DEF
+angle A = angle D
+AB parallel DE
+CD perp EF
+```
+
 ## Comparison and Inequality
 
 ### Comparison Operators

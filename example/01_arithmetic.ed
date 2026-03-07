@@ -39,6 +39,32 @@ Lambda: LAMBDA
 Pi (constant): PI
 Omega: OMEGA
 
+## Subscripts and Superscripts
+
+Subscript: x_1 + x_2
+Combined: a_i^2
+Exponent shorthand: x^2 + y^2
+
+## Factorial and Binomial
+
+Factorial: n!
+Binomial coefficient: binom(n, k)
+Binomial theorem term: binom(n, k) * a^(n-k) * b^k
+
+## Implicit Multiplication
+
+Coefficient: 2x + 3y
+Parenthesized: 2(x + 1)
+Juxtaposition: (a)(b)
+
+## Number Sets
+
+Naturals: NATURALS
+Integers: INTEGERS
+Rationals: RATIONALS
+Reals: REALS
+Complex numbers: COMPLEXES
+
 ## Expressions
 
 Quadratic formula: (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a)

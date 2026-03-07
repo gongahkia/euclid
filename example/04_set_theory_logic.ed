@@ -52,3 +52,32 @@ Division symbol: div(a, b)
 Floor: floor(x)
 Ceiling: ceil(x)
 Absolute value: abs(x)
+
+## Arrows
+
+Right arrow: rightarrow
+Left arrow: leftarrow
+Double right arrow: Rightarrow
+Maps to: mapsto
+
+## Dot Sequences
+
+Horizontal dots: ldots
+Centered dots: cdots
+Vertical dots: vdots
+Diagonal dots: ddots
+
+## Proof Notation
+
+Therefore: therefore
+Because: because
+QED: qed
+
+## Geometry
+
+Perpendicular: perp
+Parallel: parallel
+Angle: angle
+Triangle: triangle
+Congruent: cong
+Similar: sim

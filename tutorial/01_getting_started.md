@@ -160,23 +160,42 @@ d = \sqrt{\lvert x_{2} - x_{1} \rvert^{2} + \lvert y_{2} - y_{1} \rvert^{2}}
 
 $$d = \sqrt{\lvert x_{2} - x_{1} \rvert^{2} + \lvert y_{2} - y_{1} \rvert^{2}}$$
 
-## Subscripts and Indices
+## Subscripts, Superscripts and Factorial
 
-Variables with numbers or underscores automatically become subscripts:
+Use `_` for subscripts and `^` for superscripts directly. Use `!` for factorials.
 
 **Euclid:**
 ```euclid
-x1 + x2 = x_sum
+x_1 + x_2 = x_sum
+a_i^2
+n!
+binom(n, k)
 ```
 
 **LaTeX Output:**
 ```latex
 x_{1} + x_{2} = x_{sum}
+a_{i}^{2}
+n!
+\binom{n}{k}
 ```
 
 **Rendered:**
 
 $$x_{1} + x_{2} = x_{sum}$$
+$$a_{i}^{2}$$
+$$n!$$
+$$\binom{n}{k}$$
+
+## Implicit Multiplication
+
+Euclid infers multiplication from context, just like mathematical notation:
+
+| Euclid Syntax | LaTeX Output |
+|---|---|
+| `2x` | `2x` |
+| `2(x + 1)` | `2(x + 1)` |
+| `(a)(b)` | `(a)(b)` |
 
 ## Using the Transpiler
 
@@ -244,19 +263,7 @@ Comments are stripped during transpilation and don't appear in the output.
 
 ## Common Mistakes
 
-### 1. Using `^` for exponents
-
-**Wrong:**
-```euclid
-x^2  # This doesn't work!
-```
-
-**Right:**
-```euclid
-pow(x, 2)
-```
-
-### 2. Using `/` for fractions
+### 1. Using `/` for fractions
 
 **Wrong:**
 ```euclid
@@ -268,7 +275,7 @@ a / b  # This doesn't work!
 a \\ b
 ```
 
-### 3. Forgetting parentheses in function calls
+### 2. Forgetting parentheses in function calls
 
 **Wrong:**
 ```euclid

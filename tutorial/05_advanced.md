@@ -136,26 +136,22 @@ a \\ b  # Backslash-backslash
 
 ### Pitfall 2: Exponent Syntax
 
-**Wrong:**
-```euclid
-x^2  # Not supported!
-```
+Both `^` shorthand and `pow()` are supported:
 
-**Right:**
 ```euclid
-pow(x, 2)
+x^2      // shorthand
+pow(x, 2) // function form
 ```
 
 ### Pitfall 3: Implicit Multiplication
 
-**Wrong:**
-```euclid
-2x  # Not recognized!
-```
+Euclid now supports implicit multiplication:
 
-**Right:**
 ```euclid
-2 * x
+2x        // inferred multiplication
+2(x + 1)  // also works
+(a)(b)    // juxtaposition
+2 * x     // explicit also still works
 ```
 
 ### Pitfall 4: Function Argument Count
@@ -495,12 +491,12 @@ When you encounter errors:
 
 - [ ] Are all parentheses balanced?
 - [ ] Are you using `\\` for fractions (not `/`)?
-- [ ] Are you using `pow(x, 2)` for exponents (not `x^2`)?
 - [ ] Do all functions have the correct number of arguments?
 - [ ] Are function names spelled correctly?
-- [ ] Are you using `*` for multiplication (not implicit)?
 - [ ] Did you test in the REPL first?
 - [ ] Does a simpler version work?
+
+> **Note:** The transpiler now supports error recovery — valid expressions still transpile while errors are reported as diagnostics with graduated severity (error, warning, info).
 
 ## Practice Exercises
 
@@ -540,12 +536,62 @@ Try these advanced problems:
 - **[Syntax Reference](../syntax.md)** - Complete function reference
 - **[Examples](../../example/)** - More code samples
 
+## Probability and Statistics Functions
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Probability | `prob(A)` | `P(A)` |
+| Expected value | `expect(X)` | `E[X]` |
+| Variance | `var(X)` | `\text{Var}(X)` |
+| Covariance | `cov(X, Y)` | `\text{Cov}(X, Y)` |
+
+### Example: Variance Definition
+
+**Euclid:**
+```euclid
+var(X) = expect(X^2) - expect(X)^2
+```
+
+## Visual Notation
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Boxed | `boxed(x)` | `\boxed{x}` |
+| Cancel | `cancel(x)` | `\cancel{x}` |
+| Underbrace | `underbrace(x, label)` | `\underbrace{x}_{\text{label}}` |
+| Overbrace | `overbrace(x, label)` | `\overbrace{x}^{\text{label}}` |
+
+### Example: Annotated Expression
+
+**Euclid:**
+```euclid
+boxed(E = m * c^2)
+underbrace(a + b + c, n terms)
+```
+
+## LSP Server
+
+Euclid ships with a built-in Language Server Protocol server for editor integration:
+
+```bash
+java -jar target/euclid-lsp.jar
+```
+
+**Features:**
+* **Diagnostics** — red squiggles for syntax errors as you type
+* **Hover** — see the LaTeX output for the expression under your cursor
+* **Completion** — auto-complete function names, constants, and Greek letters
+* **Signature help** — parameter hints for functions like `integral(expr, var, lower, upper)`
+* **Semantic tokens** — syntax highlighting for `.ed` files
+
+Connect any LSP-compatible editor (VS Code, Neovim, Emacs, etc.) to the server on stdin/stdout.
+
 ## Tips for Power Users
 
 1. **Memorize common patterns** - Speed up your workflow
 2. **Create templates** - Save boilerplate for common tasks
 3. **Use shell scripts** - Automate repetitive transpilation
-4. **Integrate with editors** - Set up syntax highlighting if possible
+4. **Use the LSP server** - Get real-time feedback in your editor
 5. **Learn LaTeX** - Understanding output helps debug issues
 6. **Read source code** - Check how functions are implemented
 

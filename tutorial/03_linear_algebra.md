@@ -60,16 +60,16 @@ $$\hat{k} = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}$$
 
 ### Creating Matrices
 
-Use the `matrix()` function with nested lists (rows):
+Use the `matrix()` function with bracket-row notation — each row is a bracket group:
 
 **Euclid:**
 ```euclid
-matrix([[a, b], [c, d]])
+matrix([a, b], [c, d])
 ```
 
 **Rendered:**
 
-$$\begin{bmatrix} a & b \\ c & d \end{bmatrix}$$
+$$\begin{pmatrix} a & b \\ c & d \end{pmatrix}$$
 
 ### Matrix Examples
 
@@ -77,45 +77,45 @@ $$\begin{bmatrix} a & b \\ c & d \end{bmatrix}$$
 
 **Euclid:**
 ```euclid
-A = matrix([[1, 2], [3, 4]])
+A = matrix([1, 2], [3, 4])
 ```
 
 **Rendered:**
 
-$$A = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$$
+$$A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}$$
 
 #### 3×3 Identity Matrix
 
 **Euclid:**
 ```euclid
-I = matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+I = matrix([1, 0, 0], [0, 1, 0], [0, 0, 1])
 ```
 
 **Rendered:**
 
-$$I = \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$$
+$$I = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$$
 
 #### Rotation Matrix
 
 **Euclid:**
 ```euclid
-R = matrix([[cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)]])
+R = matrix([cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)])
 ```
 
 **Rendered:**
 
-$$R = \begin{bmatrix} \cos(\theta) & -\sin(\theta) \\ \sin(\theta) & \cos(\theta) \end{bmatrix}$$
+$$R = \begin{pmatrix} \cos(\theta) & -\sin(\theta) \\ \sin(\theta) & \cos(\theta) \end{pmatrix}$$
 
 #### Rectangular Matrix
 
 **Euclid:**
 ```euclid
-B = matrix([[1, 2, 3], [4, 5, 6]])
+B = matrix([1, 2, 3], [4, 5, 6])
 ```
 
 **Rendered:**
 
-$$B = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}$$
+$$B = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
 
 ## Vector Operations
 
@@ -182,7 +182,7 @@ $$\hat{v} = \frac{v}{\lvert v \rvert}$$
 
 **Euclid:**
 ```euclid
-matrix([[a, b], [c, d]]) + matrix([[e, f], [g, h]]) = matrix([[a + e, b + f], [c + g, d + h]])
+matrix([a, b], [c, d]]) + matrix([e, f], [g, h]]) = matrix([a + e, b + f], [c + g, d + h])
 ```
 
 **Rendered:**
@@ -193,7 +193,7 @@ $$\begin{bmatrix} a & b \\ c & d \end{bmatrix} + \begin{bmatrix} e & f \\ g & h 
 
 **Euclid:**
 ```euclid
-k * matrix([[a, b], [c, d]]) = matrix([[k * a, k * b], [k * c, k * d]])
+k * matrix([a, b], [c, d]]) = matrix([k * a, k * b], [k * c, k * d])
 ```
 
 **Rendered:**
@@ -206,14 +206,14 @@ You can write out matrix multiplication explicitly:
 
 **Euclid:**
 ```euclid
-A * B = matrix([[a * e + b * g, a * f + b * h], [c * e + d * g, c * f + d * h]])
+A * B = matrix([a * e + b * g, a * f + b * h], [c * e + d * g, c * f + d * h])
 ```
 
 For clarity, show the matrices being multiplied:
 
 **Euclid:**
 ```euclid
-matrix([[a, b], [c, d]]) * matrix([[e, f], [g, h]])
+matrix([a, b], [c, d]]) * matrix([e, f], [g, h])
 ```
 
 **Rendered:**
@@ -235,7 +235,7 @@ Or show the matrix:
 
 **Euclid:**
 ```euclid
-abs(matrix([[a, b], [c, d]])) = a * d - b * c
+abs(matrix([a, b], [c, d]])) = a * d - b * c
 ```
 
 **Rendered:**
@@ -259,7 +259,7 @@ $$\text{det}(A) = a \cdot (e \cdot i - f \cdot h) - b \cdot (d \cdot i - f \cdot
 
 **Euclid:**
 ```euclid
-matrix([[2, 1, 5], [3, -1, 4]])
+matrix([2, 1, 5], [3, -1, 4])
 ```
 
 **Rendered:**
@@ -281,7 +281,7 @@ Where:
 
 **Euclid:**
 ```euclid
-matrix([[a, b], [c, d]]) * vector([x, y]) = vector([e, f])
+matrix([a, b], [c, d]]) * vector([x, y]) = vector([e, f])
 ```
 
 **Rendered:**
@@ -316,7 +316,7 @@ $$\text{det}(A - \lambda \cdot I) = 0$$
 
 **Euclid:**
 ```euclid
-matrix([[a - LAMBDA, b], [c, d - LAMBDA]])
+matrix([a - LAMBDA, b], [c, d - LAMBDA])
 ```
 
 **Rendered:**
@@ -340,7 +340,7 @@ $$T(v) = A \cdot v$$
 
 **Euclid:**
 ```euclid
-matrix([[cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)]]) * vector([x, y])
+matrix([cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)]]) * vector([x, y])
 ```
 
 **Rendered:**
@@ -351,7 +351,7 @@ $$\begin{bmatrix} \cos(\theta) & -\sin(\theta) \\ \sin(\theta) & \cos(\theta) \e
 
 **Euclid:**
 ```euclid
-matrix([[sx, 0], [0, sy]]) * vector([x, y]) = vector([sx * x, sy * y])
+matrix([sx, 0], [0, sy]]) * vector([x, y]) = vector([sx * x, sy * y])
 ```
 
 **Rendered:**
@@ -362,7 +362,7 @@ $$\begin{bmatrix} s_{x} & 0 \\ 0 & s_{y} \end{bmatrix} \cdot \begin{bmatrix} x \
 
 **Euclid:**
 ```euclid
-matrix([[1, 0], [0, -1]]) * vector([x, y]) = vector([x, -y])
+matrix([1, 0], [0, -1]]) * vector([x, y]) = vector([x, -y])
 ```
 
 **Rendered:**
@@ -435,7 +435,7 @@ Try transpiling these linear algebra expressions:
 
 3. **Matrix-vector multiplication:**
    ```euclid
-   matrix([[1, 2], [3, 4]]) * vector([x, y]) = vector([x + 2 * y, 3 * x + 4 * y])
+   matrix([1, 2], [3, 4]]) * vector([x, y]) = vector([x + 2 * y, 3 * x + 4 * y])
    ```
 
 4. **Identity property:**
@@ -445,7 +445,7 @@ Try transpiling these linear algebra expressions:
 
 5. **Determinant of 2×2:**
    ```euclid
-   det(matrix([[a, b], [c, d]])) = a * d - b * c
+   det(matrix([a, b], [c, d]])) = a * d - b * c
    ```
 
 6. **Eigenvalue equation:**
@@ -457,6 +457,57 @@ Try transpiling these linear algebra expressions:
    ```euclid
    abs(vector([x, y, z])) = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
    ```
+
+## Norms and Inner Products
+
+Euclid provides dedicated syntax for norms and inner products:
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Norm | `norm(x)` | `\lVert x \rVert` |
+| Inner product | `inner(x, y)` | `\langle x, y \rangle` |
+
+### Example: Cauchy-Schwarz Inequality
+
+**Euclid:**
+```euclid
+leq(abs(inner(u, v)), norm(u) * norm(v))
+```
+
+## Linear Algebra Functions
+
+| Function | Euclid | LaTeX |
+|----------|--------|-------|
+| Determinant | `det` | `\det` |
+| Trace | `trace` | `\text{trace}` |
+| Dimension | `dim` | `\dim` |
+| Rank | `rank` | `\text{rank}` |
+| Kernel | `ker` | `\ker` |
+| Transpose | `transpose` | `^\top` |
+
+### Example: Rank-Nullity Theorem
+
+**Euclid:**
+```euclid
+rank(A) + dim(ker(A)) = dim(V)
+```
+
+## Vector Calculus
+
+| Operator | Euclid | LaTeX |
+|----------|--------|-------|
+| Gradient | `grad` | `\nabla` |
+| Divergence | `divergence` | `\nabla \cdot` |
+| Curl | `curl` | `\nabla \times` |
+| Laplacian | `laplacian` | `\nabla^2` |
+
+### Example: Maxwell's Equations (Differential Form)
+
+**Euclid:**
+```euclid
+divergence E = RHO \\ EPSILON_0
+curl E = -partial(B, t)
+```
 
 ## Tips for Linear Algebra
 
@@ -479,7 +530,7 @@ v = vector([v1, v2, v3])
 Write as a 1×n matrix:
 
 ```euclid
-v_transpose = matrix([[v1, v2, v3]])
+v_transpose = matrix([v1, v2, v3])
 ```
 
 ### Matrix-Vector Product
@@ -493,7 +544,7 @@ A * v
 ### Diagonal Matrix
 
 ```euclid
-D = matrix([[d1, 0, 0], [0, d2, 0], [0, 0, d3]])
+D = matrix([d1, 0, 0], [0, d2, 0], [0, 0, d3])
 ```
 
 ## Next Steps
