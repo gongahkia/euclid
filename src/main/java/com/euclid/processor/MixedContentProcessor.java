@@ -14,28 +14,27 @@ import java.util.regex.Pattern;
  */
 public class MixedContentProcessor {
 
-    // Pattern to match potential math expressions
-    // Matches: constants, functions, operators, and complete expressions
+    // Pattern to match potential math expressions with word boundaries to prevent
+    // false matches (e.g., "sin" inside "singing")
     private static final Pattern MATH_PATTERN = Pattern.compile(
-        // Match complete mathematical expressions including:
-        // - Function calls: pow(2, 3), sin(x), integral(f, x, a, b)
-        "\\b(pow|abs|ceil|floor|mod|gcd|lcm|sin|cos|tan|csc|sec|cot|sinh|cosh|tanh|" +
+        // Function calls: require word boundary before AND '(' after to avoid partial word matches
+        "(?<![a-zA-Z])(pow|abs|ceil|floor|mod|gcd|lcm|sin|cos|tan|csc|sec|cot|sinh|cosh|tanh|" +
         "log|ln|exp|sqrt|limit|diff|partial|integral|sum|prod|vector|matrix|" +
         "lt|gt|leq|geq|approx|neq|equiv|pm|times|div|cdot|ast|star|circ|bullet|" +
         "cap|cup|subset|supset|subseteq|supseteq|union|intersection|set_diff|" +
-        "element_of|not_element_of|AND|OR|NOT|implies|iff|forall|exists)\\s*\\([^)]*\\)" +
+        "element_of|not_element_of|AND|OR|NOT|implies|iff|forall|exists)(?![a-zA-Z])\\s*\\([^)]*\\)" +
         "|" +
-        // - Constants: PI, E, I, GAMMA, PHI, INFINITY, Greek letters
-        "\\b(PI|E|I|GAMMA|PHI|INFINITY|ALPHA|BETA|DELTA|EPSILON|ZETA|ETA|THETA|" +
-        "KAPPA|LAMBDA|MU|NU|XI|OMICRON|RHO|SIGMA|TAU|UPSILON|CHI|PSI|OMEGA|emptyset)\\b" +
+        // Constants: strict word boundaries
+        "(?<![a-zA-Z])(PI|GAMMA|PHI|INFINITY|ALPHA|BETA|DELTA|EPSILON|ZETA|ETA|THETA|" +
+        "KAPPA|LAMBDA|MU|NU|XI|OMICRON|RHO|SIGMA|TAU|UPSILON|CHI|PSI|OMEGA|emptyset)(?![a-zA-Z])" +
         "|" +
-        // - Arithmetic expressions: 2 + 3, 4 * 5, etc.
+        // Arithmetic: require at least one operator between numbers
         "\\d+\\s*[+\\-*/^]\\s*\\d+" +
         "|" +
-        // - Fraction operator: a \\\\ b
+        // Fraction operator: a \\\\ b
         "\\w+\\s*\\\\\\\\\\s*\\w+" +
         "|" +
-        // - Power operator: 2 ^ 3
+        // Power operator: 2 ^ 3
         "\\w+\\s*\\^\\s*\\w+"
     );
 
@@ -47,8 +46,8 @@ public class MixedContentProcessor {
      * @throws EuclidException if transpilation fails
      */
     public static String processLine(String line) throws EuclidException {
-        // Skip pure markdown elements
-        if (line.trim().startsWith("#") || line.trim().isEmpty()) {
+        // Skip pure markdown elements (headers, blank lines)
+        if (line.matches("^\\s*#+\\s.*") || line.trim().isEmpty()) {
             return line;
         }
 
@@ -87,13 +86,30 @@ public class MixedContentProcessor {
      * @throws EuclidException if transpilation fails
      */
     public static String processDocument(String content) throws EuclidException {
-        String[] lines = content.split("\n");
-        List<String> processedLines = new ArrayList<>();
+        // pre-pass: join lines with unclosed delimiters so multiline expressions stay together
+        String[] rawLines = content.split("\n");
+        List<String> joined = new ArrayList<>();
+        StringBuilder pending = new StringBuilder();
+        int depth = 0;
+        for (String line : rawLines) {
+            if (pending.length() > 0) pending.append(" ");
+            pending.append(line);
+            for (char c : line.toCharArray()) {
+                if (c == '(' || c == '[') depth++;
+                else if (c == ')' || c == ']') depth--;
+            }
+            if (depth <= 0) {
+                joined.add(pending.toString());
+                pending.setLength(0);
+                depth = 0;
+            }
+        }
+        if (pending.length() > 0) joined.add(pending.toString());
 
-        for (String line : lines) {
+        List<String> processedLines = new ArrayList<>();
+        for (String line : joined) {
             processedLines.add(processLine(line));
         }
-
         return String.join("\n", processedLines);
     }
 }
