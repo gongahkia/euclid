@@ -363,7 +363,7 @@ public class LatexTranspiler implements AstVisitor<String> {
 
     @Override
     public String visitTextExpr(TextExpr expr) {
-        return expr.getText();
+        return StringUtils.escapeLaTeX(expr.getText());
     }
 
     @Override
