@@ -58,9 +58,15 @@ public class EuclidIntegrationTest {
     }
 
     @Test
-    public void testFraction() throws LexerException, ParserException {
+    public void testInlineDivision() throws LexerException, ParserException {
         String result = transpile("a / b");
-        assertTrue(result.contains("\\frac"));
+        assertTrue(result.contains("a / b")); // / is inline division per spec
+    }
+
+    @Test
+    public void testFraction() throws LexerException, ParserException {
+        String result = transpile("a \\\\ b");
+        assertTrue(result.contains("\\frac")); // \\ is fraction per spec
     }
 
     @Test
