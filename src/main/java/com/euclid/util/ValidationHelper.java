@@ -1,5 +1,6 @@
 package com.euclid.util;
 
+import com.euclid.lexer.Lexer;
 import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.ParserException;
@@ -207,11 +208,8 @@ public class ValidationHelper {
             suggestions.add(commonMistakes.get(lowerName));
         }
         
-        // Check for simple typos using Levenshtein distance
-        String[] knownFunctions = {"sin", "cos", "tan", "log", "ln", "sqrt", "abs", "pow", "exp", 
-                                    "PI", "E", "ALPHA", "BETA", "GAMMA", "DELTA", "THETA"};
-        
-        for (String known : knownFunctions) {
+        // Check for simple typos using Levenshtein distance against all keywords
+        for (String known : Lexer.getKeywordNames()) {
             if (levenshteinDistance(lowerName, known.toLowerCase()) <= 2) {
                 suggestions.add(known);
             }
@@ -224,26 +222,22 @@ public class ValidationHelper {
      * Calculates Levenshtein distance between two strings.
      */
     private static int levenshteinDistance(String a, String b) {
+        if (a.length() > 100 || b.length() > 100 || Math.abs(a.length() - b.length()) > 3) {
+            return Integer.MAX_VALUE;
+        }
         int[][] dp = new int[a.length() + 1][b.length() + 1];
-        
-        for (int i = 0; i <= a.length(); i++) {
-            dp[i][0] = i;
-        }
-        for (int j = 0; j <= b.length(); j++) {
-            dp[0][j] = j;
-        }
-        
+        for (int i = 0; i <= a.length(); i++) dp[i][0] = i;
+        for (int j = 0; j <= b.length(); j++) dp[0][j] = j;
         for (int i = 1; i <= a.length(); i++) {
             for (int j = 1; j <= b.length(); j++) {
                 int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
                 dp[i][j] = Math.min(Math.min(
-                    dp[i - 1][j] + 1,      // deletion
-                    dp[i][j - 1] + 1),     // insertion
-                    dp[i - 1][j - 1] + cost // substitution
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1),
+                    dp[i - 1][j - 1] + cost
                 );
             }
         }
-        
         return dp[a.length()][b.length()];
     }
 
