@@ -176,6 +176,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             case EQUALS -> left + " = " + right;
             case AND -> left + " \\land " + right;
             case OR -> left + " \\lor " + right;
+            case DOT -> left + " \\cdot " + right;
             case POWER -> left + "^{" + right + "}";
             case UNDERSCORE -> left + "_{" + right + "}";
             case IMPLICIT_MULTIPLY -> left + right;
