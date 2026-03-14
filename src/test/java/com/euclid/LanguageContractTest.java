@@ -40,6 +40,11 @@ public class LanguageContractTest {
     }
 
     @Test
+    public void testInfixDotNotationIsSupported() throws Exception {
+        assertEquals("u \\cdot v", Transpiler.transpile("u dot v"));
+    }
+
+    @Test
     public void testCanonicalizeRewritesKnownAliases() {
         assertEquals("INFINITY + subset(A, B) + binom(n, k)",
                 Transpiler.canonicalize("INF + proper_subset(A, B) + choose(n, k)"));
