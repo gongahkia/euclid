@@ -413,7 +413,7 @@ public class SyntaxSpecificationTest {
     @Test
     public void testMatrix() throws Exception {
         String result = Transpiler.transpile("matrix([[a, b], [c, d]])");
-        assertTrue(result.contains("\\begin{matrix}") && result.contains("\\end{matrix}"));
+        assertTrue(result.contains("\\begin{pmatrix}") && result.contains("\\end{pmatrix}"));
     }
 
     // ========== SET NOTATION (from doc/syntax.md) ==========
@@ -474,13 +474,13 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testLogic_Forall() throws Exception {
-        String result = Transpiler.transpile("forall(x)");
-        assertTrue(result.contains("\\forall"));
+        String result = Transpiler.transpile("forall(x, P(x))");
+        assertTrue(result.contains("\\forall x"));
     }
 
     @Test
     public void testLogic_Exists() throws Exception {
-        String result = Transpiler.transpile("exists(x)");
-        assertTrue(result.contains("\\exists"));
+        String result = Transpiler.transpile("exists(x, P(x))");
+        assertTrue(result.contains("\\exists x"));
     }
 }
