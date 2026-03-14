@@ -197,13 +197,13 @@ Test expressions interactively:
 ```bash
 $ java -jar target/euclid-repl.jar
 
-euclid> pow(x, 2)
+>>> pow(x, 2)
 LaTeX: x^{2}
 
-euclid> pow(x, 2) + 2 * x + 1
+>>> pow(x, 2) + 2 * x + 1
 LaTeX: x^{2} + 2 \cdot x + 1
 
-euclid> :quit
+>>> :quit
 ```
 
 ### Strategy 3: Check Balanced Delimiters
@@ -218,7 +218,27 @@ pow(x, 2 + 1  # Missing closing paren
 pow(x, 2) + 1
 ```
 
-### Strategy 4: Watch Mode for Live Feedback
+### Strategy 4: Run Check Mode Before Writing Output
+
+Use `--check` when you want diagnostics without generating Markdown:
+
+```bash
+java -jar target/euclid-transpiler.jar --check myfile.ed
+```
+
+This is the safest way to validate strict Euclid input before committing or publishing generated output.
+
+### Strategy 5: Canonicalize Before You Debug
+
+Normalize compatibility aliases to canonical spellings first:
+
+```bash
+java -jar target/euclid-transpiler.jar --canonicalize myfile.ed normalized.ed
+```
+
+That removes ambiguity when you are chasing parser or transpiler issues.
+
+### Strategy 6: Watch Mode for Live Feedback
 
 Use watch mode to see changes instantly:
 
