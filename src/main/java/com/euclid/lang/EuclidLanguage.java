@@ -3,13 +3,11 @@ package com.euclid.lang;
 import com.euclid.token.TokenType;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Central language registry for Euclid keywords, aliases, signatures, and
@@ -372,14 +370,78 @@ public final class EuclidLanguage {
     }
 
     public static String canonicalizeSource(String source) {
-        String canonicalized = source;
-        List<Map.Entry<String, String>> aliases = new ArrayList<>(ALIAS_TO_CANONICAL.entrySet());
-        aliases.sort(Comparator.comparingInt((Map.Entry<String, String> entry) -> entry.getKey().length()).reversed());
-        for (Map.Entry<String, String> entry : aliases) {
-            String pattern = "(?<![A-Za-z0-9_])" + Pattern.quote(entry.getKey()) + "(?![A-Za-z0-9_])";
-            canonicalized = canonicalized.replaceAll(pattern, entry.getValue());
+        return canonicalizeSourceWithMetadata(source).canonicalSource();
+    }
+
+    public static EuclidCanonicalizationResult canonicalizeSourceWithMetadata(String source) {
+        StringBuilder canonicalized = new StringBuilder(source.length());
+        List<EuclidAliasOccurrence> occurrences = new ArrayList<>();
+
+        int index = 0;
+        int line = 1;
+        int column = 1;
+
+        while (index < source.length()) {
+            char current = source.charAt(index);
+
+            if (current == '/' && index + 1 < source.length() && source.charAt(index + 1) == '/') {
+                int commentEnd = advanceUntilNewline(source, index);
+                canonicalized.append(source, index, commentEnd);
+                column += commentEnd - index;
+                index = commentEnd;
+                continue;
+            }
+
+            if (current == '#') {
+                int commentEnd = advanceUntilNewline(source, index);
+                canonicalized.append(source, index, commentEnd);
+                column += commentEnd - index;
+                index = commentEnd;
+                continue;
+            }
+
+            if (current == '"') {
+                int stringEnd = appendStringLiteral(source, canonicalized, index);
+                for (int i = index; i < stringEnd; i++) {
+                    if (source.charAt(i) == '\n') {
+                        line++;
+                        column = 1;
+                    } else {
+                        column++;
+                    }
+                }
+                index = stringEnd;
+                continue;
+            }
+
+            if (isIdentifierStart(current)) {
+                int tokenStartLine = line;
+                int tokenStartColumn = column;
+                int tokenEnd = advanceIdentifier(source, index);
+                String identifier = source.substring(index, tokenEnd);
+                String canonical = ALIAS_TO_CANONICAL.get(identifier);
+                if (canonical != null) {
+                    canonicalized.append(canonical);
+                    occurrences.add(new EuclidAliasOccurrence(identifier, canonical, tokenStartLine, tokenStartColumn));
+                } else {
+                    canonicalized.append(identifier);
+                }
+                column += tokenEnd - index;
+                index = tokenEnd;
+                continue;
+            }
+
+            canonicalized.append(current);
+            if (current == '\n') {
+                line++;
+                column = 1;
+            } else {
+                column++;
+            }
+            index++;
         }
-        return canonicalized;
+
+        return new EuclidCanonicalizationResult(canonicalized.toString(), List.copyOf(occurrences));
     }
 
     private static EuclidCapabilityKind classify(String name, TokenType type) {
@@ -402,6 +464,57 @@ public final class EuclidLanguage {
         return ALIASES_BY_CANONICAL.containsKey(name)
                 ? EuclidAliasPolicy.WARN
                 : EuclidAliasPolicy.NONE;
+    }
+
+    private static boolean isIdentifierStart(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    private static boolean isIdentifierPart(char c) {
+        return isIdentifierStart(c) || (c >= '0' && c <= '9') || c == '_';
+    }
+
+    private static int advanceIdentifier(String source, int start) {
+        int index = start + 1;
+        while (index < source.length() && isIdentifierPart(source.charAt(index))) {
+            index++;
+        }
+        return index;
+    }
+
+    private static int advanceUntilNewline(String source, int start) {
+        int index = start;
+        while (index < source.length() && source.charAt(index) != '\n') {
+            index++;
+        }
+        return index;
+    }
+
+    private static int appendStringLiteral(String source, StringBuilder output, int start) {
+        int index = start;
+        boolean escaping = false;
+
+        while (index < source.length()) {
+            char c = source.charAt(index);
+            output.append(c);
+            index++;
+
+            if (escaping) {
+                escaping = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escaping = true;
+                continue;
+            }
+
+            if (c == '"') {
+                break;
+            }
+        }
+
+        return index;
     }
 
     private static Map<String, List<String>> reverseAliases(Map<String, String> aliasToCanonical) {
