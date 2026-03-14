@@ -215,7 +215,13 @@ Then transpile it:
 java -jar target/euclid-transpiler.jar equation.ed
 ```
 
-This creates `equation_output.md` with your LaTeX code.
+This creates `equation.md` with your LaTeX code.
+
+To validate the file without writing output, use:
+
+```bash
+java -jar target/euclid-transpiler.jar --check equation.ed
+```
 
 ### REPL (Interactive Mode)
 
@@ -228,13 +234,14 @@ java -jar target/euclid-repl.jar
 Type expressions and see immediate LaTeX output:
 
 ```
-Euclid REPL v2.0 (Java)
-Type :help for help, :quit to exit
+╔════════════════════════════════════════════════════════════════════╗
+║                    Euclid Interactive REPL                         ║
+╚════════════════════════════════════════════════════════════════════╝
 
-euclid> pow(a, 2) + pow(b, 2) = pow(c, 2)
+>>> pow(a, 2) + pow(b, 2) = pow(c, 2)
 LaTeX: a^{2} + b^{2} = c^{2}
 
-euclid> :quit
+>>> :quit
 Goodbye!
 ```
 
@@ -243,7 +250,7 @@ Goodbye!
 Automatically retranspile when your file changes:
 
 ```bash
-java -jar euclid-transpiler.jar --watch equation.ed
+java -jar target/euclid-transpiler.jar --watch equation.ed
 ```
 
 Edit `equation.ed` in your favorite editor and Euclid will retranspile automatically!
