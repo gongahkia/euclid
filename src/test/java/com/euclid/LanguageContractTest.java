@@ -28,6 +28,18 @@ public class LanguageContractTest {
     }
 
     @Test
+    public void testBracketCompatibleVectorsAndMatricesStillRender() throws Exception {
+        assertTrue(Transpiler.transpile("vector([a, b, c])").contains("\\begin{pmatrix}"));
+        assertTrue(Transpiler.transpile("matrix([[a, b], [c, d]])").contains("a & b"));
+    }
+
+    @Test
+    public void testConditionalProbabilityAndMathTextAreSupported() throws Exception {
+        assertEquals("P(A \\mid B)", Transpiler.transpile("prob(given(A, B))"));
+        assertEquals("\\text{sample mean}", Transpiler.transpile("mathtext(\"sample mean\")"));
+    }
+
+    @Test
     public void testCanonicalizeRewritesKnownAliases() {
         assertEquals("INFINITY + subset(A, B) + binom(n, k)",
                 Transpiler.canonicalize("INF + proper_subset(A, B) + choose(n, k)"));
