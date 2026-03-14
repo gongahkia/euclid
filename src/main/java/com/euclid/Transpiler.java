@@ -9,7 +9,6 @@ import com.euclid.lang.EuclidCapabilityManifest;
 import com.euclid.lang.EuclidLanguage;
 import com.euclid.lexer.Lexer;
 import com.euclid.parser.Parser;
-import com.euclid.processor.MixedContentProcessor;
 import com.euclid.token.Token;
 import com.euclid.transpiler.LatexTranspiler;
 import com.euclid.transpiler.MathMode;
@@ -59,27 +58,6 @@ public class Transpiler {
      * @throws EuclidException if an error occurs during transpilation
      */
     public static String transpile(String source, boolean verbose, MathMode mathMode) throws EuclidException {
-        return transpile(source, verbose, mathMode, false);
-    }
-
-    /**
-     * Transpiles Euclid source code to LaTeX/Markdown with full options.
-     *
-     * @param source    The Euclid source code
-     * @param verbose   Whether to print debug information
-     * @param mathMode  The math mode for wrapping output
-     * @param mixedMode Whether to use conservative mixed content mode for prose-heavy documents
-     * @return The transpiled LaTeX/Markdown
-     * @throws EuclidException if an error occurs during transpilation
-     */
-    public static String transpile(String source, boolean verbose, MathMode mathMode, boolean mixedMode) throws EuclidException {
-        // If mixed mode, use the conservative mixed content processor
-        if (mixedMode) {
-            return MixedContentProcessor.processDocument(source);
-        }
-
-        // Otherwise, use regular transpilation
-        // Lex: Convert source to tokens
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.tokenize();
 
@@ -129,10 +107,10 @@ public class Transpiler {
     /**
      * Transpiles with diagnostic collection instead of throwing exceptions.
      */
-    public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode, boolean mixedMode) {
+    public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode) {
         DiagnosticCollector collector = new DiagnosticCollector();
         String canonicalSource = canonicalize(source);
-        if (!mixedMode && !canonicalSource.equals(source)) {
+        if (!canonicalSource.equals(source)) {
             collector.addWarning(
                     "canonical.rewrite",
                     "Source contains compatibility aliases instead of canonical Euclid spellings",
@@ -142,10 +120,6 @@ public class Transpiler {
                     canonicalSource);
         }
         try {
-            if (mixedMode) {
-                String output = MixedContentProcessor.processDocument(source, collector);
-                return new TranspileResult(output, collector.getAll());
-            }
             Lexer lexer = new Lexer(source);
             List<Token> tokens = lexer.tokenize();
             Parser parser = new Parser(tokens, source, collector);
@@ -217,21 +191,6 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void transpileFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode) throws IOException, EuclidException {
-        transpileFile(inputPath, outputPath, verbose, mathMode, false);
-    }
-
-    /**
-     * Transpiles a file from .ed to .md format with full options.
-     *
-     * @param inputPath  The input .ed file path
-     * @param outputPath The output .md file path
-     * @param verbose    Whether to print debug information
-     * @param mathMode   The math mode for wrapping output
-     * @param mixedMode  Whether to use conservative mixed content mode
-     * @throws IOException     if an I/O error occurs
-     * @throws EuclidException if a transpilation error occurs
-     */
-    public static void transpileFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode, boolean mixedMode) throws IOException, EuclidException {
         // Read input file
         String source = Files.readString(Paths.get(inputPath));
 
@@ -243,7 +202,7 @@ public class Transpiler {
             System.out.println();
         }
 
-        TranspileResult result = transpileWithDiagnostics(source, verbose, mathMode, mixedMode);
+        TranspileResult result = transpileWithDiagnostics(source, verbose, mathMode);
         printDiagnostics(result.diagnostics(), verbose);
 
         if (result.hasErrors() || result.output() == null) {
@@ -265,9 +224,9 @@ public class Transpiler {
     /**
      * Checks a file for Euclid diagnostics without writing output.
      */
-    public static TranspileResult checkFile(String inputPath, boolean verbose, boolean mixedMode) throws IOException {
+    public static TranspileResult checkFile(String inputPath, boolean verbose) throws IOException {
         String source = Files.readString(Paths.get(inputPath));
-        TranspileResult result = transpileWithDiagnostics(source, verbose, MathMode.NONE, mixedMode);
+        TranspileResult result = transpileWithDiagnostics(source, verbose, MathMode.NONE);
         printDiagnostics(result.diagnostics(), verbose);
         return result;
     }
@@ -322,21 +281,6 @@ public class Transpiler {
      * @throws EuclidException if a transpilation error occurs
      */
     public static void watchFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode) throws IOException, EuclidException {
-        watchFile(inputPath, outputPath, verbose, mathMode, false);
-    }
-
-    /**
-     * Watches a file for changes and automatically retranspiles with full options.
-     *
-     * @param inputPath  The input .ed file path to watch
-     * @param outputPath The output .md file path
-     * @param verbose    Whether to print debug information
-     * @param mathMode   The math mode for wrapping output
-     * @param mixedMode  Whether to use mixed content mode
-     * @throws IOException     if an I/O error occurs
-     * @throws EuclidException if a transpilation error occurs
-     */
-    public static void watchFile(String inputPath, String outputPath, boolean verbose, MathMode mathMode, boolean mixedMode) throws IOException, EuclidException {
         Path path = Paths.get(inputPath);
         Path dir = path.getParent();
         String fileName = path.getFileName().toString();
@@ -347,7 +291,7 @@ public class Transpiler {
 
         // Initial transpilation
         System.out.println("Initial transpilation of " + inputPath + " to " + outputPath + "...");
-        transpileFile(inputPath, outputPath, verbose, mathMode, mixedMode);
+        transpileFile(inputPath, outputPath, verbose, mathMode);
         System.out.println("✓ Transpilation complete!");
         System.out.println();
         System.out.println("Watching " + inputPath + " for changes... (Press Ctrl+C to stop)");
@@ -385,7 +329,7 @@ public class Transpiler {
                         try {
                             // Small delay to ensure file write is complete
                             Thread.sleep(100);
-                            transpileFile(inputPath, outputPath, verbose, mathMode, mixedMode);
+                            transpileFile(inputPath, outputPath, verbose, mathMode);
                             System.out.println("✓ Retranspilation complete!");
                         } catch (EuclidException e) {
                             System.err.println("✗ Transpilation Error: " + e.getMessage());
@@ -422,7 +366,6 @@ public class Transpiler {
         // Check for flags
         boolean watchMode = false;
         boolean verboseMode = false;
-        boolean mixedMode = false;
         boolean checkMode = false;
         boolean canonicalizeMode = false;
         MathMode mathMode = MathMode.NONE;
@@ -435,8 +378,6 @@ public class Transpiler {
             } else if (args[i].equals("--verbose") || args[i].equals("-v") ||
                        args[i].equals("--debug") || args[i].equals("-d")) {
                 verboseMode = true;
-            } else if (args[i].equals("--mixed") || args[i].equals("-m")) {
-                mixedMode = true;
             } else if (args[i].equals("--check") || args[i].equals("-c")) {
                 checkMode = true;
             } else if (args[i].equals("--canonicalize")) {
@@ -458,13 +399,13 @@ public class Transpiler {
         }
 
         try {
-            validateCliOptions(watchMode, mixedMode, checkMode, canonicalizeMode, mathMode, outputFile);
+            validateCliOptions(watchMode, checkMode, canonicalizeMode, mathMode, outputFile);
 
             if (checkMode) {
                 if (!verboseMode) {
                     System.out.println("Checking " + inputFile + "...");
                 }
-                TranspileResult result = checkFile(inputFile, verboseMode, mixedMode);
+                TranspileResult result = checkFile(inputFile, verboseMode);
                 if (result.hasErrors()) {
                     if (!verboseMode) {
                         System.err.println("Check failed.");
@@ -495,12 +436,12 @@ public class Transpiler {
             }
 
             if (watchMode) {
-                watchFile(inputFile, outputFile, verboseMode, mathMode, mixedMode);
+                watchFile(inputFile, outputFile, verboseMode, mathMode);
             } else {
                 if (!verboseMode) {
                     System.out.println("Transpiling " + inputFile + " to " + outputFile + "...");
                 }
-                transpileFile(inputFile, outputFile, verboseMode, mathMode, mixedMode);
+                transpileFile(inputFile, outputFile, verboseMode, mathMode);
                 if (!verboseMode) {
                     System.out.println("Transpilation complete!");
                 }
@@ -524,7 +465,7 @@ public class Transpiler {
         System.out.println();
         System.out.println("Usage:");
         System.out.println("  java -jar target/euclid-transpiler.jar [options] <input.ed> [output.md]");
-        System.out.println("  java -jar target/euclid-transpiler.jar --check [--mixed] <input.ed>");
+        System.out.println("  java -jar target/euclid-transpiler.jar --check <input.ed>");
         System.out.println("  java -jar target/euclid-transpiler.jar --canonicalize <input.ed> [output.ed]");
         System.out.println();
         System.out.println("Options:");
@@ -533,7 +474,6 @@ public class Transpiler {
         System.out.println("  --debug, -d      Debug mode: same as --verbose");
         System.out.println("  --check, -c      Check source and print diagnostics without writing output");
         System.out.println("  --canonicalize   Rewrite compatibility aliases to canonical Euclid spellings");
-        System.out.println("  --mixed, -m      Mixed mode: conservatively transpile obvious inline Euclid in prose");
         System.out.println("  --inline, -i     Wrap output in inline math mode ($...$)");
         System.out.println("  --display, -D    Wrap output in display math mode ($$...$$)");
         System.out.println();
@@ -556,7 +496,6 @@ public class Transpiler {
 
     private static void validateCliOptions(
             boolean watchMode,
-            boolean mixedMode,
             boolean checkMode,
             boolean canonicalizeMode,
             MathMode mathMode,
@@ -572,9 +511,6 @@ public class Transpiler {
         }
         if (checkMode && mathMode != MathMode.NONE) {
             throw new IllegalArgumentException("--check does not support --inline or --display");
-        }
-        if (canonicalizeMode && mixedMode) {
-            throw new IllegalArgumentException("--canonicalize does not support --mixed because it would rewrite prose");
         }
         if (canonicalizeMode && mathMode != MathMode.NONE) {
             throw new IllegalArgumentException("--canonicalize does not support --inline or --display");
