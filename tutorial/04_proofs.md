@@ -8,9 +8,9 @@ This tutorial covers logic symbols, quantifiers, set theory notation, and proof 
 
 | Operation | Euclid | LaTeX |
 |-----------|--------|-------|
-| And (conjunction) | `AND(p, q)` or `p AND q` | `p \land q` |
-| Or (disjunction) | `OR(p, q)` or `p OR q` | `p \lor q` |
-| Not (negation) | `NOT(p)` | `\lnot p` |
+| And (conjunction) | `p AND q` or `AND(p, q)` | `p \land q` |
+| Or (disjunction) | `p OR q` or `OR(p, q)` | `p \lor q` |
+| Not (negation) | `NOT(p)` | `\neg p` |
 | Implies | `implies(p, q)` | `p \implies q` |
 | If and only if | `iff(p, q)` | `p \iff q` |
 
@@ -24,25 +24,25 @@ NOT(p OR q) = NOT(p) AND NOT(q)
 
 **Rendered:**
 
-$$\lnot (p \land q) = \lnot p \lor \lnot q$$
-$$\lnot (p \lor q) = \lnot p \land \lnot q$$
+$$\neg (p \land q) = \neg p \lor \neg q$$
+$$\neg (p \lor q) = \neg p \land \neg q$$
 
 ### Example: Implication
 
 **Euclid:**
 ```euclid
-implies(p, q) = OR(NOT(p), q)
+implies(p, q) = (NOT(p) OR q)
 ```
 
 **Rendered:**
 
-$$p \implies q = \lnot p \lor q$$
+$$p \implies q = \neg p \lor q$$
 
 ### Example: Logical Equivalence
 
 **Euclid:**
 ```euclid
-iff(p, q) = AND(implies(p, q), implies(q, p))
+iff(p, q) = (implies(p, q) AND implies(q, p))
 ```
 
 **Rendered:**
@@ -104,7 +104,7 @@ NOT(forall(x, P(x))) = exists(x, NOT(P(x)))
 
 **Rendered:**
 
-$$\lnot \forall x \, P(x) = \exists x \, \lnot P(x)$$
+$$\neg \forall x \, P(x) = \exists x \, \neg P(x)$$
 
 ## Set Theory
 
@@ -114,9 +114,9 @@ $$\lnot \forall x \, P(x) = \exists x \, \lnot P(x)$$
 |-----------|--------|-------|
 | Empty set | `emptyset` | `\emptyset` |
 | Element of | `element_of(x, A)` | `x \in A` |
-| Not element of | `NOT(element_of(x, A))` | `x \notin A` |
-| Subset | `subset(A, B)` | `A \subseteq B` |
-| Proper subset | `proper_subset(A, B)` | `A \subset B` |
+| Not element of | `not_element_of(x, A)` | `x \notin A` |
+| Subset | `subset(A, B)` | `A \subset B` |
+| Subset or equal | `subseteq(A, B)` | `A \subseteq B` |
 | Union | `union(A, B)` | `A \cup B` |
 | Intersection | `intersection(A, B)` | `A \cap B` |
 
@@ -135,7 +135,7 @@ $$x \in A$$
 
 **Euclid:**
 ```euclid
-subset(A, B) = forall(x, implies(element_of(x, A), element_of(x, B)))
+subseteq(A, B) = forall(x, implies(element_of(x, A), element_of(x, B)))
 ```
 
 **Rendered:**
@@ -146,18 +146,18 @@ $$A \subseteq B = \forall x \, (x \in A \implies x \in B)$$
 
 **Euclid:**
 ```euclid
-A = B = AND(subset(A, B), subset(B, A))
+iff(A = B, subseteq(A, B) AND subseteq(B, A))
 ```
 
 **Rendered:**
 
-$$A = B = (A \subseteq B) \land (B \subseteq A)$$
+$$A = B \iff (A \subseteq B) \land (B \subseteq A)$$
 
 ### Example: Union Definition
 
 **Euclid:**
 ```euclid
-element_of(x, union(A, B)) = OR(element_of(x, A), element_of(x, B))
+element_of(x, union(A, B)) = (element_of(x, A) OR element_of(x, B))
 ```
 
 **Rendered:**
@@ -168,7 +168,7 @@ $$x \in A \cup B = (x \in A) \lor (x \in B)$$
 
 **Euclid:**
 ```euclid
-element_of(x, intersection(A, B)) = AND(element_of(x, A), element_of(x, B))
+element_of(x, intersection(A, B)) = (element_of(x, A) AND element_of(x, B))
 ```
 
 **Rendered:**
@@ -207,7 +207,7 @@ subset(NATURALS, INTEGERS) AND subset(INTEGERS, RATIONALS) AND subset(RATIONALS,
 
 **Euclid:**
 ```euclid
-f: REALS rightarrow REALS, x mapsto x^2
+x mapsto x^2
 ```
 
 ## Dot Sequences
@@ -231,7 +231,7 @@ a_1, a_2, ldots, a_n
 | Symbol | Euclid | LaTeX |
 |--------|--------|-------|
 | Therefore | `therefore` | `\therefore` |
-| Because | `because` | `\because$ |
+| Because | `because` | `\because` |
 | QED | `qed` | `\blacksquare` |
 
 ### Example: Simple Proof Conclusion
@@ -249,19 +249,23 @@ qed
 |--------|--------|-------|
 | Perpendicular | `perp` | `\perp` |
 | Parallel | `parallel` | `\parallel` |
-| Angle | `angle` | `\angle$ |
+| Angle | `angle` | `\angle` |
 | Triangle | `triangle` | `\triangle` |
 | Congruent | `cong` | `\cong` |
-| Similar | `sim` | `\sim$ |
+| Similar | `sim` | `\sim` |
 
-### Example: Geometric Relationships
+### Example: Geometry Tokens
+
+These tokens usually appear inside prose-heavy proofs and diagrams rather than as standalone equations.
 
 **Euclid:**
 ```euclid
-triangle ABC cong triangle DEF
-angle A = angle D
-AB parallel DE
-CD perp EF
+triangle
+angle
+parallel
+perp
+cong
+sim
 ```
 
 ## Comparison and Inequality
@@ -294,7 +298,7 @@ $$\lvert a + b \rvert \leq \lvert a \rvert + \lvert b \rvert$$
 
 **Euclid:**
 ```euclid
-AND(lt(a, b), lt(b, c)) implies lt(a, c)
+implies(lt(a, b) AND lt(b, c), lt(a, c))
 ```
 
 **Rendered:**
@@ -343,7 +347,7 @@ $$(a < b \land b < c) \implies a < c$$
 
 **Euclid:**
 ```euclid
-# Claim: NOT(exists(p, exists(q, AND(sqrt(2) = p \\ q, gcd(p, q) = 1))))
+# Claim: NOT(exists(p, exists(q, sqrt(2) = p \\ q AND gcd(p, q) = 1)))
 
 # Assume sqrt(2) = p \\ q where gcd(p, q) = 1
 pow(sqrt(2), 2) = pow(p \\ q, 2)
@@ -389,7 +393,7 @@ $$a^{2} + b^{2} = c^{2}$$
 
 **Euclid:**
 ```euclid
-forall(n, gt(n, 1) implies exists(p1, exists(p2, n = prod(i, 1, k, pi))))
+forall(n, implies(gt(n, 1), exists(k, n = prod(p_i, i, 1, k))))
 ```
 
 **Rendered:**
@@ -414,7 +418,7 @@ $$\exists k \, (b = k \cdot a)$$
 
 **Euclid:**
 ```euclid
-equiv(a, b) mod n
+equiv(a, b)
 mod(a - b, n) = 0
 ```
 
@@ -440,7 +444,7 @@ $$\gcd(a, b) \cdot \text{lcm}(a, b) = a \cdot b$$
 
 **Euclid:**
 ```euclid
-limit(f(x), x, a) = L = forall(EPSILON, gt(EPSILON, 0) implies exists(DELTA, gt(DELTA, 0) AND forall(x, AND(gt(abs(x - a), 0), lt(abs(x - a), DELTA)) implies lt(abs(f(x) - L), EPSILON))))
+limit(f(x), x, a) = L = forall(EPSILON, implies(gt(EPSILON, 0), exists(DELTA, gt(DELTA, 0) AND forall(x, implies(gt(abs(x - a), 0) AND lt(abs(x - a), DELTA), lt(abs(f(x) - L), EPSILON))))))
 ```
 
 **Rendered:**
@@ -452,7 +456,7 @@ $$\lim_{x \to a} f(x) = L = \forall \epsilon \, (\epsilon > 0 \implies \exists \
 **Euclid:**
 ```euclid
 # f is continuous at a:
-forall(EPSILON, gt(EPSILON, 0) implies exists(DELTA, gt(DELTA, 0) AND forall(x, lt(abs(x - a), DELTA) implies lt(abs(f(x) - f(a)), EPSILON))))
+forall(EPSILON, implies(gt(EPSILON, 0), exists(DELTA, gt(DELTA, 0) AND forall(x, implies(lt(abs(x - a), DELTA), lt(abs(f(x) - f(a)), EPSILON))))))
 ```
 
 ### Convergence of Sequence
@@ -460,7 +464,7 @@ forall(EPSILON, gt(EPSILON, 0) implies exists(DELTA, gt(DELTA, 0) AND forall(x, 
 **Euclid:**
 ```euclid
 # Sequence {a_n} converges to L:
-forall(EPSILON, gt(EPSILON, 0) implies exists(N, forall(n, geq(n, N) implies lt(abs(a_n - L), EPSILON))))
+forall(EPSILON, implies(gt(EPSILON, 0), exists(N, forall(n, implies(geq(n, N), lt(abs(a_n - L), EPSILON))))))
 ```
 
 ## Complex Proofs Examples
@@ -469,7 +473,7 @@ forall(EPSILON, gt(EPSILON, 0) implies exists(N, forall(n, geq(n, N) implies lt(
 
 ```euclid
 # Assume there are finitely many primes: p1, p2, ..., pk
-# Let N = prod(i, 1, k, pi) + 1
+# Let N = prod(p_i, i, 1, k) + 1
 N = p1 * p2 * ... * pk + 1
 
 # N is not divisible by any pi
@@ -491,14 +495,14 @@ N = p1 * p2 * ... * pk + 1
 
 **Euclid:**
 ```euclid
-pow(a + b, n) = sum(k, 0, n, binom(n, k) * pow(a, n - k) * pow(b, k))
+pow(a + b, n) = sum(binom(n, k) * pow(a, n - k) * pow(b, k), k, 0, n)
 ```
 
 Where `binom(n, k)` represents the binomial coefficient:
 
 **Euclid:**
 ```euclid
-binom(n, k) = (prod(i, 1, n, i)) \\ (prod(i, 1, k, i) * prod(i, 1, n - k, i))
+binom(n, k) = (prod(i, i, 1, n)) \\ (prod(i, i, 1, k) * prod(i, i, 1, n - k))
 ```
 
 ## Practice Exercises
@@ -512,27 +516,27 @@ Try typesetting these proofs:
 
 2. **Set difference:**
    ```euclid
-   element_of(x, A - B) = AND(element_of(x, A), NOT(element_of(x, B)))
+   element_of(x, set_diff(A, B)) = element_of(x, A) AND NOT(element_of(x, B))
    ```
 
 3. **Intermediate Value Theorem setup:**
    ```euclid
-   AND(lt(f(a), 0), gt(f(b), 0)) implies exists(c, AND(lt(a, c), AND(lt(c, b), f(c) = 0)))
+   implies(lt(f(a), 0) AND gt(f(b), 0), exists(c, lt(a, c) AND lt(c, b) AND f(c) = 0))
    ```
 
 4. **Sum of first n integers:**
    ```euclid
-   sum(i, 1, n, i) = (n * (n + 1)) \\ 2
+   sum(i, i, 1, n) = (n * (n + 1)) \\ 2
    ```
 
 5. **Rational number definition:**
    ```euclid
-   element_of(x, Q) = exists(p, exists(q, AND(x = p \\ q, neq(q, 0))))
+   element_of(x, RATIONALS) = exists(p, exists(q, x = p \\ q AND neq(q, 0)))
    ```
 
 6. **Function composition:**
    ```euclid
-   (f compose g)(x) = f(g(x))
+   h(x) = f(g(x))
    ```
 
 ## Tips for Proof Typesetting
@@ -579,8 +583,8 @@ Try typesetting these proofs:
 
 - **[Advanced Techniques](05_advanced.md)** - Complex expressions and best practices
 - **[Getting Started](01_getting_started.md)** - Review basics
-- **[Syntax Reference](../syntax.md)** - Complete function list
+- **[Syntax Reference](06_syntax.md)** - Complete function list
 
 ## Reference
 
-For more logic and set theory functions, see the [syntax reference](../syntax.md).
+For more logic and set theory functions, see the [syntax reference](06_syntax.md).
