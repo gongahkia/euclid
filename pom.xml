@@ -63,12 +63,6 @@
             <version>3.25.0</version>
         </dependency>
 
-        <!-- LSP4J for Language Server Protocol -->
-        <dependency>
-            <groupId>org.eclipse.lsp4j</groupId>
-            <artifactId>org.eclipse.lsp4j</artifactId>
-            <version>0.21.1</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -143,22 +137,6 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.euclid.Repl</mainClass>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                    <!-- LSP server executable -->
-                    <execution>
-                        <id>build-lsp</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>euclid-lsp</finalName>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.euclid.lsp.EuclidLspLauncher</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
