@@ -71,4 +71,16 @@ public class MixedContentProcessorTest {
         assertEquals("Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.", result.output());
         assertTrue(result.diagnostics().isEmpty());
     }
+
+    @Test
+    public void plainWordsContainingFunctionNamesDoNotTriggerMixedMode() {
+        TranspileResult result = Transpiler.transpileWithDiagnostics(
+                "We are singing about cosine similarity in plain prose.",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                true);
+
+        assertEquals("We are singing about cosine similarity in plain prose.", result.output());
+        assertTrue(result.diagnostics().isEmpty());
+    }
 }
