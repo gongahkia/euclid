@@ -45,6 +45,13 @@ public class LanguageContractTest {
     }
 
     @Test
+    public void testStructuredLayoutHelpersAreDocumentedAndWorking() throws Exception {
+        assertTrue(Transpiler.transpile("piecewise(x, geq(x, 0), -x, lt(x, 0))").contains("\\begin{cases}"));
+        assertTrue(Transpiler.transpile("align(x = y, y = z)").contains("\\begin{align*}"));
+        assertTrue(Transpiler.transpile("system(x = y, y = z)").contains("\\begin{cases}"));
+    }
+
+    @Test
     public void testCanonicalizeRewritesKnownAliases() {
         assertEquals("INFINITY + subset(A, B) + binom(n, k)",
                 Transpiler.canonicalize("INF + proper_subset(A, B) + choose(n, k)"));
@@ -65,6 +72,12 @@ public class LanguageContractTest {
                 .findFirst();
         assertTrue(subset.isPresent());
         assertTrue(subset.get().aliases().contains("proper_subset"));
+
+        Optional<EuclidCapability> vector = manifest.capabilities().stream()
+                .filter(capability -> capability.name().equals("vector"))
+                .findFirst();
+        assertTrue(vector.isPresent());
+        assertTrue(vector.get().signature().display().contains("vector([a, b, c])"));
     }
 
     @Test
