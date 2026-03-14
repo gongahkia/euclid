@@ -175,7 +175,7 @@ public class EuclidTextDocumentService implements TextDocumentService {
 
     private void publishDiagnostics(String uri, String text) {
         if (client == null) return;
-        TranspileResult result = Transpiler.transpileWithDiagnostics(text, false, MathMode.NONE, false);
+        TranspileResult result = Transpiler.transpileWithDiagnostics(text, false, MathMode.NONE);
         List<org.eclipse.lsp4j.Diagnostic> lspDiags = new ArrayList<>();
         for (Diagnostic d : result.diagnostics()) {
             org.eclipse.lsp4j.Diagnostic lspD = new org.eclipse.lsp4j.Diagnostic();
