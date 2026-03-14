@@ -252,7 +252,7 @@ public class LatexCompilationTest {
 
     @Test
     public void testLogicSymbols() throws Exception {
-        String euclidCode = "forall AND exists OR NOT";
+        String euclidCode = "forall(x, P(x)) AND exists(y, Q(y)) AND NOT(q)";
         String latexDoc = transpileAndWrap(euclidCode);
         assertTrue(compileLatex(latexDoc, "logic-symbols"),
                 "Logic symbols should compile successfully");
