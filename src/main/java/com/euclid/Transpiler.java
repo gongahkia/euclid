@@ -386,6 +386,8 @@ public class Transpiler {
                 mathMode = MathMode.INLINE;
             } else if (args[i].equals("--display") || args[i].equals("-D")) {
                 mathMode = MathMode.DISPLAY;
+            } else if (args[i].startsWith("-")) {
+                throw new IllegalArgumentException("Unknown option: " + args[i]);
             } else if (inputFile == null) {
                 inputFile = args[i];
             } else if (outputFile == null) {
