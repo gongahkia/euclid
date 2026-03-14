@@ -49,7 +49,7 @@ public class OperatorsAndCalculusTest {
 
     @Test
     public void testDivisionAsFraction() throws LexerException, ParserException {
-        String result = transpile("a / b");
+        String result = transpile("a \\\\ b");
         assertTrue(result.contains("\\frac"));
     }
 
@@ -105,20 +105,20 @@ public class OperatorsAndCalculusTest {
 
     @Test
     public void testLimit() throws LexerException, ParserException {
-        String result = transpile("limit(x, 0)");
+        String result = transpile("limit(f, x, 0)");
         assertTrue(result.contains("\\lim") || result.contains("limit"));
     }
 
     // Summation and Product
     @Test
     public void testSummation() throws LexerException, ParserException {
-        String result = transpile("sum(i, 1, n)");
+        String result = transpile("sum(pow(i, 2), i, 1, n)");
         assertTrue(result.contains("\\sum") || result.contains("sum"));
     }
 
     @Test
     public void testProduct() throws LexerException, ParserException {
-        String result = transpile("prod(i, 1, n)");
+        String result = transpile("prod(f(i), i, 1, n)");
         assertTrue(result.contains("\\prod") || result.contains("prod"));
     }
 
@@ -170,7 +170,7 @@ public class OperatorsAndCalculusTest {
 
     @Test
     public void testComplexFraction() throws LexerException, ParserException {
-        String result = transpile("(a + b) / (c + d)");
+        String result = transpile("(a + b) \\\\ (c + d)");
         assertTrue(result.contains("\\frac"));
     }
 
