@@ -13,7 +13,7 @@ Although [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-
 
 Ultimately, this reinforces the unnecessarily high barriers to entry for beginners seeking to integrate mathematical expressions into their markdown documentation.  
 
-`Euclid` eliminates the friction associated with writing mathematical expressions in [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) by providing an intermediate syntax (`.ed` script) identical to [Markdown](https://www.markdownguide.org/) with a straightforward ruleset for parsing mathematical expressions that mirrors the syntax of widespread entry-level programming languages like [Python](https://www.python.org/) and [Javascript](https://devdocs.io/javascript/).  
+`Euclid` eliminates the friction associated with writing mathematical expressions in [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) by providing an intermediate `.ed` syntax with a straightforward ruleset for parsing mathematical expressions that mirrors the syntax of widespread entry-level programming languages like [Python](https://www.python.org/) and [Javascript](https://devdocs.io/javascript/).  
 
 `.ed` script then transpiles to [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) and adheres to the [demands](https://en.wikibooks.org/wiki/LaTeX/Mathematics) of $\LaTeX$ and [MathJax](https://docs.mathjax.org/en/latest/). 
 
@@ -28,6 +28,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 * canonical forms matter: `a / b` is inline division, while `a \\ b` is a fraction
 * logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
 * a small alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`
+* pure CLI transpilation is strict Euclid; prose-heavy Markdown authoring is an explicit `--mixed` workflow
 * capability metadata and canonical rewrites are available programmatically through the core transpiler API
 
 ## Usage
@@ -58,6 +59,12 @@ $ mvn clean compile
 
 ```console
 $ java -jar target/euclid-2.0-SNAPSHOT.jar input.ed output.md
+```
+
+For prose-heavy Markdown documents with embedded Euclid expressions, use mixed mode:
+
+```console
+$ java -jar target/euclid-2.0-SNAPSHOT.jar --mixed input.ed output.md
 ```
 
 4. Additionally launch the `Euclid` REPL to test `.ed` expressions.
