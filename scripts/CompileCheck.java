@@ -23,7 +23,6 @@ public final class CompileCheck {
         List<Path> sources = new ArrayList<>();
         try (var stream = Files.walk(sourceRoot)) {
             stream.filter(path -> path.toString().endsWith(".java"))
-                    .filter(path -> !path.toString().contains("/lsp/"))
                     .filter(path -> !path.getFileName().toString().equals("Repl.java"))
                     .forEach(sources::add);
         }
