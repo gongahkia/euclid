@@ -1,6 +1,7 @@
 package com.euclid;
 
 import com.euclid.exception.LexerException;
+import com.euclid.lang.EuclidAliasPolicy;
 import com.euclid.lang.EuclidCapability;
 import com.euclid.lang.EuclidCapabilityManifest;
 import org.junit.jupiter.api.Test;
@@ -97,18 +98,21 @@ public class LanguageContractTest {
                 .filter(capability -> capability.name().equals("INFINITY"))
                 .findFirst();
         assertTrue(infinity.isPresent());
+        assertEquals(EuclidAliasPolicy.WARN, infinity.get().aliasPolicy());
         assertTrue(infinity.get().aliases().contains("INF"));
 
         Optional<EuclidCapability> subset = manifest.capabilities().stream()
                 .filter(capability -> capability.name().equals("subset"))
                 .findFirst();
         assertTrue(subset.isPresent());
+        assertEquals(EuclidAliasPolicy.WARN, subset.get().aliasPolicy());
         assertTrue(subset.get().aliases().contains("proper_subset"));
 
         Optional<EuclidCapability> vector = manifest.capabilities().stream()
                 .filter(capability -> capability.name().equals("vector"))
                 .findFirst();
         assertTrue(vector.isPresent());
+        assertEquals(EuclidAliasPolicy.NONE, vector.get().aliasPolicy());
         assertTrue(vector.get().signature().label().contains("vector([a, b, c])"));
     }
 
