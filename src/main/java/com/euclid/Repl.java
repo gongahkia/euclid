@@ -214,7 +214,7 @@ public class Repl {
      * @param input The Euclid expression to execute
      */
     private static void executeInput(String input) {
-        TranspileResult result = Transpiler.transpileWithDiagnostics(input, false, com.euclid.transpiler.MathMode.NONE, false);
+        TranspileResult result = Transpiler.transpileWithDiagnostics(input, false, com.euclid.transpiler.MathMode.NONE);
 
         for (Diagnostic diagnostic : result.diagnostics()) {
             if (diagnostic.getSeverity() == Diagnostic.Severity.INFO) {
