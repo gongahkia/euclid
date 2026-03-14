@@ -338,7 +338,7 @@ For best results:
 
 ## Compatibility aliases
 
-The transpiler still accepts a small compatibility surface and can rewrite it to canonical form:
+The transpiler still accepts a small compatibility surface and can rewrite it to canonical form. Using these aliases emits a warning so they do not silently become part of the preferred DSL:
 
 | Alias | Canonical form |
 | :--- | :--- |
