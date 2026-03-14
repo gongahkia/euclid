@@ -2,6 +2,10 @@ import com.euclid.TranspileResult;
 import com.euclid.Transpiler;
 import com.euclid.exception.Diagnostic;
 import com.euclid.exception.LexerException;
+import com.euclid.lang.EuclidAliasPolicy;
+import com.euclid.lang.EuclidCapability;
+
+import java.util.Optional;
 
 public final class RunSmoke {
     private RunSmoke() {
@@ -22,6 +26,23 @@ public final class RunSmoke {
         assertTrue(!aliasResult.diagnostics().isEmpty(), "alias diagnostics");
         assertEquals(Diagnostic.Severity.WARNING.name(), aliasResult.diagnostics().get(0).getSeverity().name(), "alias severity");
 
+        TranspileResult mixedConstantResult = Transpiler.transpileWithDiagnostics(
+                "Acronym: INF",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                true);
+        assertEquals("Acronym: INF", mixedConstantResult.output(), "mixed bare constant");
+        assertTrue(mixedConstantResult.diagnostics().isEmpty(), "mixed bare constant diagnostics");
+
+        TranspileResult protectedSpanResult = Transpiler.transpileWithDiagnostics(
+                "Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                true);
+        assertEquals("Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.",
+                protectedSpanResult.output(),
+                "mixed protected spans");
+
         TranspileResult recoveryResult = Transpiler.transpileWithDiagnostics(
                 "x = y\npiecewise(x, geq(x, 0), -x)\nz = w",
                 false,
@@ -29,6 +50,12 @@ public final class RunSmoke {
                 false);
         assertTrue(recoveryResult.hasErrors(), "parser recovery errors");
         assertTrue(!recoveryResult.output().contains("[ERROR:"), "parser recovery output hygiene");
+
+        Optional<EuclidCapability> infinity = Transpiler.capabilityManifest().capabilities().stream()
+                .filter(capability -> capability.name().equals("INFINITY"))
+                .findFirst();
+        assertTrue(infinity.isPresent(), "capability manifest contains INFINITY");
+        assertEquals(EuclidAliasPolicy.WARN.name(), infinity.get().aliasPolicy().name(), "alias policy");
 
         System.out.println("Core Euclid smoke checks passed.");
     }
