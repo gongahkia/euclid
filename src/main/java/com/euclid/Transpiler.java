@@ -5,6 +5,8 @@ import com.euclid.ast.DocumentNode;
 import com.euclid.exception.Diagnostic;
 import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.EuclidException;
+import com.euclid.lang.EuclidCapabilityManifest;
+import com.euclid.lang.EuclidLanguage;
 import com.euclid.lexer.Lexer;
 import com.euclid.parser.Parser;
 import com.euclid.processor.MixedContentProcessor;
@@ -110,10 +112,34 @@ public class Transpiler {
     }
 
     /**
+     * Returns the shared capability manifest for editor and web clients.
+     */
+    public static EuclidCapabilityManifest capabilityManifest() {
+        return EuclidLanguage.capabilityManifest();
+    }
+
+    /**
+     * Canonicalizes lexical aliases to their preferred spellings.
+     */
+    public static String canonicalize(String source) {
+        return EuclidLanguage.canonicalizeSource(source);
+    }
+
+    /**
      * Transpiles with diagnostic collection instead of throwing exceptions.
      */
     public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode, boolean mixedMode) {
         DiagnosticCollector collector = new DiagnosticCollector();
+        String canonicalSource = canonicalize(source);
+        if (!canonicalSource.equals(source)) {
+            collector.addInfo(
+                    "canonical.rewrite",
+                    "Source contains non-canonical aliases",
+                    1,
+                    1,
+                    "Use canonical Euclid spellings for better editor support",
+                    canonicalSource);
+        }
         try {
             if (mixedMode) {
                 String output = MixedContentProcessor.processDocument(source);
@@ -127,7 +153,7 @@ public class Transpiler {
             String output = ast.accept(transpiler);
             return new TranspileResult(output, collector.getAll());
         } catch (EuclidException e) {
-            collector.addError(e.getMessage(), 1, 1);
+            collector.addError("transpile.failure", e.getMessage(), 1, 1, null, canonicalSource.equals(source) ? null : canonicalSource);
             return new TranspileResult(null, collector.getAll());
         }
     }
