@@ -143,7 +143,7 @@ $$c \cdot \begin{bmatrix} x \\ y \\ z \end{bmatrix} = \begin{bmatrix} c \cdot x 
 
 ### Dot Product
 
-The dot product isn't a built-in function, but you can write it explicitly:
+Euclid supports an infix `dot` operator for dot products:
 
 **Euclid:**
 ```euclid
@@ -182,7 +182,7 @@ $$\hat{v} = \frac{v}{\lvert v \rvert}$$
 
 **Euclid:**
 ```euclid
-matrix([a, b], [c, d]]) + matrix([e, f], [g, h]]) = matrix([a + e, b + f], [c + g, d + h])
+matrix([a, b], [c, d]) + matrix([e, f], [g, h]) = matrix([a + e, b + f], [c + g, d + h])
 ```
 
 **Rendered:**
@@ -193,7 +193,7 @@ $$\begin{bmatrix} a & b \\ c & d \end{bmatrix} + \begin{bmatrix} e & f \\ g & h 
 
 **Euclid:**
 ```euclid
-k * matrix([a, b], [c, d]]) = matrix([k * a, k * b], [k * c, k * d])
+k * matrix([a, b], [c, d]) = matrix([k * a, k * b], [k * c, k * d])
 ```
 
 **Rendered:**
@@ -213,7 +213,7 @@ For clarity, show the matrices being multiplied:
 
 **Euclid:**
 ```euclid
-matrix([a, b], [c, d]]) * matrix([e, f], [g, h])
+matrix([a, b], [c, d]) * matrix([e, f], [g, h])
 ```
 
 **Rendered:**
@@ -235,7 +235,7 @@ Or show the matrix:
 
 **Euclid:**
 ```euclid
-abs(matrix([a, b], [c, d]])) = a * d - b * c
+abs(matrix([a, b], [c, d])) = a * d - b * c
 ```
 
 **Rendered:**
@@ -281,7 +281,7 @@ Where:
 
 **Euclid:**
 ```euclid
-matrix([a, b], [c, d]]) * vector([x, y]) = vector([e, f])
+matrix([a, b], [c, d]) * vector([x, y]) = vector([e, f])
 ```
 
 **Rendered:**
@@ -340,7 +340,7 @@ $$T(v) = A \cdot v$$
 
 **Euclid:**
 ```euclid
-matrix([cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)]]) * vector([x, y])
+matrix([cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)]) * vector([x, y])
 ```
 
 **Rendered:**
@@ -351,7 +351,7 @@ $$\begin{bmatrix} \cos(\theta) & -\sin(\theta) \\ \sin(\theta) & \cos(\theta) \e
 
 **Euclid:**
 ```euclid
-matrix([sx, 0], [0, sy]]) * vector([x, y]) = vector([sx * x, sy * y])
+matrix([sx, 0], [0, sy]) * vector([x, y]) = vector([sx * x, sy * y])
 ```
 
 **Rendered:**
@@ -362,7 +362,7 @@ $$\begin{bmatrix} s_{x} & 0 \\ 0 & s_{y} \end{bmatrix} \cdot \begin{bmatrix} x \
 
 **Euclid:**
 ```euclid
-matrix([1, 0], [0, -1]]) * vector([x, y]) = vector([x, -y])
+matrix([1, 0], [0, -1]) * vector([x, y]) = vector([x, -y])
 ```
 
 **Rendered:**
@@ -435,7 +435,7 @@ Try transpiling these linear algebra expressions:
 
 3. **Matrix-vector multiplication:**
    ```euclid
-   matrix([1, 2], [3, 4]]) * vector([x, y]) = vector([x + 2 * y, 3 * x + 4 * y])
+   matrix([1, 2], [3, 4]) * vector([x, y]) = vector([x + 2 * y, 3 * x + 4 * y])
    ```
 
 4. **Identity property:**
@@ -445,7 +445,7 @@ Try transpiling these linear algebra expressions:
 
 5. **Determinant of 2×2:**
    ```euclid
-   det(matrix([a, b], [c, d]])) = a * d - b * c
+   det(matrix([a, b], [c, d])) = a * d - b * c
    ```
 
 6. **Eigenvalue equation:**
@@ -479,7 +479,7 @@ leq(abs(inner(u, v)), norm(u) * norm(v))
 | Function | Euclid | LaTeX |
 |----------|--------|-------|
 | Determinant | `det` | `\det` |
-| Trace | `trace` | `\text{trace}` |
+| Trace | `trace` | `\text{tr}` |
 | Dimension | `dim` | `\dim` |
 | Rank | `rank` | `\text{rank}` |
 | Kernel | `ker` | `\ker` |
@@ -505,8 +505,8 @@ rank(A) + dim(ker(A)) = dim(V)
 
 **Euclid:**
 ```euclid
-divergence E = RHO \\ EPSILON_0
-curl E = -partial(B, t)
+divergence(E) = RHO \\ EPSILON_0
+curl(E) = -partial(B, t)
 ```
 
 ## Tips for Linear Algebra
@@ -554,4 +554,4 @@ D = matrix([d1, 0, 0], [0, d2, 0], [0, 0, d3])
 
 ## Reference
 
-For a complete list of functions, see the [syntax reference](../syntax.md).
+For a complete list of functions, see the [syntax reference](06_syntax.md).
