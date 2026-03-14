@@ -17,6 +17,7 @@ import java.util.Set;
  */
 public class Lexer {
     private final String source;
+    private final boolean strictMode;
     private final List<Token> tokens = new ArrayList<>();
     private int start = 0;      // Start of current lexeme
     private int current = 0;    // Current character
@@ -41,7 +42,18 @@ public class Lexer {
      * @param source The source code to tokenize
      */
     public Lexer(String source) {
+        this(source, true);
+    }
+
+    /**
+     * Creates a new lexer for the given source code.
+     *
+     * @param source The source code to tokenize
+     * @param strictMode Whether unknown characters should raise lexer errors
+     */
+    public Lexer(String source, boolean strictMode) {
         this.source = source;
+        this.strictMode = strictMode;
     }
 
     /**
@@ -109,7 +121,13 @@ public class Lexer {
                 if (match('\\')) {
                     addToken(TokenType.BACKSLASH_BACKSLASH);
                 } else {
-                    // Single backslash could be part of LaTeX, treat as text
+                    if (strictMode) {
+                        throw new LexerException(
+                                "Unexpected character '\\'. Use '\\\\' for fractions in Euclid source",
+                                line,
+                                tokenStartColumn,
+                                source);
+                    }
                     addToken(TokenType.TEXT);
                 }
             }
@@ -127,7 +145,13 @@ public class Lexer {
                 } else if (isAlpha(c)) {
                     identifier();
                 } else {
-                    // Treat unknown characters as text (for markdown compatibility)
+                    if (strictMode) {
+                        throw new LexerException(
+                                "Unexpected character '" + c + "'",
+                                line,
+                                tokenStartColumn,
+                                source);
+                    }
                     addToken(TokenType.TEXT);
                 }
             }
