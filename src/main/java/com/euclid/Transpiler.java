@@ -142,7 +142,7 @@ public class Transpiler {
         }
         try {
             if (mixedMode) {
-                String output = MixedContentProcessor.processDocument(source);
+                String output = MixedContentProcessor.processDocument(source, collector);
                 return new TranspileResult(output, collector.getAll());
             }
             Lexer lexer = new Lexer(source);
