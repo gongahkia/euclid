@@ -31,7 +31,8 @@ Euclid supports all standard arithmetic operations:
 | Addition | `a + b` | `a + b` |
 | Subtraction | `a - b` | `a - b` |
 | Multiplication | `a * b` | `a \cdot b` |
-| Division (fraction) | `a \\ b` | `\frac{a}{b}` |
+| Division (inline) | `a / b` | `a / b` |
+| Fraction | `a \\ b` | `\frac{a}{b}` |
 | Exponentiation | `pow(a, b)` | `a^{b}` |
 | Square root | `sqrt(x)` | `\sqrt{x}` |
 | Nth root | `sqrt(3, x)` | `\sqrt[3]{x}` |
@@ -60,7 +61,7 @@ Euclid recognizes common mathematical constants:
 |----------|--------|-------|
 | Pi | `PI` | `\pi` |
 | Euler's number | `E` | `e` |
-| Infinity | `INF` | `\infty` |
+| Infinity | `INFINITY` | `\infty` |
 | Empty set | `emptyset` | `\emptyset` |
 
 ### Example: Circle Area
@@ -211,7 +212,7 @@ E = m * pow(c, 2)
 Then transpile it:
 
 ```bash
-java -jar euclid-transpiler.jar equation.ed
+java -jar target/euclid-transpiler.jar equation.ed
 ```
 
 This creates `equation_output.md` with your LaTeX code.
@@ -221,7 +222,7 @@ This creates `equation_output.md` with your LaTeX code.
 Start the REPL:
 
 ```bash
-java -jar euclid-repl.jar
+java -jar target/euclid-repl.jar
 ```
 
 Type expressions and see immediate LaTeX output:
@@ -263,14 +264,14 @@ Comments are stripped during transpilation and don't appear in the output.
 
 ## Common Mistakes
 
-### 1. Using `/` for fractions
+### 1. Mixing up `/` and `\\`
 
-**Wrong:**
+Use `/` for inline division:
 ```euclid
-a / b  # This doesn't work!
+a / b
 ```
 
-**Right:**
+Use `\\` only when you want a stacked fraction:
 ```euclid
 a \\ b
 ```
@@ -328,9 +329,8 @@ Now that you know the basics, check out these tutorials:
 
 ## Need Help?
 
-- Check the [syntax reference](../syntax.md) for a complete list of functions
+- Check the [syntax reference](06_syntax.md) for a complete list of functions
 - Look at the [examples directory](../../example/) for more code samples
-- Read the [FAQ](../FAQ.md) for common questions
-- Report bugs on [GitHub Issues](https://github.com/yourusername/euclid/issues)
+- Report bugs on [GitHub Issues](https://github.com/gongahkia/euclid/issues)
 
-Happy mathing! 🎓
+Happy mathing!
