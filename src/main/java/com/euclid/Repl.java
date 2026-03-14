@@ -191,11 +191,13 @@ public class Repl {
         System.out.println("  >>> integral(sin(x), x, 0, PI)");
         System.out.println("  LaTeX: \\int_{0}^{\\pi} \\sin(x) \\, dx");
         System.out.println();
+        System.out.println("Compatibility aliases still work, but the REPL now prints warnings when you use them.");
+        System.out.println();
         System.out.println("  >>> vector([1,");
         System.out.println("  ... 2, 3])");
         System.out.println("  LaTeX: \\begin{pmatrix} 1 \\\\ 2 \\\\ 3 \\end{pmatrix}");
         System.out.println();
-        System.out.println("For full syntax reference, see: doc/syntax.md");
+        System.out.println("For the canonical syntax reference, see: tutorial/06_syntax.md");
         System.out.println();
     }
 
