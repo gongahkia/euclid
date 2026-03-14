@@ -6,7 +6,7 @@ This document is the canonical language contract for the current `Euclid` DSL.
 
 `Euclid` source is usually saved with the `.ed` extension.
 
-Pure Euclid parsing is strict by default. For prose-heavy Markdown documents, use mixed mode so normal text is preserved and Euclid expressions are transpiled in place.
+Pure Euclid parsing is strict by default. For prose-heavy Markdown documents, use mixed mode so normal text is preserved and obvious Euclid expressions are transpiled in place.
 
 The language is case-sensitive:
 
@@ -328,17 +328,19 @@ Standalone tokens transpile directly:
 
 ## Mixed-content mode
 
-When mixed mode is enabled, normal prose is preserved and Euclid-like expressions are transpiled in place. This is intended for Markdown authoring workflows where text and math live in the same document.
+When mixed mode is enabled, normal prose is preserved and obvious Euclid-like expressions are transpiled in place. This is intended for Markdown authoring workflows where text and math live in the same document, but it is not the core DSL contract.
 
 For best results:
 
 * keep complex expressions on their own line
 * use canonical spellings so diagnostics and rewrite suggestions stay accurate
 * prefer explicit grouping for long logic, fraction, and aggregate expressions
+* keep existing inline code and `$...$` LaTeX spans as-is; mixed mode intentionally does not rewrite inside those protected regions
+* do not rely on bare constants in prose being auto-detected; write a real Euclid expression such as `PI / 2` or use strict `.ed` input instead
 
 ## Compatibility aliases
 
-The transpiler still accepts a small compatibility surface and can rewrite it to canonical form. Using these aliases emits a warning so they do not silently become part of the preferred DSL:
+The transpiler still accepts a small compatibility surface and can rewrite it to canonical form. Using these aliases emits a warning-level diagnostic so they do not silently become part of the preferred DSL:
 
 | Alias | Canonical form |
 | :--- | :--- |
