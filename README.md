@@ -26,10 +26,10 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 
 * canonical forms matter: `a / b` is inline division, while `a \\ b` is a fraction
 * logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
-* a small compatibility alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`, but alias usage now emits warnings
+* a small compatibility alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`; alias usage warns by default and can be rejected with `--strict-aliases`
 * pure CLI transpilation is strict Euclid and the entire tool now assumes `.ed` input is Euclid source rather than prose
 * CLI transpilation now prints structured warnings and refuses to write output files when the source still has errors
-* capability metadata and canonical rewrites are available programmatically through the core transpiler API
+* capability metadata, exact alias locations, and canonical rewrites are available programmatically through the core transpiler API
 
 ## Usage
 
@@ -65,7 +65,10 @@ $ java -jar target/euclid-transpiler.jar input.ed output.md
 
 ```console
 $ java -jar target/euclid-transpiler.jar --check input.ed
+$ java -jar target/euclid-transpiler.jar --check --json input.ed
+$ java -jar target/euclid-transpiler.jar --check --strict-aliases input.ed
 $ java -jar target/euclid-transpiler.jar --canonicalize input.ed normalized.ed
+$ java -jar target/euclid-transpiler.jar --manifest --json
 ```
 
 5. Additionally launch the `Euclid` REPL with `target/euclid-repl.jar` to test `.ed` expressions.
