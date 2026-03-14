@@ -124,6 +124,7 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.EXPECT, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.VAR, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.COV, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.GIVEN, 2);
 
         // Linear algebra
         FUNCTION_ARG_COUNTS.put(TokenType.DET, 1);
