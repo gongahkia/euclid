@@ -40,7 +40,7 @@ public final class EuclidLanguage {
             TokenType.MAX, TokenType.SUP, TokenType.INF, TokenType.LIMSUP, TokenType.LIMINF,
             TokenType.BINOM, TokenType.NORM, TokenType.INNER, TokenType.GRAD, TokenType.DIVERGENCE,
             TokenType.CURL, TokenType.LAPLACIAN, TokenType.PROB, TokenType.EXPECT, TokenType.VAR,
-            TokenType.COV, TokenType.DET, TokenType.TRACE, TokenType.DIM, TokenType.RANK, TokenType.KER,
+            TokenType.COV, TokenType.GIVEN, TokenType.DET, TokenType.TRACE, TokenType.DIM, TokenType.RANK, TokenType.KER,
             TokenType.TRANSPOSE, TokenType.INVERSE, TokenType.BOXED, TokenType.CANCEL,
             TokenType.UNDERBRACE, TokenType.OVERBRACE
     );
@@ -247,6 +247,7 @@ public final class EuclidLanguage {
         registerKeyword(keywords, "expect", TokenType.EXPECT);
         registerKeyword(keywords, "var", TokenType.VAR);
         registerKeyword(keywords, "cov", TokenType.COV);
+        registerKeyword(keywords, "given", TokenType.GIVEN);
         registerKeyword(keywords, "det", TokenType.DET);
         registerKeyword(keywords, "trace", TokenType.TRACE);
         registerKeyword(keywords, "dim", TokenType.DIM);
@@ -301,6 +302,7 @@ public final class EuclidLanguage {
         registerSignature(signatures, "expect", "expect(expr)", "expr: random variable or expression");
         registerSignature(signatures, "var", "var(expr)", "expr: random variable or expression");
         registerSignature(signatures, "cov", "cov(x, y)", "x: first variable", "y: second variable");
+        registerSignature(signatures, "given", "given(event, condition)", "event: left-hand event", "condition: right-hand event");
 
         KEYWORDS = Collections.unmodifiableMap(keywords);
         ALIAS_TO_CANONICAL = Collections.unmodifiableMap(aliasToCanonical);
