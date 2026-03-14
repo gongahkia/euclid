@@ -525,4 +525,4 @@ The index variable should appear in the expression.
 
 ## Reference
 
-For a complete list of functions, see the [syntax reference](../syntax.md).
+For a complete list of functions, see the [syntax reference](06_syntax.md).
