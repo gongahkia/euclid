@@ -1,13 +1,14 @@
 package com.euclid.util;
 
-import com.euclid.lexer.Lexer;
 import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.ParserException;
+import com.euclid.lang.EuclidLanguage;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,9 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.SINH, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.COSH, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.TANH, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.CSCH, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.SECH, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.COTH, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.LN, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.EXP, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.ABS, 1);
@@ -42,7 +46,7 @@ public class ValidationHelper {
         
         // Binary functions (2 arguments)
         FUNCTION_ARG_COUNTS.put(TokenType.POW, 2);
-        FUNCTION_ARG_COUNTS.put(TokenType.LOG, -2); // 1 or 2 arguments
+        FUNCTION_ARG_COUNTS.put(TokenType.LOG, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.MOD, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.GCD, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.LCM, 2);
@@ -75,12 +79,12 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.EXISTS, 2);
         
         // Calculus operations (variable arguments)
-        FUNCTION_ARG_COUNTS.put(TokenType.LIMIT, -1);
-        FUNCTION_ARG_COUNTS.put(TokenType.DIFF, -1);
-        FUNCTION_ARG_COUNTS.put(TokenType.PARTIAL, -1);
-        FUNCTION_ARG_COUNTS.put(TokenType.INTEGRAL, -1);
-        FUNCTION_ARG_COUNTS.put(TokenType.SUM, -1);
-        FUNCTION_ARG_COUNTS.put(TokenType.PROD, -1);
+        FUNCTION_ARG_COUNTS.put(TokenType.LIMIT, 3);
+        FUNCTION_ARG_COUNTS.put(TokenType.DIFF, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.PARTIAL, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.INTEGRAL, -3); // 2 or 4 arguments
+        FUNCTION_ARG_COUNTS.put(TokenType.SUM, -4); // 1, 3, or 4 arguments
+        FUNCTION_ARG_COUNTS.put(TokenType.PROD, -4); // 1, 3, or 4 arguments
         
         // Matrix/vector operations (variable arguments)
         FUNCTION_ARG_COUNTS.put(TokenType.VECTOR, -1);
@@ -168,6 +172,32 @@ public class ValidationHelper {
             }
             return;
         }
+
+        if (expected == -3) {
+            // 2 or 4 arguments
+            if (argumentCount != 2 && argumentCount != 4) {
+                throw new ParserException(
+                    String.format("Function '%s' expects 2 or 4 arguments, but got %d",
+                                  function.getLexeme(), argumentCount),
+                    function.getLine(),
+                    function.getColumn()
+                );
+            }
+            return;
+        }
+
+        if (expected == -4) {
+            // 1, 3, or 4 arguments
+            if (argumentCount != 1 && argumentCount != 3 && argumentCount != 4) {
+                throw new ParserException(
+                    String.format("Function '%s' expects 1, 3, or 4 arguments, but got %d",
+                                  function.getLexeme(), argumentCount),
+                    function.getLine(),
+                    function.getColumn()
+                );
+            }
+            return;
+        }
         
         if (expected != argumentCount) {
             String plural = expected == 1 ? "" : "s";
@@ -186,7 +216,7 @@ public class ValidationHelper {
      * @return A list of suggestions
      */
     public static List<String> suggestSimilarFunctions(String name) {
-        List<String> suggestions = new ArrayList<>();
+        LinkedHashSet<String> suggestions = new LinkedHashSet<>();
         String lowerName = name.toLowerCase();
         
         // Common typos and similar names
@@ -209,13 +239,13 @@ public class ValidationHelper {
         }
         
         // Check for simple typos using Levenshtein distance against all keywords
-        for (String known : Lexer.getKeywordNames()) {
+        for (String known : EuclidLanguage.getKeywordNames()) {
             if (levenshteinDistance(lowerName, known.toLowerCase()) <= 2) {
-                suggestions.add(known);
+                suggestions.add(EuclidLanguage.getCanonicalName(known));
             }
         }
-        
-        return suggestions;
+
+        return new ArrayList<>(suggestions);
     }
 
     /**
