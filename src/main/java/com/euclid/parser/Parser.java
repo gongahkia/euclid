@@ -5,6 +5,7 @@ import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.ParserException;
+import com.euclid.lang.EuclidLanguage;
 import com.euclid.util.ValidationHelper;
 
 import java.util.ArrayList;
@@ -54,7 +55,13 @@ public class Parser {
                 try {
                     nodes.add(expression());
                 } catch (ParserException e) {
-                    diagnostics.addError(e.getMessage(), e.getLine(), e.getColumn());
+                    diagnostics.addError(
+                            e.getCode(),
+                            e.getMessage(),
+                            e.getLine(),
+                            e.getColumn(),
+                            e.getSuggestion(),
+                            e.getCanonicalRewrite());
                     nodes.add(new TextExpr("[ERROR: " + e.getMessage() + "]"));
                     while (!isAtEnd() && !check(TokenType.NEWLINE) && !check(TokenType.EOF)) {
                         advance();
@@ -72,7 +79,52 @@ public class Parser {
      * Parses an expression (top level).
      */
     private AstNode expression() throws ParserException {
-        return addition();
+        return equality();
+    }
+
+    /**
+     * Parses equality chains.
+     */
+    private AstNode equality() throws ParserException {
+        AstNode expr = logicalOr();
+
+        while (match(TokenType.EQUALS)) {
+            Token operator = previous();
+            AstNode right = logicalOr();
+            expr = new BinaryExpr(expr, operator, right);
+        }
+
+        return expr;
+    }
+
+    /**
+     * Parses logical disjunction.
+     */
+    private AstNode logicalOr() throws ParserException {
+        AstNode expr = logicalAnd();
+
+        while (match(TokenType.OR)) {
+            Token operator = previous();
+            AstNode right = logicalAnd();
+            expr = new BinaryExpr(expr, operator, right);
+        }
+
+        return expr;
+    }
+
+    /**
+     * Parses logical conjunction.
+     */
+    private AstNode logicalAnd() throws ParserException {
+        AstNode expr = addition();
+
+        while (match(TokenType.AND)) {
+            Token operator = previous();
+            AstNode right = addition();
+            expr = new BinaryExpr(expr, operator, right);
+        }
+
+        return expr;
     }
 
     /**
@@ -116,7 +168,7 @@ public class Parser {
     private boolean isImplicitMultiplyStart(Token token) {
         TokenType t = token.getType();
         return t == TokenType.NUMBER || t == TokenType.IDENTIFIER || t == TokenType.LPAREN ||
-               isFunctionToken(token) || isGreekLetter(token);
+               EuclidLanguage.isFunctionType(t) || isGreekLetter(token) || isConstantToken(token);
     }
 
     /**
@@ -138,7 +190,7 @@ public class Parser {
      * Parses unary expressions (-x, +x).
      */
     private AstNode unary() throws ParserException {
-        if (match(TokenType.MINUS, TokenType.PLUS)) {
+        if (match(TokenType.MINUS, TokenType.PLUS, TokenType.NOT)) {
             Token operator = previous();
             AstNode right = unary();
             return new UnaryExpr(operator, right);
@@ -162,6 +214,11 @@ public class Parser {
      * Parses function calls and constants.
      */
     private AstNode call() throws ParserException {
+        if (isLogicalFunctionAlias(peek())) {
+            Token function = advance();
+            return parseFunctionCall(function);
+        }
+
         // Check for function calls
         if (isFunctionToken(peek())) {
             Token function = advance();
@@ -176,21 +233,7 @@ public class Parser {
                 return new IdentifierExpr(function.getLexeme());
             }
 
-            consume(TokenType.LPAREN, "Expected '('");
-            List<AstNode> arguments = new ArrayList<>();
-
-            if (!check(TokenType.RPAREN)) {
-                do {
-                    arguments.add(expression());
-                } while (match(TokenType.COMMA));
-            }
-
-            consume(TokenType.RPAREN, "Expected ')' after function arguments");
-            
-            // Validate argument count
-            ValidationHelper.validateArgumentCount(function, arguments.size());
-            
-            return new CallExpr(function, arguments);
+            return parseFunctionCall(function);
         }
 
         return primary();
@@ -267,6 +310,7 @@ public class Parser {
         String suggestion = "Try using a number, identifier, or function call here";
         if (source != null) {
             throw new ParserException(
+                "parser.unexpected-token",
                 "Unexpected token '" + token.getLexeme() + "'",
                 token.getLine(),
                 token.getColumn(),
@@ -286,92 +330,21 @@ public class Parser {
      * Checks if a token is a function token.
      */
     private boolean isFunctionToken(Token token) {
-        TokenType type = token.getType();
-        return type == TokenType.POW || type == TokenType.ABS || type == TokenType.CEIL ||
-               type == TokenType.FLOOR || type == TokenType.MOD || type == TokenType.GCD ||
-               type == TokenType.LCM || type == TokenType.LT || type == TokenType.GT ||
-               type == TokenType.LEQ || type == TokenType.GEQ || type == TokenType.APPROX ||
-               type == TokenType.NEQ || type == TokenType.EQUIV || type == TokenType.PM ||
-               type == TokenType.TIMES || type == TokenType.DIV || type == TokenType.CDOT ||
-               type == TokenType.AST || type == TokenType.STAR || type == TokenType.CIRC ||
-               type == TokenType.BULLET || type == TokenType.CAP || type == TokenType.CUP ||
-               type == TokenType.SIN || type == TokenType.COS || type == TokenType.TAN ||
-               type == TokenType.CSC || type == TokenType.SEC || type == TokenType.COT ||
-               type == TokenType.SINH || type == TokenType.COSH || type == TokenType.TANH ||
-               type == TokenType.LOG || type == TokenType.LN || type == TokenType.EXP ||
-               type == TokenType.SQRT || type == TokenType.PARTIAL || type == TokenType.LIMIT ||
-               type == TokenType.DIFF || type == TokenType.INTEGRAL || type == TokenType.SUM ||
-               type == TokenType.PROD || type == TokenType.VECTOR || type == TokenType.MATRIX ||
-               type == TokenType.SUBSET || type == TokenType.SUPSET || type == TokenType.SUBSETEQ ||
-               type == TokenType.SUPSETEQ || type == TokenType.UNION || type == TokenType.INTERSECTION ||
-               type == TokenType.SET_DIFF || type == TokenType.ELEMENT_OF || type == TokenType.NOT_ELEMENT_OF ||
-               type == TokenType.IMPLIES || type == TokenType.IFF || type == TokenType.FORALL ||
-               type == TokenType.EXISTS || type == TokenType.HAT || type == TokenType.TILDE ||
-               type == TokenType.BAR || type == TokenType.VEC || type == TokenType.DOT ||
-               type == TokenType.DDOT || type == TokenType.OVERLINE || type == TokenType.UNDERLINE ||
-               type == TokenType.MATHTEXT || type == TokenType.PIECEWISE || type == TokenType.CASES ||
-               type == TokenType.ALIGN || type == TokenType.SYSTEM ||
-               // Inverse trig
-               type == TokenType.ARCSIN || type == TokenType.ARCCOS || type == TokenType.ARCTAN ||
-               type == TokenType.ARCCSC || type == TokenType.ARCSEC || type == TokenType.ARCCOT ||
-               // Extrema
-               type == TokenType.MIN || type == TokenType.MAX || type == TokenType.SUP ||
-               type == TokenType.INF || type == TokenType.LIMSUP || type == TokenType.LIMINF ||
-               // Binomial
-               type == TokenType.BINOM ||
-               // Norm/inner
-               type == TokenType.NORM || type == TokenType.INNER ||
-               // Vector calculus
-               type == TokenType.GRAD || type == TokenType.DIVERGENCE || type == TokenType.CURL || type == TokenType.LAPLACIAN ||
-               // Probability
-               type == TokenType.PROB || type == TokenType.EXPECT || type == TokenType.VAR || type == TokenType.COV ||
-               // Linear algebra
-               type == TokenType.DET || type == TokenType.TRACE || type == TokenType.DIM || type == TokenType.RANK ||
-               type == TokenType.KER || type == TokenType.TRANSPOSE || type == TokenType.INVERSE ||
-               // Visual decorations
-               type == TokenType.BOXED || type == TokenType.CANCEL || type == TokenType.UNDERBRACE || type == TokenType.OVERBRACE ||
-               isConstantToken(token);
+        return EuclidLanguage.isFunctionType(token.getType()) || isConstantToken(token);
     }
 
     /**
      * Checks if a token is a constant (doesn't require parentheses).
      */
     private boolean isConstantToken(Token token) {
-        TokenType type = token.getType();
-        return type == TokenType.PI || type == TokenType.E || type == TokenType.I ||
-               type == TokenType.GAMMA || type == TokenType.PHI || type == TokenType.INFINITY ||
-               type == TokenType.EMPTYSET || type == TokenType.AND || type == TokenType.OR ||
-               type == TokenType.NOT ||
-               // Number sets
-               type == TokenType.NATURALS || type == TokenType.INTEGERS || type == TokenType.RATIONALS ||
-               type == TokenType.REALS || type == TokenType.COMPLEXES ||
-               // Arrows
-               type == TokenType.RIGHTARROW || type == TokenType.LEFTARROW || type == TokenType.LEFTRIGHTARROW ||
-               type == TokenType.MAPSTO || type == TokenType.UPARROW || type == TokenType.DOWNARROW ||
-               type == TokenType.DARROW_RIGHT || type == TokenType.DARROW_LEFT || type == TokenType.DARROW_LEFTRIGHT ||
-               // Dots
-               type == TokenType.LDOTS || type == TokenType.CDOTS || type == TokenType.VDOTS || type == TokenType.DDOTS ||
-               // Proof
-               type == TokenType.THEREFORE || type == TokenType.BECAUSE || type == TokenType.QED ||
-               // Geometry
-               type == TokenType.PERP || type == TokenType.PARALLEL || type == TokenType.ANGLE ||
-               type == TokenType.TRIANGLE || type == TokenType.CONG || type == TokenType.SIM || type == TokenType.PROPTO ||
-               // Physics
-               type == TokenType.HBAR || type == TokenType.NABLA || type == TokenType.ELL;
+        return EuclidLanguage.isConstantType(token.getType());
     }
 
     /**
      * Checks if a token is a Greek letter.
      */
     private boolean isGreekLetter(Token token) {
-        TokenType type = token.getType();
-        return type == TokenType.ALPHA || type == TokenType.BETA || type == TokenType.DELTA ||
-               type == TokenType.EPSILON || type == TokenType.ZETA || type == TokenType.ETA ||
-               type == TokenType.THETA || type == TokenType.KAPPA || type == TokenType.LAMBDA ||
-               type == TokenType.MU || type == TokenType.NU || type == TokenType.XI ||
-               type == TokenType.OMICRON || type == TokenType.RHO || type == TokenType.SIGMA ||
-               type == TokenType.TAU || type == TokenType.UPSILON || type == TokenType.CHI ||
-               type == TokenType.PSI || type == TokenType.OMEGA;
+        return EuclidLanguage.isGreekType(token.getType());
     }
 
     /**
@@ -414,10 +387,37 @@ public class Parser {
         }
         
         if (source != null && suggestion != null) {
-            throw new ParserException(message, token.getLine(), token.getColumn(), source, suggestion);
+            throw new ParserException("parser.consume", message, token.getLine(), token.getColumn(), source, suggestion);
         } else {
             throw new ParserException(message, token.getLine(), token.getColumn());
         }
+    }
+
+    private AstNode parseFunctionCall(Token function) throws ParserException {
+        consume(TokenType.LPAREN, "Expected '('");
+        List<AstNode> arguments = new ArrayList<>();
+
+        if (!check(TokenType.RPAREN)) {
+            do {
+                arguments.add(expression());
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RPAREN, "Expected ')' after function arguments");
+        ValidationHelper.validateArgumentCount(function, arguments.size());
+        return new CallExpr(function, arguments);
+    }
+
+    private boolean isLogicalFunctionAlias(Token token) {
+        return (token.getType() == TokenType.AND || token.getType() == TokenType.OR || token.getType() == TokenType.NOT)
+                && checkNext(TokenType.LPAREN);
+    }
+
+    private boolean checkNext(TokenType type) {
+        if (current + 1 >= tokens.size()) {
+            return false;
+        }
+        return tokens.get(current + 1).getType() == type;
     }
 
     /**
