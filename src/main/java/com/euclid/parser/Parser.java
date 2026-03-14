@@ -62,10 +62,7 @@ public class Parser {
                             e.getColumn(),
                             e.getSuggestion(),
                             e.getCanonicalRewrite());
-                    nodes.add(new TextExpr("[ERROR: " + e.getMessage() + "]"));
-                    while (!isAtEnd() && !check(TokenType.NEWLINE) && !check(TokenType.EOF)) {
-                        advance();
-                    }
+                    synchronize();
                 }
             } else {
                 nodes.add(expression());
@@ -428,6 +425,21 @@ public class Parser {
             return false;
         }
         return tokens.get(current + 1).getType() == type;
+    }
+
+    private void synchronize() {
+        while (!isAtEnd()) {
+            if (check(TokenType.NEWLINE)) {
+                advance();
+                return;
+            }
+
+            if (check(TokenType.EOF)) {
+                return;
+            }
+
+            advance();
+        }
     }
 
     /**
