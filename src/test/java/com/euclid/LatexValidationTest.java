@@ -21,7 +21,7 @@ public class LatexValidationTest {
             "sqrt(2, 16)",
             "a \\\\ b",
             "integral(f, x, 0, 1)",
-            "sum(i, 1, n, i^2)",
+            "sum(i^2, i, 1, n)",
             "limit(f, x, 0)",
             "diff(x^2, x)"
         };
@@ -129,7 +129,7 @@ public class LatexValidationTest {
      */
     @Test
     public void testSummationSyntax() throws Exception {
-        String input = "sum(i, 1, n, i^2)";
+        String input = "sum(i^2, i, 1, n)";
         String latex = Transpiler.transpile(input);
 
         assertTrue(latex.contains("\\sum"),
@@ -160,7 +160,7 @@ public class LatexValidationTest {
             "sin(cos(x))",
             "pow(2, pow(3, 4))",
             "integral(sin(x^2), x, 0, PI)",
-            "sum(i, 1, n, pow(i, 2))",
+            "sum(pow(i, 2), i, 1, n)",
             "sqrt(2, sqrt(2, 256))"
         };
 
