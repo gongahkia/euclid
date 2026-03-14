@@ -1,4 +1,4 @@
-name: CI
+name: Euclid CI/CD on push
 
 on:
   push:

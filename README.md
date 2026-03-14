@@ -1,5 +1,6 @@
 [![](https://img.shields.io/badge/euclid_1.0-passing-light_green)](https://github.com/gongahkia/euclid/releases/tag/1.0)
 [![](https://img.shields.io/badge/euclid_2.0-passing-green)](https://github.com/gongahkia/euclid/releases/tag/2.0)
+![](https://github.com/gongahkia/euclid/actions/workflows/ci.yml/badge.svg)
 
 # `Euclid`
 
@@ -17,6 +18,8 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 
 `.ed` script then transpiles to [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) and adheres to the [demands](https://en.wikibooks.org/wiki/LaTeX/Mathematics) of $\LaTeX$ and [MathJax](https://docs.mathjax.org/en/latest/). 
 
+## An example
+
 | Euclid Syntax (`.ed`) | Transpiled LaTeX Output | Rendered Result |
 |---|---|---|
 | `x = (-b +- sqrt(b^2 - 4*a*c)) / (2*a)` | `$x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$` | $x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$ |
@@ -32,8 +35,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 1. First run the below commands to install `Euclid` and create a standalone JAR at `target/euclid-2.0-SNAPSHOT.jar`.
 
 ```console
-$ git clone https://github.com/gongahkia/euclid
-$ cd euclid
+$ git clone https://github.com/gongahkia/euclid && cd euclid
 $ mvn clean package
 ```
 
@@ -48,18 +50,28 @@ $ mvn clean compile
 3. Transpile `.ed` files to `.md` with $\LaTeX$.
 
 ```console
-$ java -jar target/euclid-2.0-SNAPSHOT.jar input.ed output.md
+$ java -jar target/euclid-transpiler.jar input.ed output.md
 ```
 
-4. Additionally launch the `Euclid` REPL to test `.ed` expressions.
+4. Check or canonicalize Euclid source without transpiling it.
 
 ```console
-$ java -jar target/euclid-2.0-SNAPSHOT.jar
-$ euclid> x^2 + 2*x + 1
+$ java -jar target/euclid-transpiler.jar --check input.ed
+$ java -jar target/euclid-transpiler.jar --check --json input.ed
+$ java -jar target/euclid-transpiler.jar --check --strict-aliases input.ed
+$ java -jar target/euclid-transpiler.jar --canonicalize input.ed normalized.ed
+$ java -jar target/euclid-transpiler.jar --manifest --json
+```
+
+5. Additionally launch the `Euclid` REPL to test `.ed` expressions.
+
+```console
+$ java -jar target/euclid-repl.jar
+$ >>> x^2 + 2*x + 1
 $ LaTeX: x^{2} + 2x + 1
-$ euclid> integral(x^2, x)
+$ >>> integral(x^2, x)
 $ LaTeX: \int x^{2} \, dx
-$ euclid> exit
+$ >>> :quit
 ```
 
 ## References
