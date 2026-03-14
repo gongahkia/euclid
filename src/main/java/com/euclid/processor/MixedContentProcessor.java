@@ -18,14 +18,14 @@ public class MixedContentProcessor {
     // false matches (e.g., "sin" inside "singing")
     private static final Pattern MATH_PATTERN = Pattern.compile(
         // Function calls: require word boundary before AND '(' after to avoid partial word matches
-        "(?<![a-zA-Z])(pow|abs|ceil|floor|mod|gcd|lcm|sin|cos|tan|csc|sec|cot|sinh|cosh|tanh|" +
+        "(?<![a-zA-Z])(pow|abs|ceil|floor|mod|gcd|lcm|sin|cos|tan|csc|sec|cot|sinh|cosh|tanh|csch|sech|coth|" +
         "log|ln|exp|sqrt|limit|diff|partial|integral|sum|prod|vector|matrix|" +
         "lt|gt|leq|geq|approx|neq|equiv|pm|times|div|cdot|ast|star|circ|bullet|" +
         "cap|cup|subset|supset|subseteq|supseteq|union|intersection|set_diff|" +
-        "element_of|not_element_of|AND|OR|NOT|implies|iff|forall|exists)(?![a-zA-Z])\\s*\\([^)]*\\)" +
+        "element_of|not_element_of|AND|OR|NOT|implies|iff|forall|exists|given)(?![a-zA-Z])\\s*\\([^)]*\\)" +
         "|" +
         // Constants: strict word boundaries
-        "(?<![a-zA-Z])(PI|GAMMA|PHI|INFINITY|ALPHA|BETA|DELTA|EPSILON|ZETA|ETA|THETA|" +
+        "(?<![a-zA-Z])(PI|GAMMA|PHI|INFINITY|INF|ALPHA|BETA|DELTA|EPSILON|ZETA|ETA|THETA|" +
         "KAPPA|LAMBDA|MU|NU|XI|OMICRON|RHO|SIGMA|TAU|UPSILON|CHI|PSI|OMEGA|emptyset)(?![a-zA-Z])" +
         "|" +
         // Arithmetic: require at least one operator between numbers
