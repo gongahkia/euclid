@@ -228,6 +228,18 @@ java -jar target/euclid-transpiler.jar --check myfile.ed
 
 This is the safest way to validate strict Euclid input before committing or publishing generated output.
 
+When you need machine-readable diagnostics for scripts or CI:
+
+```bash
+java -jar target/euclid-transpiler.jar --check --json myfile.ed
+```
+
+When you want compatibility aliases to fail instead of warn:
+
+```bash
+java -jar target/euclid-transpiler.jar --check --strict-aliases myfile.ed
+```
+
 ### Strategy 5: Canonicalize Before You Debug
 
 Normalize compatibility aliases to canonical spellings first:
@@ -237,6 +249,12 @@ java -jar target/euclid-transpiler.jar --canonicalize myfile.ed normalized.ed
 ```
 
 That removes ambiguity when you are chasing parser or transpiler issues.
+
+You can also inspect the supported DSL surface directly:
+
+```bash
+java -jar target/euclid-transpiler.jar --manifest --json
+```
 
 ### Strategy 6: Watch Mode for Live Feedback
 
