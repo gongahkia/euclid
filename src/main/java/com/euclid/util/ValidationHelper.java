@@ -4,6 +4,7 @@ import com.euclid.token.Token;
 import com.euclid.token.TokenType;
 import com.euclid.exception.ParserException;
 import com.euclid.lang.EuclidLanguage;
+import com.euclid.lang.EuclidSignature;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -188,12 +189,7 @@ public class ValidationHelper {
         if (expected == -1) {
             // Variable arguments, any count is valid
             if ((function.getType() == TokenType.VECTOR || function.getType() == TokenType.MATRIX) && argumentCount < 1) {
-                throw new ParserException(
-                    String.format("Function '%s' expects at least 1 argument, but got %d",
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "at least 1", argumentCount);
             }
             return;
         }
@@ -201,12 +197,7 @@ public class ValidationHelper {
         if (expected == -2) {
             // 1 or 2 arguments
             if (argumentCount != 1 && argumentCount != 2) {
-                throw new ParserException(
-                    String.format("Function '%s' expects 1 or 2 arguments, but got %d", 
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "1 or 2", argumentCount);
             }
             return;
         }
@@ -214,12 +205,7 @@ public class ValidationHelper {
         if (expected == -3) {
             // 2 or 4 arguments
             if (argumentCount != 2 && argumentCount != 4) {
-                throw new ParserException(
-                    String.format("Function '%s' expects 2 or 4 arguments, but got %d",
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "2 or 4", argumentCount);
             }
             return;
         }
@@ -227,12 +213,7 @@ public class ValidationHelper {
         if (expected == -4) {
             // 1, 3, or 4 arguments
             if (argumentCount != 1 && argumentCount != 3 && argumentCount != 4) {
-                throw new ParserException(
-                    String.format("Function '%s' expects 1, 3, or 4 arguments, but got %d",
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "1, 3, or 4", argumentCount);
             }
             return;
         }
@@ -240,12 +221,7 @@ public class ValidationHelper {
         if (expected == -5) {
             // Even number of arguments, at least 2
             if (argumentCount < 2 || argumentCount % 2 != 0) {
-                throw new ParserException(
-                    String.format("Function '%s' expects an even number of arguments and at least 2, but got %d",
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "an even number and at least 2", argumentCount);
             }
             return;
         }
@@ -253,25 +229,31 @@ public class ValidationHelper {
         if (expected == -6) {
             // At least 1 argument
             if (argumentCount < 1) {
-                throw new ParserException(
-                    String.format("Function '%s' expects at least 1 argument, but got %d",
-                                  function.getLexeme(), argumentCount),
-                    function.getLine(),
-                    function.getColumn()
-                );
+                throw invalidArity(function, "at least 1", argumentCount);
             }
             return;
         }
         
         if (expected != argumentCount) {
-            String plural = expected == 1 ? "" : "s";
-            throw new ParserException(
-                String.format("Function '%s' expects %d argument%s, but got %d", 
-                              function.getLexeme(), expected, plural, argumentCount),
-                function.getLine(),
-                function.getColumn()
-            );
+            throw invalidArity(function, String.valueOf(expected), argumentCount);
         }
+    }
+
+    private static ParserException invalidArity(Token function, String expected, int actual) {
+        EuclidSignature signature = EuclidLanguage.getSignature(function.getLexeme());
+        String suggestion = signature != null
+                ? "Use " + signature.label()
+                : "Check the canonical function signature before retrying";
+        String message = String.format("Function '%s' expects %s argument%s, but got %d",
+                function.getLexeme(),
+                expected,
+                needsPluralSuffix(expected) ? "s" : "",
+                actual);
+        return new ParserException("parser.invalid-arity", message, function.getLine(), function.getColumn(), suggestion);
+    }
+
+    private static boolean needsPluralSuffix(String expected) {
+        return !(expected.equals("1") || expected.equals("at least 1"));
     }
 
     /**
