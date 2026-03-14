@@ -117,6 +117,7 @@ public class LanguageContractTest {
         TranspileResult result = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE, false);
         assertFalse(result.diagnostics().isEmpty());
         assertEquals("canonical.rewrite", result.diagnostics().get(0).getCode());
+        assertEquals(com.euclid.exception.Diagnostic.Severity.WARNING, result.diagnostics().get(0).getSeverity());
         assertEquals("INFINITY", result.diagnostics().get(0).getCanonicalRewrite());
     }
 
