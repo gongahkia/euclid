@@ -22,16 +22,19 @@
  * // Validate function argument count
  * Token functionToken = new Token(TokenType.SIN, "sin", 1, 1);
  * List<AstNode> arguments = Arrays.asList(arg1);
- * ValidationHelper.validateFunctionArguments(functionToken, arguments);
+ * ValidationHelper.validateArgumentCount(functionToken, arguments.size());
  *
  * // Get suggestions for typos
  * String typo = "cosine";
- * String suggestion = ValidationHelper.getSuggestion(typo);
- * // Returns: "cos" (using Levenshtein distance to find closest match)
+ * List<String> suggestions = ValidationHelper.suggestSimilarFunctions(typo);
+ * // Returns a list containing "cos" as a close canonical match
  *
  * // Check balanced delimiters
- * String source = "sin(PI / 4)";
- * ValidationHelper.checkBalancedDelimiters(source);
+ * List<Token> tokens = List.of(
+ *     new Token(TokenType.LPAREN, "(", 1, 1),
+ *     new Token(TokenType.RPAREN, ")", 1, 2)
+ * );
+ * ValidationHelper.validateBalancedDelimiters(tokens);
  * // No exception thrown - delimiters are balanced
  * }</pre>
  *
