@@ -36,15 +36,39 @@ public class MixedContentProcessorTest {
     @Test
     public void aliasWarningsAreOffsetInsideMixedMode() {
         TranspileResult result = Transpiler.transpileWithDiagnostics(
-                "Infinity: INF",
+                "Choose: choose(n, k)",
                 false,
                 com.euclid.transpiler.MathMode.NONE,
                 true);
 
-        assertEquals("Infinity: $\\infty$", result.output());
+        assertEquals("Choose: $\\binom{n}{k}$", result.output());
         assertTrue(result.diagnostics().stream().anyMatch(d ->
                 d.getSeverity() == Diagnostic.Severity.WARNING
                         && "canonical.rewrite".equals(d.getCode())
                         && d.getColumn() > 1));
+    }
+
+    @Test
+    public void standaloneConstantsRemainPlainTextInMixedMode() {
+        TranspileResult result = Transpiler.transpileWithDiagnostics(
+                "Acronym: INF",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                true);
+
+        assertEquals("Acronym: INF", result.output());
+        assertTrue(result.diagnostics().isEmpty());
+    }
+
+    @Test
+    public void existingInlineCodeAndLatexAreLeftUntouchedInMixedMode() {
+        TranspileResult result = Transpiler.transpileWithDiagnostics(
+                "Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                true);
+
+        assertEquals("Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.", result.output());
+        assertTrue(result.diagnostics().isEmpty());
     }
 }
