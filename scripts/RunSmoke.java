@@ -2,6 +2,7 @@ import com.euclid.TranspileResult;
 import com.euclid.Transpiler;
 import com.euclid.exception.Diagnostic;
 import com.euclid.exception.LexerException;
+import com.euclid.lang.EuclidAliasHandling;
 import com.euclid.lang.EuclidAliasPolicy;
 import com.euclid.lang.EuclidCapability;
 
@@ -22,6 +23,9 @@ public final class RunSmoke {
         assertEquals("INFINITY + subset(A, B) + binom(n, k)",
                 Transpiler.canonicalize("INF + proper_subset(A, B) + choose(n, k)"),
                 "canonicalization");
+        assertEquals("mathtext(\"INF\") # choose\nINFINITY",
+                Transpiler.canonicalize("mathtext(\"INF\") # choose\nINF"),
+                "token-aware canonicalization");
         assertThrowsLexer("x + @", "strict lexer");
 
         TranspileResult aliasResult = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE);
@@ -47,6 +51,11 @@ public final class RunSmoke {
         assertTrue(!checkResult.hasErrors(), "check mode success");
         assertTrue(checkResult.diagnostics().stream().anyMatch(d ->
                 d.getSeverity() == Diagnostic.Severity.WARNING && "canonical.rewrite".equals(d.getCode())), "check mode warning");
+
+        TranspileResult strictAliasResult = Transpiler.checkFile(checkFile.toString(), false, EuclidAliasHandling.ERROR);
+        assertTrue(strictAliasResult.hasErrors(), "strict alias mode errors");
+        assertTrue(strictAliasResult.diagnostics().stream().anyMatch(d ->
+                d.getSeverity() == Diagnostic.Severity.ERROR && "alias.noncanonical".equals(d.getCode())), "strict alias diagnostic");
 
         Path canonicalizeInput = Files.createTempFile("euclid-canonicalize-smoke", ".ed");
         Path canonicalizeOutput = Files.createTempFile("euclid-canonicalize-smoke", ".out");
