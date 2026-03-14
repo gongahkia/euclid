@@ -155,6 +155,11 @@ public class Transpiler {
         } catch (EuclidException e) {
             collector.addError("transpile.failure", e.getMessage(), 1, 1, null, canonicalSource.equals(source) ? null : canonicalSource);
             return new TranspileResult(null, collector.getAll());
+        } catch (RuntimeException e) {
+            collector.addError("transpile.internal", e.getMessage(), 1, 1,
+                    "This indicates a compiler contract failure rather than invalid Euclid source",
+                    canonicalSource.equals(source) ? null : canonicalSource);
+            return new TranspileResult(null, collector.getAll());
         }
     }
 
