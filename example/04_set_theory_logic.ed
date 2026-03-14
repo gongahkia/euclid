@@ -22,21 +22,21 @@ Equivalent: equiv(a, b) means a ≡ b
 
 ## Logical Operators
 
-AND: AND(P, Q)
-OR: OR(P, Q)
+AND: P AND Q
+OR: P OR Q
 NOT: NOT(P)
 Implies: implies(P, Q)
 If and only if: iff(P, Q)
 
 ## Quantifiers
 
-For all: forall(x)
-There exists: exists(x)
+For all: forall(x, P(x))
+There exists: exists(x, P(x))
 
 ## Logic Examples
 
-De Morgan's law: NOT(AND(P, Q)) equiv OR(NOT(P), NOT(Q))
-Contrapositive: implies(P, Q) equiv implies(NOT(Q), NOT(P))
+De Morgan's law: equiv(NOT(P AND Q), NOT(P) OR NOT(Q))
+Contrapositive: equiv(implies(P, Q), implies(NOT(Q), NOT(P)))
 
 ## Number Theory
 
