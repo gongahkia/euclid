@@ -576,31 +576,13 @@ boxed(E = m * c^2)
 underbrace(a + b + c, "n terms")
 ```
 
-## LSP Server
-
-Euclid ships with a built-in Language Server Protocol server for editor integration:
-
-```bash
-java -jar target/euclid-lsp.jar
-```
-
-**Features:**
-* **Diagnostics** — red squiggles for syntax errors as you type
-* **Hover** — see the LaTeX output for the expression under your cursor
-* **Completion** — auto-complete function names, constants, and Greek letters
-* **Signature help** — parameter hints for functions like `integral(expr, var, lower, upper)`
-* **Semantic tokens** — syntax highlighting for `.ed` files
-
-Connect any LSP-compatible editor (VS Code, Neovim, Emacs, etc.) to the server on stdin/stdout.
-
 ## Tips for Power Users
 
 1. **Memorize common patterns** - Speed up your workflow
 2. **Create templates** - Save boilerplate for common tasks
 3. **Use shell scripts** - Automate repetitive transpilation
-4. **Use the LSP server** - Get real-time feedback in your editor
-5. **Learn LaTeX** - Understanding output helps debug issues
-6. **Read source code** - Check how functions are implemented
+4. **Learn LaTeX** - Understanding output helps debug issues
+5. **Read source code** - Check how functions are implemented
 
 ## Final Thoughts
 
