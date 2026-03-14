@@ -23,6 +23,10 @@ public class DiagnosticCollector {
         diagnostics.add(new Diagnostic(Diagnostic.Severity.WARNING, message, line, column));
     }
 
+    public void addWarning(String code, String message, int line, int column, String suggestion, String canonicalRewrite) {
+        diagnostics.add(new Diagnostic(Diagnostic.Severity.WARNING, code, message, line, column, suggestion, canonicalRewrite));
+    }
+
     public void addInfo(String message, int line, int column) {
         diagnostics.add(new Diagnostic(Diagnostic.Severity.INFO, message, line, column));
     }
@@ -49,6 +53,10 @@ public class DiagnosticCollector {
 
     public boolean hasErrors() {
         return diagnostics.stream().anyMatch(d -> d.getSeverity() == Diagnostic.Severity.ERROR);
+    }
+
+    public void add(Diagnostic diagnostic) {
+        diagnostics.add(diagnostic);
     }
 
     public void clear() {
