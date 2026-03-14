@@ -45,6 +45,16 @@ public class ParserException extends EuclidException {
         this(code, message, line, column, source, suggestion, null);
     }
 
+    public ParserException(String code, String message, int line, int column, String suggestion) {
+        super(String.format("Parser error at line %d, column %d: %s", line, column, message));
+        this.line = line;
+        this.column = column;
+        this.code = code;
+        this.sourceContext = null;
+        this.suggestion = suggestion;
+        this.canonicalRewrite = null;
+    }
+
     public ParserException(String code, String message, int line, int column, String source, String suggestion, String canonicalRewrite) {
         super(buildErrorMessage(message, line, column, source, suggestion));
         this.line = line;
