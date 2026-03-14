@@ -149,7 +149,7 @@ public class Parser {
         AstNode expr = power();
 
         while (true) {
-            if (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BACKSLASH_BACKSLASH)) {
+            if (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BACKSLASH_BACKSLASH, TokenType.DOT)) {
                 Token operator = previous();
                 AstNode right = power();
                 expr = new BinaryExpr(expr, operator, right);
