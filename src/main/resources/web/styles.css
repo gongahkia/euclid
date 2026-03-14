@@ -267,6 +267,7 @@ textarea {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.3)),
         rgba(255, 249, 241, 0.85);
+    white-space: pre-wrap;
 }
 
 .diagnostic-list,
