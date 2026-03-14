@@ -103,6 +103,7 @@ public class Lexer {
                 column = 1;
             }
             case '\r', '\t', ' ' -> { /* Skip whitespace but track columns */ }
+            case '"' -> string();
             case '\\' -> {
                 // Check for \\ (fraction operator)
                 if (match('\\')) {
@@ -184,6 +185,49 @@ public class Lexer {
         String text = source.substring(start, current);
         TokenType type = keywords.getOrDefault(text, TokenType.IDENTIFIER);
         addToken(type);
+    }
+
+    /**
+     * Scans a double-quoted string literal.
+     */
+    private void string() throws LexerException {
+        StringBuilder value = new StringBuilder();
+        boolean escaping = false;
+
+        while (!isAtEnd()) {
+            char c = advance();
+
+            if (escaping) {
+                value.append(switch (c) {
+                    case 'n' -> '\n';
+                    case 't' -> '\t';
+                    case '"' -> '"';
+                    case '\\' -> '\\';
+                    default -> c;
+                });
+                escaping = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escaping = true;
+                continue;
+            }
+
+            if (c == '"') {
+                addToken(TokenType.STRING, value.toString());
+                return;
+            }
+
+            if (c == '\n') {
+                line++;
+                column = 1;
+            }
+
+            value.append(c);
+        }
+
+        throw new LexerException("Unterminated string literal", line, tokenStartColumn, source);
     }
 
     /**
