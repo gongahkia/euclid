@@ -83,6 +83,24 @@ public class MathFunctionsTest {
         assertTrue(result.contains("\\tanh"));
     }
 
+    @Test
+    public void testHyperbolicCosecant() throws LexerException, ParserException {
+        String result = transpile("csch(x)");
+        assertTrue(result.contains("csch"));
+    }
+
+    @Test
+    public void testHyperbolicSecant() throws LexerException, ParserException {
+        String result = transpile("sech(x)");
+        assertTrue(result.contains("sech"));
+    }
+
+    @Test
+    public void testHyperbolicCotangent() throws LexerException, ParserException {
+        String result = transpile("coth(x)");
+        assertTrue(result.contains("\\coth"));
+    }
+
     // Logarithmic and Exponential
     @Test
     public void testNaturalLog() throws LexerException, ParserException {
@@ -219,7 +237,7 @@ public class MathFunctionsTest {
 
     @Test
     public void testFractionsWithFunctions() throws LexerException, ParserException {
-        String result = transpile("sin(x) / cos(x)");
+        String result = transpile("sin(x) \\\\ cos(x)");
         assertTrue(result.contains("\\frac"));
         assertTrue(result.contains("\\sin") && result.contains("\\cos"));
     }
