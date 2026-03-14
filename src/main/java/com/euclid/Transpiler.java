@@ -523,9 +523,9 @@ public class Transpiler {
         System.out.println("Euclid Transpiler - Convert .ed files to Markdown with LaTeX");
         System.out.println();
         System.out.println("Usage:");
-        System.out.println("  java -jar euclid-transpiler.jar [options] <input.ed> [output.md]");
-        System.out.println("  java -jar euclid-transpiler.jar --check [--mixed] <input.ed>");
-        System.out.println("  java -jar euclid-transpiler.jar --canonicalize <input.ed> [output.ed]");
+        System.out.println("  java -jar target/euclid-transpiler.jar [options] <input.ed> [output.md]");
+        System.out.println("  java -jar target/euclid-transpiler.jar --check [--mixed] <input.ed>");
+        System.out.println("  java -jar target/euclid-transpiler.jar --canonicalize <input.ed> [output.ed]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  --watch, -w      Watch mode: automatically retranspile when file changes");
@@ -543,15 +543,15 @@ public class Transpiler {
         System.out.println("  output.ed        Canonicalized Euclid file (optional, defaults to stdout)");
         System.out.println();
         System.out.println("Examples:");
-        System.out.println("  java -jar euclid-transpiler.jar example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar example.ed output.md");
-        System.out.println("  java -jar euclid-transpiler.jar --check example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar --canonicalize example.ed normalized.ed");
-        System.out.println("  java -jar euclid-transpiler.jar --watch example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar -v example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar --inline example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar --display example.ed");
-        System.out.println("  java -jar euclid-transpiler.jar --watch --inline --verbose example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar example.ed output.md");
+        System.out.println("  java -jar target/euclid-transpiler.jar --check example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --canonicalize example.ed normalized.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --watch example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar -v example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --inline example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --display example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --watch --inline --verbose example.ed");
     }
 
     private static void validateCliOptions(
