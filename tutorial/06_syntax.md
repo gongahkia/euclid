@@ -1,337 +1,350 @@
 # `Euclid` syntax guide
 
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Constants](#constants)
-3. [Number Sets](#number-sets)
-4. [Basic Operations](#basic-operations)
-5. [Subscripts and Superscripts](#subscripts-and-superscripts)
-6. [Factorial and Binomial](#factorial-and-binomial)
-7. [Implicit Multiplication](#implicit-multiplication)
-8. [Symbols](#symbols)
-9. [Arrows](#arrows)
-10. [Dot Sequences](#dot-sequences)
-11. [Trigonometric and Hyperbolic Functions](#trigonometric-and-hyperbolic-functions)
-12. [Inverse Trigonometric Functions](#inverse-trigonometric-functions)
-13. [Logarithmic and Exponential Functions](#logarithmic-and-exponential-functions)
-14. [Roots and Fractions](#roots-and-fractions)
-15. [Limits, Derivatives and Integrals](#limits-derivatives-and-integrals)
-16. [Extrema](#extrema)
-17. [Summation and Product Notation](#summation-and-product-notation)
-18. [Matrices and Vectors](#matrices-and-vectors)
-19. [Norms and Inner Products](#norms-and-inner-products)
-20. [Linear Algebra](#linear-algebra)
-21. [Vector Calculus](#vector-calculus)
-22. [Set Notation](#set-notation)
-23. [Logic Symbols](#logic-symbols)
-24. [Proof Notation](#proof-notation)
-25. [Geometry](#geometry)
-26. [Probability and Statistics](#probability-and-statistics)
-27. [Visual Notation](#visual-notation)
+This document is the canonical language contract for the current `Euclid` DSL.
 
 ## Introduction
 
-* save your Euclid files with the `.ed` file extension
-* standard Markdown is read normally, only the extended syntax below is transpiled to the corresponding MathJax
-* for IDE syntax highlighting, it is more convenient to match the language syntax to Markdown
-* Euclid ships with a built-in LSP server for editor integration (`java -jar target/euclid-lsp.jar`)
-* the transpiler supports error recovery — valid expressions still transpile while errors are reported as diagnostics
+`Euclid` source is usually saved with the `.ed` extension.
 
-## Constants
+Plain Markdown is preserved as text. Euclid expressions are parsed and transpiled to LaTeX or MathJax.
 
-Commonly used constants are specified in Uppercase by default.
+The language is case-sensitive:
 
-| Euclid representation | MathJax equivalent |
+* constants and named sets use uppercase tokens such as `PI`, `INFINITY`, and `REALS`
+* most functions use lowercase tokens such as `sqrt`, `integral`, and `matrix`
+* logical infix keywords are uppercase: `AND`, `OR`, `NOT`
+
+## Canonical rules
+
+Use these forms in new source:
+
+* `/` is inline division, while `\\` creates a fraction
+* `=` is infix equality
+* `AND` and `OR` are infix logical operators, while `NOT(expr)` is the clearest unary negation form
+* `sum(expr, var, lower, upper)` and `prod(expr, var, lower, upper)` are the canonical aggregate forms
+* `vector([a, b, c])` and `matrix([[a, b], [c, d]])` are the preferred collection forms
+* conditional probability is written as `prob(given(A, B))`
+
+## Precedence and associativity
+
+`Euclid` parses operators in this order, from highest precedence to lowest:
+
+1. function calls and postfix factorial: `sin(x)`, `n!`
+2. powers and subscripts: `x^2`, `a_i`
+3. multiplication family: implicit multiplication, `*`, `/`, `\\`, and infix `dot`
+4. addition and subtraction: `+`, `-`
+5. logical conjunction: `AND`
+6. logical disjunction: `OR`
+7. equality: `=`
+
+`^`, `_`, and chained binary operators associate from left to right in the current parser implementation except where grouping forces a different structure. Use parentheses whenever intent could be ambiguous.
+
+Comparison operators such as `<` and `>=` are written with helper functions like `lt(a, b)` and `geq(a, b)` rather than infix tokens.
+
+## Constants and named sets
+
+| Euclid | Output |
 | :--- | :--- |
-| `PI` | $\pi$ |
-| `E` | $e$ |
-| `I` | $i$ |
-| `GAMMA` | $\gamma$ |
-| `PHI` | $\phi$ |
-| `INFINITY` | $\infty$ |
-| `ALPHA` | $\alpha$ |
-| `BETA` | $\beta$ |
-| `DELTA` | $\delta$ |
-| `EPSILON` | $\epsilon$ |
-| `ZETA` | $\zeta$ |
-| `ETA` | $\eta$ |
-| `THETA` | $\theta$ |
-| `KAPPA` | $\kappa$ |
-| `LAMBDA` | $\lambda$ |
-| `MU` | $\mu$ |
-| `NU` | $\nu$ |
-| `XI` | $\xi$ |
-| `OMICRON` | $o$ |
-| `RHO` | $\rho$ |
-| `SIGMA` | $\sigma$ |
-| `TAU` | $\tau$ |
-| `UPSILON` | $\upsilon$ |
-| `CHI` | $\chi$ |
-| `PSI` | $\psi$ |
-| `OMEGA` | $\omega$ |
+| `PI` | `\pi` |
+| `E` | `e` |
+| `I` | `i` |
+| `INFINITY` | `\infty` |
+| `emptyset` | `\emptyset` |
+| `NATURALS` | `\mathbb{N}` |
+| `INTEGERS` | `\mathbb{Z}` |
+| `RATIONALS` | `\mathbb{Q}` |
+| `REALS` | `\mathbb{R}` |
+| `COMPLEXES` | `\mathbb{C}` |
 
-## Number Sets
+## Greek letters
 
-| Euclid representation | MathJax equivalent |
+Uppercase token names transpile to the corresponding lowercase Greek letter.
+
+| Euclid | Output |
 | :--- | :--- |
-| `NATURALS` | $\mathbb{N}$ |
-| `INTEGERS` | $\mathbb{Z}$ |
-| `RATIONALS` | $\mathbb{Q}$ |
-| `REALS` | $\mathbb{R}$ |
-| `COMPLEXES` | $\mathbb{C}$ |
+| `ALPHA` | `\alpha` |
+| `BETA` | `\beta` |
+| `DELTA` | `\delta` |
+| `EPSILON` | `\epsilon` |
+| `GAMMA` | `\gamma` |
+| `LAMBDA` | `\lambda` |
+| `MU` | `\mu` |
+| `PHI` | `\phi` |
+| `SIGMA` | `\sigma` |
+| `THETA` | `\theta` |
+| `OMEGA` | `\omega` |
 
-## Basic Operations
+## Arithmetic and numeric helpers
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `+` | $+$ |
-| `-` | $-$ |
-| `/` | $/$ |
-| `*` | $*$ |
-| `pow(x, y)` | $x^y$ |
-| `x^y` | $x^{y}$ |
-| `abs(x)` | $|x|$ |
-| `ceil(x)` | $\lceil x \rceil $ |
-| `floor(x)` | $\lfloor x \rfloor$ |
-| `mod(a, b)` | $a \mod b$ |
-| `gcd(a, b)` | $\gcd(a, b)$ |
-| `lcm(a, b)` | $\text{lcm}(a, b)$ |
+| `a + b` | `a + b` |
+| `a - b` | `a - b` |
+| `a * b` | `a * b` |
+| `a / b` | `a / b` |
+| `a \\ b` | `\frac{a}{b}` |
+| `pow(a, b)` or `a^b` | `a^{b}` |
+| `abs(x)` | `|x|` |
+| `ceil(x)` | `\lceil x \rceil` |
+| `floor(x)` | `\lfloor x \rfloor` |
+| `mod(a, b)` | `a \mod b` |
+| `gcd(a, b)` | `\gcd(a, b)` |
+| `lcm(a, b)` | `\text{lcm}(a, b)` |
+| `n!` | `n!` |
+| `binom(n, k)` | `\binom{n}{k}` |
 
-## Subscripts and Superscripts
+Implicit multiplication is supported:
 
-Use `_` for subscripts and `^` for superscripts directly.
-
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `x_1` | $x_{1}$ |
-| `x_i` | $x_{i}$ |
-| `a_i^2` | $a_{i}^{2}$ |
-| `x^2` | $x^{2}$ |
+| `2x` | `2x` |
+| `2(x + 1)` | `2(x + 1)` |
+| `(a)(b)` | `(a)(b)` |
 
-## Factorial and Binomial
+## Comparison and symbolic operators
 
-| Euclid lang syntax | MathJax equivalent |
+These forms remain function-based:
+
+| Euclid | Output |
 | :--- | :--- |
-| `n!` | $n!$ |
-| `binom(n, k)` | $\binom{n}{k}$ |
+| `lt(a, b)` | `a < b` |
+| `gt(a, b)` | `a > b` |
+| `leq(a, b)` | `a \leq b` |
+| `geq(a, b)` | `a \geq b` |
+| `approx(a, b)` | `a \approx b` |
+| `neq(a, b)` | `a \neq b` |
+| `equiv(a, b)` | `a \equiv b` |
+| `pm(a, b)` | `a \pm b` |
+| `times(a, b)` | `a \times b` |
+| `div(a, b)` | `a \div b` |
+| `cdot(a, b)` | `a \cdot b` |
+| `ast(a, b)` | `a \ast b` |
+| `star(a, b)` | `a \star b` |
+| `circ(a, b)` | `a \circ b` |
+| `bullet(a, b)` | `a \bullet b` |
+| `cap(a, b)` | `a \cap b` |
+| `cup(a, b)` | `a \cup b` |
 
-## Implicit Multiplication
+Infix `dot` is also supported:
 
-Euclid infers multiplication from context, just like mathematical notation.
-
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `2x` | $2x$ |
-| `2(x + 1)` | $2(x + 1)$ |
-| `(a)(b)` | $(a)(b)$ |
+| `u dot v` | `u \cdot v` |
 
-## Symbols
+## Trigonometric, logarithmic, and root functions
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `lt(a, b)` | $a < b$ |
-| `gt(a, b)` | $a > b$ |
-| `leq(a, b)` | $a \leq b$ |
-| `geq(a, b)` | $a \geq b$ |
-| `approx(a, b)` | $a \approx b$ |
-| `neq(a, b)` | $a \neq b$ |
-| `equiv(a, b)` | $a \equiv b$ |
-| `pm(a, b)` | $a \pm b$ |
-| `times(a, b)` | $a \times b$ |
-| `div(a, b)` | $a \div b$ |
-| `cdot(a, b)` | $a \cdot b$ |
-| `ast(a, b)` | $a \ast b$ |
-| `star(a, b)` | $a \star b$ |
-| `circ(a, b)` | $a \circ b$ |
-| `bullet(a, b)` | $a \bullet b$ |
-| `cap(a, b)` | $a \cap b$ |
-| `cup(a, b)` | $a \cup b$ |
+| `sin(x)` | `\sin(x)` |
+| `cos(x)` | `\cos(x)` |
+| `tan(x)` | `\tan(x)` |
+| `csc(x)` | `\csc(x)` |
+| `sec(x)` | `\sec(x)` |
+| `cot(x)` | `\cot(x)` |
+| `sinh(x)` | `\sinh(x)` |
+| `cosh(x)` | `\cosh(x)` |
+| `tanh(x)` | `\tanh(x)` |
+| `csch(x)` | `\operatorname{csch}(x)` |
+| `sech(x)` | `\operatorname{sech}(x)` |
+| `coth(x)` | `\coth(x)` |
+| `arcsin(x)` | `\arcsin(x)` |
+| `arccos(x)` | `\arccos(x)` |
+| `arctan(x)` | `\arctan(x)` |
+| `arccsc(x)` | `\operatorname{arccsc}(x)` |
+| `arcsec(x)` | `\operatorname{arcsec}(x)` |
+| `arccot(x)` | `\operatorname{arccot}(x)` |
+| `log(x, base)` | `\log_{base}(x)` |
+| `ln(x)` | `\ln(x)` |
+| `exp(x)` | `e^{x}` |
+| `sqrt(x)` | `\sqrt{x}` |
+| `sqrt(n, x)` | `\sqrt[n]{x}` |
 
-## Arrows
+## Calculus
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `rightarrow` | $\rightarrow$ |
-| `leftarrow` | $\leftarrow$ |
-| `Rightarrow` | $\Rightarrow$ |
-| `mapsto` | $\mapsto$ |
+| `limit(expr, var, point)` | `\lim_{var \to point} expr` |
+| `diff(expr, var)` | `\frac{d}{dvar} expr` |
+| `partial(expr, var)` | `\frac{\partial}{\partial var} expr` |
+| `integral(expr, var)` | `\int expr \, dvar` |
+| `integral(expr, var, lower, upper)` | `\int_{lower}^{upper} expr \, dvar` |
+| `sum(expr, var, lower, upper)` | `\sum_{var=lower}^{upper} expr` |
+| `prod(expr, var, lower, upper)` | `\prod_{var=lower}^{upper} expr` |
 
-## Dot Sequences
+Extrema and limit-family tokens are unary in the current implementation:
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `ldots` | $\ldots$ |
-| `cdots` | $\cdots$ |
-| `vdots` | $\vdots$ |
-| `ddots` | $\ddots$ |
+| `min(S)` | `\min(S)` |
+| `max(S)` | `\max(S)` |
+| `sup(S)` | `\sup(S)` |
+| `inf(S)` | `\inf(S)` |
+| `limsup(a_n)` | `\limsup(a_n)` |
+| `liminf(a_n)` | `\liminf(a_n)` |
 
-## Trigonometric and Hyperbolic Functions
+## Vectors, matrices, and linear algebra
 
-| Euclid lang syntax | MathJax equivalent |
+Preferred collection forms:
+
+| Euclid | Output |
 | :--- | :--- |
-| `sin(x)` | $\sin(x)$ |
-| `cos(x)` | $\cos(x)$ |
-| `tan(x)` | $\tan(x)$ |
-| `csc(x)` | $\csc(x)$ |
-| `sec(x)` | $\sec(x)$ |
-| `cot(x)` | $\cot(x)$ |
-| `sinh(x)` | $\sinh(x)$ |
-| `cosh(x)` | $\cosh(x)$ |
-| `tanh(x)` | $\tanh(x)$ |
+| `vector([a, b, c])` | column vector |
+| `matrix([[a, b], [c, d]])` | matrix with explicit row list |
+| `matrix([a, b], [c, d])` | compatibility row form |
 
-## Inverse Trigonometric Functions
+Other linear algebra helpers:
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `arcsin(x)` | $\arcsin(x)$ |
-| `arccos(x)` | $\arccos(x)$ |
-| `arctan(x)` | $\arctan(x)$ |
-| `arccsc(x)` | $\text{arccsc}(x)$ |
-| `arcsec(x)` | $\text{arcsec}(x)$ |
-| `arccot(x)` | $\text{arccot}(x)$ |
+| `norm(x)` | `\|x\|` |
+| `norm(x, p)` | `\|x\|_{p}` |
+| `inner(x, y)` | `\langle x, y \rangle` |
+| `det(A)` | `\det(A)` |
+| `trace(A)` | `\text{tr}(A)` |
+| `dim(V)` | `\dim(V)` |
+| `rank(A)` | `\text{rank}(A)` |
+| `ker(A)` | `\ker(A)` |
+| `transpose(A)` | `A^{T}` |
+| `inverse(A)` | `A^{-1}` |
+| `grad(f)` | `\nabla f` |
+| `divergence(F)` | `\nabla \cdot F` |
+| `curl(F)` | `\nabla \times F` |
+| `laplacian(f)` | `\nabla^{2} f` |
 
-## Logarithmic and Exponential Functions
+## Sets and logic
 
-| Euclid lang syntax | MathJax equivalent |
+Set helpers:
+
+| Euclid | Output |
 | :--- | :--- |
-| `log(x, base)` | $\log_{base}(x)$ |
-| `ln(x)` | $\ln(x)$ |
-| `exp(x)` | $e^x$ |
+| `subset(A, B)` | `A \subset B` |
+| `supset(A, B)` | `A \supset B` |
+| `subseteq(A, B)` | `A \subseteq B` |
+| `supseteq(A, B)` | `A \supseteq B` |
+| `union(A, B)` | `A \cup B` |
+| `intersection(A, B)` | `A \cap B` |
+| `set_diff(A, B)` | `A \setminus B` |
+| `element_of(x, A)` | `x \in A` |
+| `not_element_of(x, A)` | `x \notin A` |
 
-## Roots and Fractions
+Logical helpers:
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `a \\ b` | $\frac{a}{b}$ |
-| `partial(f(x, y), x)` | $\frac{\partial}{\partial x} f(x, y)$ |
-| `sqrt(x)` | $\sqrt{x}$ |
-| `sqrt(n, x)` | $\sqrt[n]{x}$ |
+| `p AND q` | `p \land q` |
+| `p OR q` | `p \lor q` |
+| `NOT(p)` | `\neg (p)` |
+| `implies(p, q)` | `p \implies q` |
+| `iff(p, q)` | `p \iff q` |
+| `forall(x, P(x))` | `\forall x \, P(x)` |
+| `exists(x, P(x))` | `\exists x \, P(x)` |
 
-## Limits, Derivatives and Integrals
+Use parentheses around complex quantified predicates for readability:
 
-| Euclid lang syntax | MathJax equivalent |
+```euclid
+forall(x, implies(element_of(x, A), element_of(x, B)))
+exists(y, P(y) AND Q(y))
+```
+
+`AND(p, q)`, `OR(p, q)`, and `NOT(p)` remain accepted as compatibility aliases for the infix logical operators.
+
+## Probability and statistics
+
+| Euclid | Output |
 | :--- | :--- |
-| `limit(f(x), x, a)` | $\lim_{{x \to a}} f(x)$ |
-| `diff(f(x), x)` | $\frac{d}{dx} f(x)$ |
-| `partial(f(x, y), x)` | $\frac{\partial}{\partial x} f(x, y)$ |
-| `integral(f(x), x)` | $\int f(x) \, dx$ |
-| `integral(f(x), x, a, b)` | $\int_{a}^{b} f(x) \, dx$ |
+| `prob(A)` | `P(A)` |
+| `prob(given(A, B))` | `P(A \mid B)` |
+| `expect(X)` | `\mathbb{E}[X]` |
+| `var(X)` | `\text{Var}(X)` |
+| `cov(X, Y)` | `\text{Cov}(X, Y)` |
 
-## Extrema
+## Layout, text, and visual notation
 
-| Euclid lang syntax | MathJax equivalent |
+Decorations:
+
+| Euclid | Output |
 | :--- | :--- |
-| `min` | $\min$ |
-| `max` | $\max$ |
-| `sup` | $\sup$ |
-| `inf` | $\inf$ |
-| `limsup` | $\limsup$ |
-| `liminf` | $\liminf$ |
+| `hat(x)` | `\hat{x}` |
+| `tilde(x)` | `\tilde{x}` |
+| `bar(x)` | `\bar{x}` |
+| `vec(x)` | `\vec{x}` |
+| `dot(x)` | `\dot{x}` |
+| `ddot(x)` | `\ddot{x}` |
+| `overline(x)` | `\overline{x}` |
+| `underline(x)` | `\underline{x}` |
+| `boxed(x)` | `\boxed{x}` |
+| `cancel(x)` | `\cancel{x}` |
 
-## Summation and Product Notation
+Text-aware helpers:
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `sum(i, 1, n, f(i))` | $\sum_{i=1}^n f(i)$ |
-| `prod(i, 1, n, f(i))` | $\prod_{i=1}^n f(i)$ |
+| `mathtext("sample mean")` | `\text{sample mean}` |
+| `underbrace(x, "n terms")` | labeled underbrace |
+| `overbrace(x, "n terms")` | labeled overbrace |
 
-## Matrices and Vectors
+Strings use double quotes.
 
-Matrices use bracket-row notation with each row as a bracket group.
+Structured layout helpers:
 
-| Euclid lang syntax | MathJax equivalent |
+| Euclid | Output |
 | :--- | :--- |
-| `vector([a, b, c])` | $\begin{pmatrix} a \\ b \\ c \end{pmatrix}$ |
-| `matrix([a, b], [c, d])` | $\begin{pmatrix} a & b \\ c & d \end{pmatrix}$ |
+| `piecewise(expr1, cond1, expr2, cond2, ...)` | `cases` environment |
+| `cases(expr1, cond1, expr2, cond2, ...)` | `cases` environment |
+| `align(eq1, eq2, ...)` | `align*` environment |
+| `system(eq1, eq2, ...)` | aligned system |
 
-## Norms and Inner Products
+## Arrows, dots, proof, and geometry tokens
 
-| Euclid lang syntax | MathJax equivalent |
+Standalone tokens transpile directly:
+
+| Euclid | Output |
 | :--- | :--- |
-| `norm(x)` | $\lVert x \rVert$ |
-| `inner(x, y)` | $\langle x, y \rangle$ |
+| `rightarrow` | `\rightarrow` |
+| `leftarrow` | `\leftarrow` |
+| `leftrightarrow` | `\leftrightarrow` |
+| `mapsto` | `\mapsto` |
+| `Rightarrow` | `\Rightarrow` |
+| `Leftarrow` | `\Leftarrow` |
+| `Leftrightarrow` | `\Leftrightarrow` |
+| `ldots` | `\ldots` |
+| `cdots` | `\cdots` |
+| `vdots` | `\vdots` |
+| `ddots` | `\ddots` |
+| `therefore` | `\therefore` |
+| `because` | `\because` |
+| `qed` | `\blacksquare` |
+| `perp` | `\perp` |
+| `parallel` | `\parallel` |
+| `angle` | `\angle` |
+| `triangle` | `\triangle` |
+| `cong` | `\cong` |
+| `sim` | `\sim` |
+| `propto` | `\propto` |
+| `hbar` | `\hbar` |
+| `nabla` | `\nabla` |
+| `ell` | `\ell` |
 
-## Linear Algebra
+## Mixed-content mode
 
-| Euclid lang syntax | MathJax equivalent |
+When mixed mode is enabled, normal prose is preserved and Euclid-like expressions are transpiled in place. This is intended for Markdown authoring workflows where text and math live in the same document.
+
+For best results:
+
+* keep complex expressions on their own line
+* use canonical spellings so diagnostics and rewrite suggestions stay accurate
+* prefer explicit grouping for long logic, fraction, and aggregate expressions
+
+## Compatibility aliases
+
+The transpiler still accepts a small compatibility surface and can rewrite it to canonical form:
+
+| Alias | Canonical form |
 | :--- | :--- |
-| `det` | $\det$ |
-| `trace` | $\text{trace}$ |
-| `dim` | $\dim$ |
-| `rank` | $\text{rank}$ |
-| `ker` | $\ker$ |
-| `transpose` | $^\top$ |
+| `INF` | `INFINITY` |
+| `choose(n, k)` | `binom(n, k)` |
+| `proper_subset(A, B)` | `subset(A, B)` |
+| `AND(p, q)` | `p AND q` |
+| `OR(p, q)` | `p OR q` |
 
-## Vector Calculus
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `grad` | $\nabla$ |
-| `divergence` | $\nabla \cdot$ |
-| `curl` | $\nabla \times$ |
-| `laplacian` | $\nabla^2$ |
-
-## Set Notation
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `emptyset` | $\emptyset$ |
-| `subset(a, b)` | $a \subset b$ |
-| `supset(a, b)` | $a \supset b$ |
-| `subseteq(a, b)` | $a \subseteq b$ |
-| `supseteq(a, b)` | $a \supseteq b$ |
-| `union(a, b)` | $a \cup b$ |
-| `intersection(a, b)` | $a \cap b$ |
-| `set_diff(a, b)` | $a \setminus b$ |
-| `element_of(a, b)` | $a \in b$ |
-| `not_element_of(a, b)` | $a \notin b$ |
-
-## Logic Symbols
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `AND` | $\land$ |
-| `OR` | $\lor$ |
-| `NOT` | $\neg$ |
-| `implies(a, b)` | $a \implies b$ |
-| `iff(a, b)` | $a \iff b$ |
-| `forall(x, P(x))` | $\forall x \, P(x)$|
-| `exists(x, P(x))` | $\exists x \, P(x)$|
-
-## Proof Notation
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `therefore` | $\therefore$ |
-| `because` | $\because$ |
-| `qed` | $\blacksquare$ |
-
-## Geometry
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `perp` | $\perp$ |
-| `parallel` | $\parallel$ |
-| `angle` | $\angle$ |
-| `triangle` | $\triangle$ |
-| `cong` | $\cong$ |
-| `sim` | $\sim$ |
-
-## Probability and Statistics
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `prob(A)` | $P(A)$ |
-| `expect(X)` | $E[X]$ |
-| `var(X)` | $\text{Var}(X)$ |
-| `cov(X, Y)` | $\text{Cov}(X, Y)$ |
-
-## Visual Notation
-
-| Euclid lang syntax | MathJax equivalent |
-| :--- | :--- |
-| `boxed(x)` | $\boxed{x}$ |
-| `cancel(x)` | $\cancel{x}$ |
-| `underbrace(x, label)` | $\underbrace{x}_{\text{label}}$ |
-| `overbrace(x, label)` | $\overbrace{x}^{\text{label}}$ |
+If you want stable docs, editor support, and predictable canonicalization, prefer the canonical forms shown throughout this guide.
