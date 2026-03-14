@@ -132,12 +132,12 @@ public class Transpiler {
         DiagnosticCollector collector = new DiagnosticCollector();
         String canonicalSource = canonicalize(source);
         if (!canonicalSource.equals(source)) {
-            collector.addInfo(
+            collector.addWarning(
                     "canonical.rewrite",
-                    "Source contains non-canonical aliases",
+                    "Source contains compatibility aliases instead of canonical Euclid spellings",
                     1,
                     1,
-                    "Use canonical Euclid spellings for better editor support",
+                    "Use canonical Euclid spellings for a stable DSL contract",
                     canonicalSource);
         }
         try {
