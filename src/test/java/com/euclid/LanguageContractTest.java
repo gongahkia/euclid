@@ -118,7 +118,7 @@ public class LanguageContractTest {
 
     @Test
     public void testDiagnosticsSurfaceCanonicalRewrite() {
-        TranspileResult result = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE, false);
+        TranspileResult result = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE);
         assertFalse(result.diagnostics().isEmpty());
         assertEquals("canonical.rewrite", result.diagnostics().get(0).getCode());
         assertEquals(com.euclid.exception.Diagnostic.Severity.WARNING, result.diagnostics().get(0).getSeverity());
@@ -130,8 +130,7 @@ public class LanguageContractTest {
         TranspileResult result = Transpiler.transpileWithDiagnostics(
                 "piecewise(x, geq(x, 0), -x)",
                 false,
-                com.euclid.transpiler.MathMode.NONE,
-                false);
+                com.euclid.transpiler.MathMode.NONE);
         assertTrue(result.hasErrors());
         assertTrue(result.diagnostics().stream().anyMatch(d -> "parser.invalid-arity".equals(d.getCode())));
         assertTrue(result.diagnostics().stream().anyMatch(d -> d.getSuggestion() != null && d.getSuggestion().contains("piecewise")));
