@@ -75,17 +75,17 @@ x = (-b pm sqrt(pow(b, 2) - 4 * a * c)) \\ (2 * a)
 Instead of:
 
 ```euclid
-f = integral(pow(E, -pow(x, 2)) * sqrt(2 * PI), x, -INF, INF) \\ integral(pow(E, -pow(x, 2)), x, -INF, INF)
+f = integral(pow(E, -pow(x, 2)) * sqrt(2 * PI), x, -INFINITY, INFINITY) \\ integral(pow(E, -pow(x, 2)), x, -INFINITY, INFINITY)
 ```
 
 Use:
 
 ```euclid
 # Numerator: normal distribution
-numerator = integral(pow(E, -pow(x, 2)) * sqrt(2 * PI), x, -INF, INF)
+numerator = integral(pow(E, -pow(x, 2)) * sqrt(2 * PI), x, -INFINITY, INFINITY)
 
 # Denominator: Gaussian integral
-denominator = integral(pow(E, -pow(x, 2)), x, -INF, INF)
+denominator = integral(pow(E, -pow(x, 2)), x, -INFINITY, INFINITY)
 
 # Final result
 f = numerator \\ denominator
@@ -124,14 +124,11 @@ Always use parentheses when in doubt!
 
 ### Pitfall 1: Division vs Fraction
 
-**Wrong:**
-```euclid
-a / b  # Not supported!
-```
+Use `/` when you want inline division, and `\\` when you want a stacked fraction:
 
-**Right:**
 ```euclid
-a \\ b  # Backslash-backslash
+a / b
+a \\ b
 ```
 
 ### Pitfall 2: Exponent Syntax
@@ -168,14 +165,9 @@ pow(x, 2)  # Two arguments required
 
 ### Pitfall 5: Mixing Operators
 
-**Wrong:**
+**Preferred:**
 ```euclid
-x < y AND y < z  # Might not parse correctly
-```
-
-**Right:**
-```euclid
-lt(x, y) AND lt(y, z)  # Use function form for safety
+lt(x, y) AND lt(y, z)
 ```
 
 ## Debugging Strategies
@@ -203,7 +195,7 @@ result = integral(middle, x, 0, PI)  # Test this
 Test expressions interactively:
 
 ```bash
-$ java -jar euclid-repl.jar
+$ java -jar target/euclid-repl.jar
 
 euclid> pow(x, 2)
 LaTeX: x^{2}
@@ -231,36 +223,31 @@ pow(x, 2) + 1
 Use watch mode to see changes instantly:
 
 ```bash
-java -jar euclid-transpiler.jar --watch myfile.ed
+java -jar target/euclid-transpiler.jar --watch myfile.ed
 ```
 
 Edit `myfile.ed` and see immediate transpilation results!
 
 ## Advanced Patterns
 
-### Pattern 1: Piecewise Functions (Manual)
+### Pattern 1: Piecewise Functions
 
-While Euclid doesn't have built-in piecewise syntax, you can document it:
+Euclid has built-in `piecewise()` and `cases()` helpers:
 
 ```euclid
-# Absolute value function:
-# f(x) = x   if x >= 0
-# f(x) = -x  if x < 0
-
-abs(x) = x  // for geq(x, 0)
-abs(x) = -x  // for lt(x, 0)
+piecewise(x, geq(x, 0), -x, lt(x, 0))
 ```
 
 ### Pattern 2: Function Composition
 
 ```euclid
-# Composition: (f ∘ g)(x) = f(g(x))
-(f compose g)(x) = f(g(x))
+# Write composition with an intermediate name
+h(x) = f(g(x))
 
 # Example: sqrt(x^2)
 f(x) = sqrt(x)
 g(x) = pow(x, 2)
-(f compose g)(x) = sqrt(pow(x, 2)) = abs(x)
+h(x) = sqrt(pow(x, 2))
 ```
 
 ### Pattern 3: Parametric Equations
@@ -286,7 +273,7 @@ F(n) = F(n - 1) + F(n - 2)  # for n >= 2
 
 ```euclid
 # Sum over even numbers
-sum(i, 2, n, i)  # where i is even, step by 2
+sum(i, i, 2, n)  # where i is even, step by 2
 
 # Notation: sum of 2, 4, 6, ..., n
 S = 2 + 4 + 6 + ... + n
@@ -334,8 +321,8 @@ project/
 Transpile each separately:
 
 ```bash
-java -jar euclid-transpiler.jar intro.ed
-java -jar euclid-transpiler.jar chapter1.ed
+java -jar target/euclid-transpiler.jar intro.ed
+java -jar target/euclid-transpiler.jar chapter1.ed
 # etc.
 ```
 
@@ -349,7 +336,7 @@ java -jar euclid-transpiler.jar chapter1.ed
 - Use Greek letters for angles: `THETA`, `PHI`
 
 **Constants:**
-- Use uppercase: `PI`, `E`, `INF`
+- Use uppercase: `PI`, `E`, `INFINITY`
 - Use descriptive names: `SPEED_OF_LIGHT`, `GRAVITY`
 
 ### Whitespace
@@ -440,7 +427,7 @@ f(x) = (1 \\ sqrt(2 * PI * pow(SIGMA, 2))) * exp(-(pow(x - MU, 2) \\ (2 * pow(SI
 PHI(x) = (1 \\ sqrt(2 * PI)) * exp(-(pow(x, 2) \\ 2))
 
 # Cumulative distribution function (integral)
-CAPITAL_PHI(x) = integral(PHI(t), t, -INF, x)
+CAPITAL_PHI(x) = integral(PHI(t), t, -INFINITY, x)
 
 # 68-95-99.7 rule
 # P(MU - SIGMA <= X <= MU + SIGMA) = 0.68
@@ -490,7 +477,7 @@ $$x^{2} + 2 \cdot x + 1 = 0$$
 When you encounter errors:
 
 - [ ] Are all parentheses balanced?
-- [ ] Are you using `\\` for fractions (not `/`)?
+- [ ] Are you using `\\` when you want a fraction and `/` when inline division is enough?
 - [ ] Do all functions have the correct number of arguments?
 - [ ] Are function names spelled correctly?
 - [ ] Did you test in the REPL first?
@@ -504,27 +491,27 @@ Try these advanced problems:
 
 1. **Derive Euler's formula using Taylor series:**
    ```euclid
-   exp(i * THETA) = sum(n, 0, INF, (pow(i * THETA, n)) \\ prod(k, 1, n, k))
+   exp(I * THETA) = sum((pow(I * THETA, n)) \\ (n!), n, 0, INFINITY)
    ```
 
 2. **Fourier transform definition:**
    ```euclid
-   F(OMEGA) = integral(f(t) * exp(-i * OMEGA * t), t, -INF, INF)
+   F(OMEGA) = integral(f(t) * exp(-I * OMEGA * t), t, -INFINITY, INFINITY)
    ```
 
 3. **Chain rule with multiple variables:**
    ```euclid
-   partial(f(u(x, y), v(x, y)), x) = partial(f, u) * partial(u, x) + partial(f, v) * partial(v, x)
+   partial(f(u(x, y), v(x, y)), x) = partial(f(u, v), u) * partial(u(x, y), x) + partial(f(u, v), v) * partial(v(x, y), x)
    ```
 
 4. **Lagrange multiplier method:**
    ```euclid
-   nabla f = LAMBDA * nabla g
+   grad(f) = LAMBDA * grad(g)
    ```
 
-5. **Green's theorem:**
+5. **Aligned derivation:**
    ```euclid
-   integral(integral(partial(Q, x) - partial(P, y), x, y), D) = integral(P * dx + Q * dy, C)
+   align(diff(f(g(x)), x) = diff(f(u), u) * diff(g(x), x), integral(diff(f(x), x), x) = f(x) + C)
    ```
 
 ## Additional Resources
@@ -533,7 +520,7 @@ Try these advanced problems:
 - **[Calculus](02_calculus.md)** - Derivatives, integrals, limits
 - **[Linear Algebra](03_linear_algebra.md)** - Vectors and matrices
 - **[Proofs](04_proofs.md)** - Logic and set theory
-- **[Syntax Reference](../syntax.md)** - Complete function reference
+- **[Syntax Reference](06_syntax.md)** - Complete function reference
 - **[Examples](../../example/)** - More code samples
 
 ## Probability and Statistics Functions
@@ -566,7 +553,7 @@ var(X) = expect(X^2) - expect(X)^2
 **Euclid:**
 ```euclid
 boxed(E = m * c^2)
-underbrace(a + b + c, n terms)
+underbrace(a + b + c, "n terms")
 ```
 
 ## LSP Server
@@ -606,4 +593,4 @@ Remember:
 - **Use the REPL** - Interactive testing catches errors early
 - **Don't be afraid to experiment** - Try new patterns and techniques
 
-Happy mathing with Euclid! 🎓✨
+Happy mathing with Euclid!
