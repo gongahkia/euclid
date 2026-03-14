@@ -27,7 +27,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 
 * canonical forms matter: `a / b` is inline division, while `a \\ b` is a fraction
 * logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
-* a small alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`
+* a small compatibility alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`, but alias usage now emits warnings
 * pure CLI transpilation is strict Euclid; prose-heavy Markdown authoring is an explicit `--mixed` workflow
 * capability metadata and canonical rewrites are available programmatically through the core transpiler API
 
