@@ -19,7 +19,16 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 
 | Euclid Syntax (`.ed`) | Transpiled LaTeX Output | Rendered Result |
 |---|---|---|
-| `x = (-b +- sqrt(b^2 - 4*a*c)) / (2*a)` | `$x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$` | $x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$ |
+| `x = pm(-b, sqrt(pow(b, 2) - 4 * a * c)) \\ (2 * a)` | `$x = \frac{-b \pm \sqrt{b^{2} - 4 * a * c}}{2 * a}$` | $x = \frac{-b \pm \sqrt{b^{2} - 4 * a * c}}{2 * a}$ |
+
+## Language Contract
+
+`Euclid` now exposes a canonical language contract in code and uses it across the transpiler and LSP.
+
+* canonical forms matter: `a / b` is inline division, while `a \\ b` is a fraction
+* logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
+* a small alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`
+* capability metadata and canonical rewrites are available programmatically through the core transpiler API
 
 ## Usage
 
@@ -61,6 +70,22 @@ $ euclid> integral(x^2, x)
 $ LaTeX: \int x^{2} \, dx
 $ euclid> exit
 ```
+
+5. Launch the browser playground for authoring, diagnostics, canonicalization, and preview.
+
+```console
+$ java -jar target/euclid-web.jar 8080
+```
+
+Then open `http://localhost:8080`.
+
+## Real User Flows
+
+`Euclid` is optimized for three concrete workflows.
+
+* formula translation: turn readable Euclid into exact LaTeX without writing raw backslashes and braces
+* Markdown authoring: write prose and math together, then use mixed mode plus diagnostics to keep valid output
+* notation audit: inspect the capability manifest, canonical spellings, signatures, and aliases before publishing
 
 ## References
 
