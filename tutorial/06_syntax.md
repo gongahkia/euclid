@@ -6,7 +6,7 @@ This document is the canonical language contract for the current `Euclid` DSL.
 
 `Euclid` source is usually saved with the `.ed` extension.
 
-Plain Markdown is preserved as text. Euclid expressions are parsed and transpiled to LaTeX or MathJax.
+Pure Euclid parsing is strict by default. For prose-heavy Markdown documents, use mixed mode so normal text is preserved and Euclid expressions are transpiled in place.
 
 The language is case-sensitive:
 
@@ -24,6 +24,7 @@ Use these forms in new source:
 * `sum(expr, var, lower, upper)` and `prod(expr, var, lower, upper)` are the canonical aggregate forms
 * `vector([a, b, c])` and `matrix([[a, b], [c, d]])` are the preferred collection forms
 * conditional probability is written as `prob(given(A, B))`
+* unexpected characters are rejected in strict mode instead of being silently treated as text
 
 ## Precedence and associativity
 
