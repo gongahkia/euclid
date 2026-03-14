@@ -87,6 +87,16 @@ Then open `http://localhost:8080`.
 * Markdown authoring: write prose and math together, then use mixed mode plus diagnostics to keep valid output
 * notation audit: inspect the capability manifest, canonical spellings, signatures, and aliases before publishing
 
+## Verification
+
+For a local core check that does not depend on Maven, run:
+
+```console
+$ bash scripts/verify_core.sh
+```
+
+This compiles the core Java sources with `java` source-file mode and runs a smoke suite against the canonical writer-facing flows.
+
 ## References
 
 * [Symbolica](https://github.com/benruijl/symbolica) by [benruijl](https://github.com/benruijl)
