@@ -366,7 +366,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             case UNDERBRACE -> transpileUnderbrace(args);
             case OVERBRACE -> transpileOverbrace(args);
 
-            default -> "UNKNOWN_FUNCTION(" + function + ")";
+            default -> unsupportedFunction(function);
         };
     }
 
@@ -397,62 +397,62 @@ public class LatexTranspiler implements AstVisitor<String> {
     // Helper methods for specific function transpilation
 
     private String transpilePow(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("pow", args.size(), "2");
         return args.get(0).accept(this) + "^{" + args.get(1).accept(this) + "}";
     }
 
     private String transpileAbs(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("abs", args.size(), "1");
         return "|" + args.get(0).accept(this) + "|";
     }
 
     private String transpileCeil(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("ceil", args.size(), "1");
         return "\\lceil " + args.get(0).accept(this) + " \\rceil";
     }
 
     private String transpileFloor(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("floor", args.size(), "1");
         return "\\lfloor " + args.get(0).accept(this) + " \\rfloor";
     }
 
     private String transpileMod(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("mod", args.size(), "2");
         return args.get(0).accept(this) + " \\mod " + args.get(1).accept(this);
     }
 
     private String transpileGcd(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("gcd", args.size(), "2");
         return "\\gcd(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
     }
 
     private String transpileLcm(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("lcm", args.size(), "2");
         return "\\text{lcm}(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
     }
 
     private String transpileBinarySymbol(List<AstNode> args, String symbol) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments(symbol, args.size(), "2");
         return args.get(0).accept(this) + " " + symbol + " " + args.get(1).accept(this);
     }
 
     private String transpileTrigFunction(String funcName, List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments(funcName, args.size(), "1");
         return funcName + "(" + args.get(0).accept(this) + ")";
     }
 
     private String transpileLog(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("log", args.size(), "2");
         return "\\log_{" + args.get(1).accept(this) + "}(" + args.get(0).accept(this) + ")";
     }
 
     private String transpileLn(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("ln", args.size(), "1");
         return "\\ln(" + args.get(0).accept(this) + ")";
     }
 
     private String transpileExp(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("exp", args.size(), "1");
         return "e^{" + args.get(0).accept(this) + "}";
     }
 
@@ -462,21 +462,21 @@ public class LatexTranspiler implements AstVisitor<String> {
         } else if (args.size() == 2) {
             return "\\sqrt[" + args.get(0).accept(this) + "]{" + args.get(1).accept(this) + "}";
         }
-        return "ERROR";
+        return invalidArguments("sqrt", args.size(), "1 or 2");
     }
 
     private String transpilePartial(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("partial", args.size(), "2");
         return "\\frac{\\partial}{\\partial " + args.get(1).accept(this) + "} " + args.get(0).accept(this);
     }
 
     private String transpileLimit(List<AstNode> args) {
-        if (args.size() != 3) return "ERROR";
+        if (args.size() != 3) return invalidArguments("limit", args.size(), "3");
         return "\\lim_{{" + args.get(1).accept(this) + " \\to " + args.get(2).accept(this) + "}} " + args.get(0).accept(this);
     }
 
     private String transpileDiff(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("diff", args.size(), "2");
         return "\\frac{d}{d" + args.get(1).accept(this) + "} " + args.get(0).accept(this);
     }
 
@@ -487,23 +487,23 @@ public class LatexTranspiler implements AstVisitor<String> {
             return "\\int_{" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " +
                    args.get(0).accept(this) + " \\, d" + args.get(1).accept(this);
         }
-        return "ERROR";
+        return invalidArguments("integral", args.size(), "2 or 4");
     }
 
     private String transpileSum(List<AstNode> args) {
-        if (args.isEmpty()) return "ERROR";
+        if (args.isEmpty()) return invalidArguments("sum", args.size(), "1, 3, or 4");
         if (args.size() == 1) return "\\sum " + args.get(0).accept(this);
         if (args.size() == 3) return "\\sum_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
         if (args.size() == 4) return "\\sum_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
-        return "ERROR";
+        return invalidArguments("sum", args.size(), "1, 3, or 4");
     }
 
     private String transpileProd(List<AstNode> args) {
-        if (args.isEmpty()) return "ERROR";
+        if (args.isEmpty()) return invalidArguments("prod", args.size(), "1, 3, or 4");
         if (args.size() == 1) return "\\prod " + args.get(0).accept(this);
         if (args.size() == 3) return "\\prod_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
         if (args.size() == 4) return "\\prod_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
-        return "ERROR";
+        return invalidArguments("prod", args.size(), "1, 3, or 4");
     }
 
     private String transpileVector(List<AstNode> args) {
@@ -542,29 +542,29 @@ public class LatexTranspiler implements AstVisitor<String> {
     }
 
     private String transpileForall(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("forall", args.size(), "2");
         return "\\forall " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
     }
 
     private String transpileExists(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("exists", args.size(), "2");
         return "\\exists " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
     }
 
     private String transpileNot(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("NOT", args.size(), "1");
         return "\\neg " + args.get(0).accept(this);
     }
 
     // Accents and decorations
     private String transpileAccent(String command, List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments(command, args.size(), "1");
         return command + "{" + args.get(0).accept(this) + "}";
     }
 
     // Text in math mode
     private String transpileMathtext(List<AstNode> args) {
-        if (args.size() != 1) return "ERROR";
+        if (args.size() != 1) return invalidArguments("mathtext", args.size(), "1");
         // The argument should be a string literal
         String text = args.get(0).accept(this);
         // Remove quotes if present using StringUtils
@@ -576,7 +576,7 @@ public class LatexTranspiler implements AstVisitor<String> {
     private String transpilePiecewise(List<AstNode> args) {
         // piecewise(expr1, cond1, expr2, cond2, ...)
         // Generates: \begin{cases} expr1 & cond1 \\ expr2 & cond2 \\ ... \end{cases}
-        if (args.size() % 2 != 0) return "ERROR: piecewise requires even number of arguments";
+        if (args.size() % 2 != 0) return invalidArguments("piecewise", args.size(), "an even number");
 
         StringBuilder result = new StringBuilder("\\begin{cases}\n");
         for (int i = 0; i < args.size(); i += 2) {
@@ -603,7 +603,7 @@ public class LatexTranspiler implements AstVisitor<String> {
     private String transpileAlign(List<AstNode> args) {
         // align(eq1, eq2, eq3, ...)
         // Generates: \begin{align*} eq1 \\ eq2 \\ eq3 \\ ... \end{align*}
-        if (args.isEmpty()) return "ERROR: align requires at least one equation";
+        if (args.isEmpty()) return invalidArguments("align", args.size(), "at least 1");
 
         StringBuilder result = new StringBuilder("\\begin{align*}\n");
         for (int i = 0; i < args.size(); i++) {
@@ -618,28 +618,28 @@ public class LatexTranspiler implements AstVisitor<String> {
     }
 
     private String transpileBinom(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("binom", args.size(), "2");
         return "\\binom{" + args.get(0).accept(this) + "}{" + args.get(1).accept(this) + "}";
     }
 
     private String transpileNorm(List<AstNode> args) {
         if (args.size() == 1) return "\\|" + args.get(0).accept(this) + "\\|";
         if (args.size() == 2) return "\\|" + args.get(0).accept(this) + "\\|_{" + args.get(1).accept(this) + "}";
-        return "ERROR";
+        return invalidArguments("norm", args.size(), "1 or 2");
     }
 
     private String transpileInner(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("inner", args.size(), "2");
         return "\\langle " + args.get(0).accept(this) + ", " + args.get(1).accept(this) + " \\rangle";
     }
 
     private String transpileUnderbrace(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("underbrace", args.size(), "2");
         return "\\underbrace{" + args.get(0).accept(this) + "}_{" + args.get(1).accept(this) + "}";
     }
 
     private String transpileOverbrace(List<AstNode> args) {
-        if (args.size() != 2) return "ERROR";
+        if (args.size() != 2) return invalidArguments("overbrace", args.size(), "2");
         return "\\overbrace{" + args.get(0).accept(this) + "}^{" + args.get(1).accept(this) + "}";
     }
 
@@ -647,7 +647,7 @@ public class LatexTranspiler implements AstVisitor<String> {
     private String transpileSystem(List<AstNode> args) {
         // system(eq1, eq2, eq3, ...)
         // Generates: \begin{cases} eq1 \\ eq2 \\ eq3 \\ ... \end{cases}
-        if (args.isEmpty()) return "ERROR: system requires at least one equation";
+        if (args.isEmpty()) return invalidArguments("system", args.size(), "at least 1");
 
         StringBuilder result = new StringBuilder("\\begin{cases}\n");
         for (int i = 0; i < args.size(); i++) {
@@ -659,5 +659,16 @@ public class LatexTranspiler implements AstVisitor<String> {
         }
         result.append("\\end{cases}");
         return result.toString();
+    }
+
+    private String invalidArguments(String function, int actual, String expected) {
+        throw new IllegalStateException(
+                "Internal Euclid contract error: function '" + function + "' received "
+                        + actual + " arguments; expected " + expected + ".");
+    }
+
+    private String unsupportedFunction(TokenType function) {
+        throw new IllegalStateException(
+                "Internal Euclid contract error: unsupported function '" + function + "' reached the LaTeX transpiler.");
     }
 }
