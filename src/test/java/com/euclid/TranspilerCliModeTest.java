@@ -110,6 +110,10 @@ public class TranspilerCliModeTest {
         }
     }
 
+    private static int runCliQuietly(String... args) {
+        return runCli(args).exitCode();
+    }
+
     private record CliInvocationResult(int exitCode, String stdout, String stderr) {
     }
 }
