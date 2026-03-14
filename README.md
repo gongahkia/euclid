@@ -27,7 +27,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 * canonical forms matter: `a / b` is inline division, while `a \\ b` is a fraction
 * logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
 * a small compatibility alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`, but alias usage now emits warnings
-* pure CLI transpilation is strict Euclid; prose-heavy Markdown authoring is an explicit `--mixed` workflow
+* pure CLI transpilation is strict Euclid and the entire tool now assumes `.ed` input is Euclid source rather than prose
 * CLI transpilation now prints structured warnings and refuses to write output files when the source still has errors
 * capability metadata and canonical rewrites are available programmatically through the core transpiler API
 
@@ -61,14 +61,6 @@ $ mvn clean compile
 $ java -jar target/euclid-transpiler.jar input.ed output.md
 ```
 
-For prose-heavy Markdown documents with embedded Euclid expressions, use mixed mode:
-
-```console
-$ java -jar target/euclid-transpiler.jar --mixed input.ed output.md
-```
-
-Mixed mode is intentionally conservative: it only rewrites obvious Euclid candidates, leaves existing inline code and `$...$` spans untouched, and no longer rewrites bare constants such as `INF` inside prose.
-
 4. Check or canonicalize Euclid source without transpiling it.
 
 ```console
@@ -92,8 +84,8 @@ $ >>> :quit
 `Euclid` is optimized for three concrete workflows.
 
 * formula translation: turn readable Euclid into exact LaTeX without writing raw backslashes and braces
-* Markdown authoring: write prose and obvious Euclid expressions together, then use mixed mode plus diagnostics to keep valid output without touching protected Markdown spans
 * notation audit: inspect the capability manifest, canonical spellings, signatures, and aliases before publishing
+* source validation: run strict checks and canonicalization before generating Markdown output
 
 ## Verification
 
