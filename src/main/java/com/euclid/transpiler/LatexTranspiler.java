@@ -173,6 +173,9 @@ public class LatexTranspiler implements AstVisitor<String> {
             case MINUS -> left + " - " + right;
             case MULTIPLY -> left + " * " + right;
             case DIVIDE -> left + " / " + right;
+            case EQUALS -> left + " = " + right;
+            case AND -> left + " \\land " + right;
+            case OR -> left + " \\lor " + right;
             case POWER -> left + "^{" + right + "}";
             case UNDERSCORE -> left + "_{" + right + "}";
             case IMPLICIT_MULTIPLY -> left + right;
@@ -189,6 +192,7 @@ public class LatexTranspiler implements AstVisitor<String> {
         return switch (op) {
             case MINUS -> "-" + operand;
             case PLUS -> "+" + operand;
+            case NOT -> "\\neg " + operand;
             case BANG -> operand + "!";
             default -> expr.getOperator().getLexeme() + operand;
         };
@@ -242,6 +246,9 @@ public class LatexTranspiler implements AstVisitor<String> {
             case SINH -> transpileTrigFunction("\\sinh", args);
             case COSH -> transpileTrigFunction("\\cosh", args);
             case TANH -> transpileTrigFunction("\\tanh", args);
+            case CSCH -> transpileTrigFunction("\\operatorname{csch}", args);
+            case SECH -> transpileTrigFunction("\\operatorname{sech}", args);
+            case COTH -> transpileTrigFunction("\\coth", args);
 
             // Logarithmic and exponential
             case LOG -> transpileLog(args);
@@ -280,6 +287,9 @@ public class LatexTranspiler implements AstVisitor<String> {
             // Logic symbols
             case IMPLIES -> transpileBinarySymbol(args, "\\implies");
             case IFF -> transpileBinarySymbol(args, "\\iff");
+            case AND -> transpileBinarySymbol(args, "\\land");
+            case OR -> transpileBinarySymbol(args, "\\lor");
+            case NOT -> transpileNot(args);
             case FORALL -> transpileForall(args);
             case EXISTS -> transpileExists(args);
 
@@ -527,6 +537,11 @@ public class LatexTranspiler implements AstVisitor<String> {
     private String transpileExists(List<AstNode> args) {
         if (args.size() != 2) return "ERROR";
         return "\\exists " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
+    }
+
+    private String transpileNot(List<AstNode> args) {
+        if (args.size() != 1) return "ERROR";
+        return "\\neg " + args.get(0).accept(this);
     }
 
     // Accents and decorations
