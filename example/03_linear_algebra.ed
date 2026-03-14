@@ -10,18 +10,18 @@ Column vector: vector([x, y, z])
 
 ## Matrices
 
-2x2 matrix: matrix([a, b], [c, d])
+2x2 matrix: matrix([[a, b], [c, d]])
 3x3 identity matrix: matrix([1, 0, 0], [0, 1, 0], [0, 0, 1])
 
 ## Matrix Operations
 
-Determinant of 2x2 matrix: a * d - b * c
-Trace of matrix: a + d
+Determinant of 2x2 matrix: det(matrix([[a, b], [c, d]])) = a * d - b * c
+Trace of matrix: trace(A)
 
 ## Vector Operations
 
-Dot product: vector([a, b]) * vector([c, d]) = a*c + b*d
-Cross product in 3D: vector([a1, a2, a3]) times vector([b1, b2, b3])
+Dot product: vector([a, b]) dot vector([c, d]) = a * c + b * d
+Cross product in 3D: times(vector([a1, a2, a3]), vector([b1, b2, b3]))
 
 ## Norms and Inner Products
 
@@ -41,7 +41,7 @@ Transpose: transpose(A)
 
 ## Vector Calculus
 
-Gradient: grad f
-Divergence: divergence F
-Curl: curl F
-Laplacian: laplacian f
+Gradient: grad(f)
+Divergence: divergence(F)
+Curl: curl(F)
+Laplacian: laplacian(f)
