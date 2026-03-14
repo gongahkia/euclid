@@ -132,7 +132,7 @@ public class Transpiler {
     public static TranspileResult transpileWithDiagnostics(String source, boolean verbose, MathMode mathMode, boolean mixedMode) {
         DiagnosticCollector collector = new DiagnosticCollector();
         String canonicalSource = canonicalize(source);
-        if (!canonicalSource.equals(source)) {
+        if (!mixedMode && !canonicalSource.equals(source)) {
             collector.addWarning(
                     "canonical.rewrite",
                     "Source contains compatibility aliases instead of canonical Euclid spellings",
