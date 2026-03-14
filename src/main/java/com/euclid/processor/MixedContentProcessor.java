@@ -1,7 +1,11 @@
 package com.euclid.processor;
 
+import com.euclid.TranspileResult;
 import com.euclid.Transpiler;
+import com.euclid.exception.Diagnostic;
+import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.EuclidException;
+import com.euclid.transpiler.MathMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +50,10 @@ public class MixedContentProcessor {
      * @throws EuclidException if transpilation fails
      */
     public static String processLine(String line) throws EuclidException {
+        return processLine(line, 1, null);
+    }
+
+    public static String processLine(String line, int lineNumber, DiagnosticCollector diagnostics) throws EuclidException {
         // Skip pure markdown elements (headers, blank lines)
         if (line.matches("^\\s*#+\\s.*") || line.trim().isEmpty()) {
             return line;
@@ -61,11 +69,12 @@ public class MixedContentProcessor {
 
             // Extract and transpile the math expression
             String mathExpr = matcher.group();
-            try {
-                String latex = Transpiler.transpile(mathExpr);
-                result.append("$").append(latex).append("$");
-            } catch (EuclidException e) {
-                // If transpilation fails, keep the original text
+            TranspileResult transpileResult = Transpiler.transpileWithDiagnostics(mathExpr, false, MathMode.NONE, false);
+            mergeDiagnostics(diagnostics, transpileResult.diagnostics(), lineNumber, matcher.start() + 1);
+
+            if (!transpileResult.hasErrors() && transpileResult.output() != null) {
+                result.append("$").append(transpileResult.output()).append("$");
+            } else {
                 result.append(mathExpr);
             }
 
@@ -86,12 +95,22 @@ public class MixedContentProcessor {
      * @throws EuclidException if transpilation fails
      */
     public static String processDocument(String content) throws EuclidException {
+        return processDocument(content, null);
+    }
+
+    public static String processDocument(String content, DiagnosticCollector diagnostics) throws EuclidException {
         // pre-pass: join lines with unclosed delimiters so multiline expressions stay together
         String[] rawLines = content.split("\n");
         List<String> joined = new ArrayList<>();
+        List<Integer> joinedStartLines = new ArrayList<>();
         StringBuilder pending = new StringBuilder();
         int depth = 0;
+        int lineNumber = 1;
+        int pendingStartLine = 1;
         for (String line : rawLines) {
+            if (pending.length() == 0) {
+                pendingStartLine = lineNumber;
+            }
             if (pending.length() > 0) pending.append(" ");
             pending.append(line);
             for (char c : line.toCharArray()) {
@@ -100,16 +119,46 @@ public class MixedContentProcessor {
             }
             if (depth <= 0) {
                 joined.add(pending.toString());
+                joinedStartLines.add(pendingStartLine);
                 pending.setLength(0);
                 depth = 0;
             }
+            lineNumber++;
         }
-        if (pending.length() > 0) joined.add(pending.toString());
+        if (pending.length() > 0) {
+            joined.add(pending.toString());
+            joinedStartLines.add(pendingStartLine);
+        }
 
         List<String> processedLines = new ArrayList<>();
-        for (String line : joined) {
-            processedLines.add(processLine(line));
+        for (int i = 0; i < joined.size(); i++) {
+            processedLines.add(processLine(joined.get(i), joinedStartLines.get(i), diagnostics));
         }
         return String.join("\n", processedLines);
+    }
+
+    private static void mergeDiagnostics(
+            DiagnosticCollector collector,
+            List<Diagnostic> diagnostics,
+            int baseLine,
+            int baseColumn) {
+        if (collector == null) {
+            return;
+        }
+
+        for (Diagnostic diagnostic : diagnostics) {
+            int line = baseLine + diagnostic.getLine() - 1;
+            int column = diagnostic.getLine() == 1
+                    ? baseColumn + diagnostic.getColumn() - 1
+                    : diagnostic.getColumn();
+            collector.add(new Diagnostic(
+                    diagnostic.getSeverity(),
+                    diagnostic.getCode(),
+                    diagnostic.getMessage(),
+                    line,
+                    column,
+                    diagnostic.getSuggestion(),
+                    diagnostic.getCanonicalRewrite()));
+        }
     }
 }
