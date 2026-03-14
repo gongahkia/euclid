@@ -348,6 +348,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             case EXPECT -> "\\mathbb{E}[" + args.get(0).accept(this) + "]";
             case VAR -> "\\text{Var}(" + args.get(0).accept(this) + ")";
             case COV -> "\\text{Cov}(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
+            case GIVEN -> transpileBinarySymbol(args, "\\mid");
 
             // Linear algebra
             case DET -> transpileTrigFunction("\\det", args);
@@ -505,16 +506,26 @@ public class LatexTranspiler implements AstVisitor<String> {
     }
 
     private String transpileVector(List<AstNode> args) {
-        String elements = args.stream()
+        List<AstNode> elements = args;
+        if (args.size() == 1 && args.get(0) instanceof CallExpr row && row.getFunction().getType() == TokenType.LBRACKET) {
+            elements = row.getArguments();
+        }
+
+        String content = elements.stream()
                 .map(arg -> arg.accept(this))
                 .collect(Collectors.joining(" \\\\ "));
-        return "\\begin{pmatrix} " + elements + " \\end{pmatrix}";
+        return "\\begin{pmatrix} " + content + " \\end{pmatrix}";
     }
 
     private String transpileMatrix(List<AstNode> args) {
+        List<AstNode> rows = args;
+        if (args.size() == 1 && args.get(0) instanceof CallExpr outerRow && outerRow.getFunction().getType() == TokenType.LBRACKET) {
+            rows = outerRow.getArguments();
+        }
+
         StringBuilder sb = new StringBuilder("\\begin{pmatrix} ");
-        for (int i = 0; i < args.size(); i++) {
-            AstNode arg = args.get(i);
+        for (int i = 0; i < rows.size(); i++) {
+            AstNode arg = rows.get(i);
             if (arg instanceof CallExpr row && row.getFunction().getType() == TokenType.LBRACKET) {
                 // row node: join elements with &
                 sb.append(row.getArguments().stream()
@@ -523,7 +534,7 @@ public class LatexTranspiler implements AstVisitor<String> {
             } else {
                 sb.append(arg.accept(this));
             }
-            if (i < args.size() - 1) sb.append(" \\\\ ");
+            if (i < rows.size() - 1) sb.append(" \\\\ ");
         }
         sb.append(" \\end{pmatrix}");
         return sb.toString();
