@@ -124,8 +124,8 @@ public enum TokenType {
     INTEGRAL,       // integral(f(x), x, a, b) → ∫[a,b] f(x) dx
 
     // Summation and product notation
-    SUM,            // sum(from i=1 to n) f(i)
-    PROD,           // prod(from i=1 to n) f(i)
+    SUM,            // sum(expr, i, 1, n)
+    PROD,           // prod(expr, i, 1, n)
 
     // Matrices and vectors
     VECTOR,         // vector([a, b, c])
@@ -152,17 +152,17 @@ public enum TokenType {
     FORALL,         // forall(x, P(x)) → ∀x P(x)
     EXISTS,         // exists(x, P(x)) → ∃x P(x)
 
-    // Keywords for structured expressions
-    FROM,           // Used in sum/prod: from i=1
-    TO,             // Used in sum/prod: to n
-    EQUALS,         // = (for equations in sum/prod bounds)
+    // Reserved keywords retained for compatibility and diagnostics
+    FROM,           // Reserved for legacy sum/prod notation
+    TO,             // Reserved for legacy sum/prod notation
+    EQUALS,         // = (equality operator and structured bounds)
 
     // Accents and decorations
     HAT,            // hat(x) → \\hat{x}
     TILDE,          // tilde(x) → \\tilde{x}
     BAR,            // bar(x) → \\bar{x}
     VEC,            // vec(x) → \\vec{x}
-    DOT,            // dot(x) → \\dot{x}
+    DOT,            // dot(x) → \\dot{x} or infix a dot b → a \\cdot b
     DDOT,           // ddot(x) → \\ddot{x}
     OVERLINE,       // overline(x) → \\overline{x}
     UNDERLINE,      // underline(x) → \\underline{x}
