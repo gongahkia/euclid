@@ -392,13 +392,13 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testSummation() throws Exception {
-        String result = Transpiler.transpile("sum(i, 1, n, f)");
+        String result = Transpiler.transpile("sum(f, i, 1, n)");
         assertTrue(result.contains("\\sum_{i=1}^{n}"));
     }
 
     @Test
     public void testProduct() throws Exception {
-        String result = Transpiler.transpile("prod(i, 1, n, f)");
+        String result = Transpiler.transpile("prod(f, i, 1, n)");
         assertTrue(result.contains("\\prod_{i=1}^{n}"));
     }
 
