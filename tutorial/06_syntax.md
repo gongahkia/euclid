@@ -328,7 +328,7 @@ Standalone tokens transpile directly:
 
 ## Compatibility aliases
 
-The transpiler still accepts a small compatibility surface and can rewrite it to canonical form. Using these aliases emits a warning-level diagnostic so they do not silently become part of the preferred DSL:
+The transpiler still accepts a small compatibility surface and can rewrite it to canonical form. Using these aliases emits a warning-level diagnostic by default so they do not silently become part of the preferred DSL. In strict alias mode (`--strict-aliases`), the same forms are rejected as errors:
 
 | Alias | Canonical form |
 | :--- | :--- |
@@ -338,4 +338,4 @@ The transpiler still accepts a small compatibility surface and can rewrite it to
 | `AND(p, q)` | `p AND q` |
 | `OR(p, q)` | `p OR q` |
 
-If you want stable docs, editor support, and predictable canonicalization, prefer the canonical forms shown throughout this guide.
+If you want stable docs, predictable canonicalization, and enforceable CI checks, prefer the canonical forms shown throughout this guide and use `--strict-aliases` during validation.
