@@ -42,20 +42,6 @@
             <scope>test</scope>
         </dependency>
         
-        <!-- JUnit QuickCheck for property-based testing -->
-        <dependency>
-            <groupId>com.pholser</groupId>
-            <artifactId>junit-quickcheck-core</artifactId>
-            <version>1.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.pholser</groupId>
-            <artifactId>junit-quickcheck-generators</artifactId>
-            <version>1.0</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- JLine 3 for REPL with history and line editing -->
         <dependency>
             <groupId>org.jline</groupId>
