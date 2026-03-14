@@ -17,7 +17,7 @@ public class TranspilerCliModeTest {
         Path input = Files.createTempFile("euclid-check", ".ed");
         Files.writeString(input, "INF");
 
-        TranspileResult result = Transpiler.checkFile(input.toString(), false, false);
+        TranspileResult result = Transpiler.checkFile(input.toString(), false);
 
         assertFalse(result.hasErrors());
         assertTrue(result.diagnostics().stream().anyMatch(d ->
@@ -48,11 +48,11 @@ public class TranspilerCliModeTest {
     }
 
     @Test
-    public void canonicalizeModeRejectsMixedMode() throws Exception {
+    public void removedMixedModeFlagIsRejected() throws Exception {
         Path input = Files.createTempFile("euclid-canonicalize-usage", ".ed");
         Files.writeString(input, "sum(i, i, 1, n)");
 
-        int exitCode = runCliQuietly("--canonicalize", "--mixed", input.toString());
+        int exitCode = runCliQuietly("--mixed", input.toString());
 
         assertEquals(1, exitCode);
     }
