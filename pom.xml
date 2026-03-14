@@ -163,22 +163,6 @@
                             </transformers>
                         </configuration>
                     </execution>
-                    <!-- Web playground executable -->
-                    <execution>
-                        <id>build-web</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>euclid-web</finalName>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.euclid.web.EuclidWebServer</mainClass>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 
