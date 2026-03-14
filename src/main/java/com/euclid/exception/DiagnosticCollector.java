@@ -15,12 +15,20 @@ public class DiagnosticCollector {
         diagnostics.add(new Diagnostic(Diagnostic.Severity.ERROR, message, line, column, suggestion));
     }
 
+    public void addError(String code, String message, int line, int column, String suggestion, String canonicalRewrite) {
+        diagnostics.add(new Diagnostic(Diagnostic.Severity.ERROR, code, message, line, column, suggestion, canonicalRewrite));
+    }
+
     public void addWarning(String message, int line, int column) {
         diagnostics.add(new Diagnostic(Diagnostic.Severity.WARNING, message, line, column));
     }
 
     public void addInfo(String message, int line, int column) {
         diagnostics.add(new Diagnostic(Diagnostic.Severity.INFO, message, line, column));
+    }
+
+    public void addInfo(String code, String message, int line, int column, String suggestion, String canonicalRewrite) {
+        diagnostics.add(new Diagnostic(Diagnostic.Severity.INFO, code, message, line, column, suggestion, canonicalRewrite));
     }
 
     public List<Diagnostic> getErrors() {

@@ -6,8 +6,10 @@ package com.euclid.exception;
 public class ParserException extends EuclidException {
     private final int line;
     private final int column;
+    private final String code;
     private final String sourceContext;
     private final String suggestion;
+    private final String canonicalRewrite;
 
     /**
      * Creates a new parser exception.
@@ -20,8 +22,10 @@ public class ParserException extends EuclidException {
         super(String.format("Parser error at line %d, column %d: %s", line, column, message));
         this.line = line;
         this.column = column;
+        this.code = null;
         this.sourceContext = null;
         this.suggestion = null;
+        this.canonicalRewrite = null;
     }
 
     /**
@@ -34,11 +38,21 @@ public class ParserException extends EuclidException {
      * @param suggestion Suggested fix (optional)
      */
     public ParserException(String message, int line, int column, String source, String suggestion) {
+        this(null, message, line, column, source, suggestion, null);
+    }
+
+    public ParserException(String code, String message, int line, int column, String source, String suggestion) {
+        this(code, message, line, column, source, suggestion, null);
+    }
+
+    public ParserException(String code, String message, int line, int column, String source, String suggestion, String canonicalRewrite) {
         super(buildErrorMessage(message, line, column, source, suggestion));
         this.line = line;
         this.column = column;
+        this.code = code;
         this.sourceContext = extractSourceContext(source, line, column);
         this.suggestion = suggestion;
+        this.canonicalRewrite = canonicalRewrite;
     }
 
     /**
@@ -53,8 +67,10 @@ public class ParserException extends EuclidException {
         super(String.format("Parser error at line %d, column %d: %s", line, column, message), cause);
         this.line = line;
         this.column = column;
+        this.code = null;
         this.sourceContext = null;
         this.suggestion = null;
+        this.canonicalRewrite = null;
     }
 
     /**
@@ -75,6 +91,10 @@ public class ParserException extends EuclidException {
         return column;
     }
 
+    public String getCode() {
+        return code;
+    }
+
     /**
      * Gets the source context around the error.
      *
@@ -91,6 +111,10 @@ public class ParserException extends EuclidException {
      */
     public String getSuggestion() {
         return suggestion;
+    }
+
+    public String getCanonicalRewrite() {
+        return canonicalRewrite;
     }
 
     /**
