@@ -1,5 +1,6 @@
 package com.euclid;
 
+import com.euclid.exception.LexerException;
 import com.euclid.lang.EuclidCapability;
 import com.euclid.lang.EuclidCapabilityManifest;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,16 @@ public class LanguageContractTest {
     public void testConditionalProbabilityAndMathTextAreSupported() throws Exception {
         assertEquals("P(A \\mid B)", Transpiler.transpile("prob(given(A, B))"));
         assertEquals("\\text{sample mean}", Transpiler.transpile("mathtext(\"sample mean\")"));
+    }
+
+    @Test
+    public void testPureDslLexerRejectsUnexpectedCharacters() {
+        assertThrows(LexerException.class, () -> Transpiler.transpile("x + @"));
+    }
+
+    @Test
+    public void testPureDslLexerRejectsSingleBackslash() {
+        assertThrows(LexerException.class, () -> Transpiler.transpile("a \\ b"));
     }
 
     @Test
@@ -98,7 +109,7 @@ public class LanguageContractTest {
                 .filter(capability -> capability.name().equals("vector"))
                 .findFirst();
         assertTrue(vector.isPresent());
-        assertTrue(vector.get().signature().display().contains("vector([a, b, c])"));
+        assertTrue(vector.get().signature().label().contains("vector([a, b, c])"));
     }
 
     @Test
@@ -107,5 +118,17 @@ public class LanguageContractTest {
         assertFalse(result.diagnostics().isEmpty());
         assertEquals("canonical.rewrite", result.diagnostics().get(0).getCode());
         assertEquals("INFINITY", result.diagnostics().get(0).getCanonicalRewrite());
+    }
+
+    @Test
+    public void testInvalidArityProducesStableParserDiagnostic() {
+        TranspileResult result = Transpiler.transpileWithDiagnostics(
+                "piecewise(x, geq(x, 0), -x)",
+                false,
+                com.euclid.transpiler.MathMode.NONE,
+                false);
+        assertTrue(result.hasErrors());
+        assertTrue(result.diagnostics().stream().anyMatch(d -> "parser.invalid-arity".equals(d.getCode())));
+        assertTrue(result.diagnostics().stream().anyMatch(d -> d.getSuggestion() != null && d.getSuggestion().contains("piecewise")));
     }
 }
