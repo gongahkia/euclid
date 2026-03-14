@@ -16,13 +16,15 @@
  *   <li>Strips inline comments (# and // styles)</li>
  *   <li>Tracks line and column numbers for error reporting</li>
  *   <li>Handles backslash-backslash fraction operator: {@code a \\ b}</li>
+ *   <li>Rejects unexpected characters in strict mode instead of silently treating them as text</li>
  * </ul>
  *
  * <h2>Error Handling</h2>
  * <p>
  * The lexer throws {@link com.euclid.exception.LexerException} when encountering
  * invalid input, providing detailed error messages with source context and position
- * information.
+ * information. A permissive mode is available for callers that explicitly need
+ * markdown-tolerant tokenization.
  * </p>
  *
  * <h2>Example Usage</h2>
