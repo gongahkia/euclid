@@ -71,14 +71,6 @@ $ LaTeX: \int x^{2} \, dx
 $ euclid> exit
 ```
 
-5. Launch the browser playground for authoring, diagnostics, canonicalization, and preview.
-
-```console
-$ java -jar target/euclid-web.jar 8080
-```
-
-Then open `http://localhost:8080`.
-
 ## Real User Flows
 
 `Euclid` is optimized for three concrete workflows.
