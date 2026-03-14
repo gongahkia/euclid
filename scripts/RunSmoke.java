@@ -24,32 +24,14 @@ public final class RunSmoke {
                 "canonicalization");
         assertThrowsLexer("x + @", "strict lexer");
 
-        TranspileResult aliasResult = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE, false);
+        TranspileResult aliasResult = Transpiler.transpileWithDiagnostics("INF", false, com.euclid.transpiler.MathMode.NONE);
         assertTrue(!aliasResult.diagnostics().isEmpty(), "alias diagnostics");
         assertEquals(Diagnostic.Severity.WARNING.name(), aliasResult.diagnostics().get(0).getSeverity().name(), "alias severity");
-
-        TranspileResult mixedConstantResult = Transpiler.transpileWithDiagnostics(
-                "Acronym: INF",
-                false,
-                com.euclid.transpiler.MathMode.NONE,
-                true);
-        assertEquals("Acronym: INF", mixedConstantResult.output(), "mixed bare constant");
-        assertTrue(mixedConstantResult.diagnostics().isEmpty(), "mixed bare constant diagnostics");
-
-        TranspileResult protectedSpanResult = Transpiler.transpileWithDiagnostics(
-                "Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.",
-                false,
-                com.euclid.transpiler.MathMode.NONE,
-                true);
-        assertEquals("Code `sum(i, i, 1, n)` and math $choose(n, k)$ stay literal.",
-                protectedSpanResult.output(),
-                "mixed protected spans");
 
         TranspileResult recoveryResult = Transpiler.transpileWithDiagnostics(
                 "x = y\npiecewise(x, geq(x, 0), -x)\nz = w",
                 false,
-                com.euclid.transpiler.MathMode.NONE,
-                false);
+                com.euclid.transpiler.MathMode.NONE);
         assertTrue(recoveryResult.hasErrors(), "parser recovery errors");
         assertTrue(!recoveryResult.output().contains("[ERROR:"), "parser recovery output hygiene");
 
@@ -61,7 +43,7 @@ public final class RunSmoke {
 
         Path checkFile = Files.createTempFile("euclid-check-smoke", ".ed");
         Files.writeString(checkFile, "INF");
-        TranspileResult checkResult = Transpiler.checkFile(checkFile.toString(), false, false);
+        TranspileResult checkResult = Transpiler.checkFile(checkFile.toString(), false);
         assertTrue(!checkResult.hasErrors(), "check mode success");
         assertTrue(checkResult.diagnostics().stream().anyMatch(d ->
                 d.getSeverity() == Diagnostic.Severity.WARNING && "canonical.rewrite".equals(d.getCode())), "check mode warning");
