@@ -290,8 +290,8 @@ public final class EuclidLanguage {
         registerSignature(signatures, "exists", "exists(var, predicate)", "var: quantified variable", "predicate: body");
         registerSignature(signatures, "implies", "implies(left, right)", "left: premise", "right: consequence");
         registerSignature(signatures, "iff", "iff(left, right)", "left: proposition", "right: proposition");
-        registerSignature(signatures, "matrix", "matrix([row1], [row2], ...)", "rowN: bracketed row");
-        registerSignature(signatures, "vector", "vector(a, b, c, ...)", "a..n: vector elements");
+        registerSignature(signatures, "matrix", "matrix([[a, b], [c, d]]) or matrix([a, b], [c, d])", "rowN: bracketed row");
+        registerSignature(signatures, "vector", "vector([a, b, c]) or vector(a, b, c)", "a..n: vector elements");
         registerSignature(signatures, "piecewise", "piecewise(expr1, cond1, expr2, cond2, ...)", "exprN: branch result", "condN: branch condition");
         registerSignature(signatures, "align", "align(eq1, eq2, ...)", "eqN: aligned expression");
         registerSignature(signatures, "system", "system(eq1, eq2, ...)", "eqN: system equation");
