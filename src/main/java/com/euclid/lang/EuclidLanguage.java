@@ -494,6 +494,9 @@ public final class EuclidLanguage {
         int index = start;
         boolean escaping = false;
 
+        output.append(source.charAt(index));
+        index++;
+
         while (index < source.length()) {
             char c = source.charAt(index);
             output.append(c);
