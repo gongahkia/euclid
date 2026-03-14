@@ -76,18 +76,18 @@ $$\arcsin(x) + \arccos(x) = \frac{\pi}{2}$$
 
 | Function | Euclid | LaTeX |
 |----------|--------|-------|
-| Minimum | `min` | `\min` |
-| Maximum | `max` | `\max` |
-| Supremum | `sup` | `\sup` |
-| Infimum | `inf` | `\inf` |
-| Limit superior | `limsup` | `\limsup` |
-| Limit inferior | `liminf` | `\liminf` |
+| Minimum | `min(S)` | `\min(S)` |
+| Maximum | `max(S)` | `\max(S)` |
+| Supremum | `sup(S)` | `\sup(S)` |
+| Infimum | `inf(S)` | `\inf(S)` |
+| Limit superior | `limsup(a_n)` | `\limsup(a_n)` |
+| Limit inferior | `liminf(a_n)` | `\liminf(a_n)` |
 
 ### Example: Bounded Sequence
 
 **Euclid:**
 ```euclid
-limsup a_n = inf(n, sup(k, geq(k, n), a_k))
+limsup(a_n)
 ```
 
 ## Logarithms and Exponentials
@@ -293,7 +293,7 @@ $$\lim_{x \to a} f(x)$$
 
 **Euclid:**
 ```euclid
-limit(f(x), x, INF)
+limit(f(x), x, INFINITY)
 ```
 
 **Rendered:**
@@ -326,7 +326,7 @@ $$\lim_{x \to a} \frac{f(x)}{g(x)} = \lim_{x \to a} \frac{\frac{d}{dx} f(x)}{\fr
 
 **Euclid:**
 ```euclid
-E = limit(pow(1 + 1 \\ n, n), n, INF)
+E = limit(pow(1 + 1 \\ n, n), n, INFINITY)
 ```
 
 **Rendered:**
@@ -339,7 +339,7 @@ $$e = \lim_{n \to \infty} (1 + \frac{1}{n})^{n}$$
 
 **Euclid:**
 ```euclid
-sum(i, 1, n, f(i))
+sum(f(i), i, 1, n)
 ```
 
 **Rendered:**
@@ -350,7 +350,7 @@ $$\sum_{i=1}^{n} f(i)$$
 
 **Euclid:**
 ```euclid
-sum(i, 1, n, i) = (n * (n + 1)) \\ 2
+sum(i, i, 1, n) = (n * (n + 1)) \\ 2
 ```
 
 **Rendered:**
@@ -361,7 +361,7 @@ $$\sum_{i=1}^{n} i = \frac{n \cdot (n + 1)}{2}$$
 
 **Euclid:**
 ```euclid
-sum(n, 0, INF, 1 \\ pow(2, n)) = 2
+sum(1 \\ pow(2, n), n, 0, INFINITY) = 2
 ```
 
 **Rendered:**
@@ -372,7 +372,7 @@ $$\sum_{n=0}^{\infty} \frac{1}{2^{n}} = 2$$
 
 **Euclid:**
 ```euclid
-prod(i, 1, n, f(i))
+prod(f(i), i, 1, n)
 ```
 
 **Rendered:**
@@ -383,7 +383,7 @@ $$\prod_{i=1}^{n} f(i)$$
 
 **Euclid:**
 ```euclid
-n! = prod(i, 1, n, i)
+n! = prod(i, i, 1, n)
 ```
 
 **Rendered:**
@@ -396,7 +396,7 @@ $$n! = \prod_{i=1}^{n} i$$
 
 **Euclid:**
 ```euclid
-exp(x) = sum(n, 0, INF, (pow(x, n)) \\ prod(k, 1, n, k))
+exp(x) = sum((pow(x, n)) \\ (n!), n, 0, INFINITY)
 ```
 
 **Rendered:**
@@ -429,7 +429,7 @@ $$\int u \cdot \frac{d}{dx} v \, dx = u \cdot v - \int v \cdot \frac{d}{dx} u \,
 
 **Euclid:**
 ```euclid
-integral(exp(-pow(x, 2)), x, -INF, INF) = sqrt(PI)
+integral(exp(-pow(x, 2)), x, -INFINITY, INFINITY) = sqrt(PI)
 ```
 
 **Rendered:**
@@ -463,12 +463,12 @@ Try transpiling these calculus expressions:
 
 3. **Limit definition of e:**
    ```euclid
-   E = limit(pow(1 + 1 \\ n, n), n, INF)
+   E = limit(pow(1 + 1 \\ n, n), n, INFINITY)
    ```
 
 4. **Riemann sum:**
    ```euclid
-   integral(f(x), x, a, b) = limit(sum(i, 1, n, f(xi) * DELTA_x), n, INF)
+   integral(f(x), x, a, b) = limit(sum(f(x_i) * DELTA_x, i, 1, n), n, INFINITY)
    ```
 
 5. **Partial derivative:**
@@ -478,7 +478,7 @@ Try transpiling these calculus expressions:
 
 6. **Geometric series:**
    ```euclid
-   sum(n, 0, INF, pow(r, n)) = 1 \\ (1 - r)
+   sum(pow(r, n), n, 0, INFINITY) = 1 \\ (1 - r)
    ```
 
 7. **Euler's formula (as limit):**
@@ -506,7 +506,7 @@ integral(expression, variable, lower, upper)
 
 ### Summation/Product Index
 
-Format: `sum(index, start, end, expression)`
+Format: `sum(expression, index, start, end)`
 
 The index variable should appear in the expression.
 
