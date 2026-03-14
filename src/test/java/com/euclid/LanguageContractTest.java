@@ -122,6 +122,9 @@ public class LanguageContractTest {
         assertFalse(result.diagnostics().isEmpty());
         assertEquals("canonical.rewrite", result.diagnostics().get(0).getCode());
         assertEquals(com.euclid.exception.Diagnostic.Severity.WARNING, result.diagnostics().get(0).getSeverity());
+        assertEquals(1, result.diagnostics().get(0).getLine());
+        assertEquals(1, result.diagnostics().get(0).getColumn());
+        assertTrue(result.diagnostics().get(0).getMessage().contains("INF"));
         assertEquals("INFINITY", result.diagnostics().get(0).getCanonicalRewrite());
     }
 
