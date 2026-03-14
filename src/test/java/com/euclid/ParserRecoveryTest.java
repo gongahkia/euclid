@@ -11,8 +11,7 @@ public class ParserRecoveryTest {
         TranspileResult result = Transpiler.transpileWithDiagnostics(
                 "x = y\npiecewise(x, geq(x, 0), -x)\nz = w",
                 false,
-                com.euclid.transpiler.MathMode.NONE,
-                false);
+                com.euclid.transpiler.MathMode.NONE);
 
         assertTrue(result.hasErrors());
         assertFalse(result.output().contains("[ERROR:"));
@@ -25,8 +24,7 @@ public class ParserRecoveryTest {
         TranspileResult result = Transpiler.transpileWithDiagnostics(
                 "x = y\npiecewise(x, geq(x, 0), -x)\nz = w",
                 false,
-                com.euclid.transpiler.MathMode.NONE,
-                false);
+                com.euclid.transpiler.MathMode.NONE);
 
         assertTrue(result.diagnostics().stream().anyMatch(d -> "parser.invalid-arity".equals(d.getCode())));
     }
