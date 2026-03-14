@@ -1,5 +1,6 @@
 package com.euclid;
 
+import com.euclid.exception.Diagnostic;
 import com.euclid.exception.EuclidException;
 import org.jline.reader.*;
 import org.jline.terminal.Terminal;
@@ -211,14 +212,22 @@ public class Repl {
      * @param input The Euclid expression to execute
      */
     private static void executeInput(String input) {
-        try {
-            String result = Transpiler.transpile(input);
-            System.out.println("LaTeX: " + result);
-            System.out.println();
-        } catch (EuclidException e) {
-            System.err.println("Error: " + e.getMessage());
-            System.out.println();
+        TranspileResult result = Transpiler.transpileWithDiagnostics(input, false, com.euclid.transpiler.MathMode.NONE, false);
+
+        for (Diagnostic diagnostic : result.diagnostics()) {
+            if (diagnostic.getSeverity() == Diagnostic.Severity.INFO) {
+                continue;
+            }
+            System.err.println(diagnostic);
         }
+
+        if (result.hasErrors() || result.output() == null) {
+            System.out.println();
+            return;
+        }
+
+        System.out.println("LaTeX: " + result.output());
+        System.out.println();
     }
 
     /**
