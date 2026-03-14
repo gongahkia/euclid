@@ -263,6 +263,30 @@ public class Transpiler {
     }
 
     /**
+     * Checks a file for Euclid diagnostics without writing output.
+     */
+    public static TranspileResult checkFile(String inputPath, boolean verbose, boolean mixedMode) throws IOException {
+        String source = Files.readString(Paths.get(inputPath));
+        TranspileResult result = transpileWithDiagnostics(source, verbose, MathMode.NONE, mixedMode);
+        printDiagnostics(result.diagnostics(), verbose);
+        return result;
+    }
+
+    /**
+     * Canonicalizes a file's Euclid source without transpiling it.
+     */
+    public static String canonicalizeFile(String inputPath) throws IOException {
+        return canonicalize(Files.readString(Paths.get(inputPath)));
+    }
+
+    /**
+     * Canonicalizes a file's Euclid source and writes it to a destination path.
+     */
+    public static void canonicalizeFile(String inputPath, String outputPath) throws IOException {
+        Files.writeString(Paths.get(outputPath), canonicalizeFile(inputPath));
+    }
+
+    /**
      * Watches a file for changes and automatically retranspiles.
      *
      * @param inputPath  The input .ed file path to watch
@@ -386,15 +410,21 @@ public class Transpiler {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        System.exit(runCli(args));
+    }
+
+    static int runCli(String[] args) {
         if (args.length == 0) {
             printUsage();
-            System.exit(1);
+            return 1;
         }
 
         // Check for flags
         boolean watchMode = false;
         boolean verboseMode = false;
         boolean mixedMode = false;
+        boolean checkMode = false;
+        boolean canonicalizeMode = false;
         MathMode mathMode = MathMode.NONE;
         String inputFile = null;
         String outputFile = null;
@@ -407,6 +437,10 @@ public class Transpiler {
                 verboseMode = true;
             } else if (args[i].equals("--mixed") || args[i].equals("-m")) {
                 mixedMode = true;
+            } else if (args[i].equals("--check") || args[i].equals("-c")) {
+                checkMode = true;
+            } else if (args[i].equals("--canonicalize")) {
+                canonicalizeMode = true;
             } else if (args[i].equals("--inline") || args[i].equals("-i")) {
                 mathMode = MathMode.INLINE;
             } else if (args[i].equals("--display") || args[i].equals("-D")) {
@@ -420,20 +454,46 @@ public class Transpiler {
 
         if (inputFile == null) {
             printUsage();
-            System.exit(1);
-        }
-
-        // Determine output file
-        if (outputFile == null) {
-            // Default: replace .ed with .md
-            if (inputFile.endsWith(".ed")) {
-                outputFile = inputFile.substring(0, inputFile.length() - 3) + ".md";
-            } else {
-                outputFile = inputFile + ".md";
-            }
+            return 1;
         }
 
         try {
+            validateCliOptions(watchMode, mixedMode, checkMode, canonicalizeMode, mathMode, outputFile);
+
+            if (checkMode) {
+                if (!verboseMode) {
+                    System.out.println("Checking " + inputFile + "...");
+                }
+                TranspileResult result = checkFile(inputFile, verboseMode, mixedMode);
+                if (result.hasErrors()) {
+                    if (!verboseMode) {
+                        System.err.println("Check failed.");
+                    }
+                    return 1;
+                }
+                if (!verboseMode) {
+                    System.out.println("Check passed.");
+                }
+                return 0;
+            }
+
+            if (canonicalizeMode) {
+                String canonicalSource = canonicalizeFile(inputFile);
+                if (outputFile == null) {
+                    System.out.print(canonicalSource);
+                } else {
+                    Files.writeString(Paths.get(outputFile), canonicalSource);
+                    if (!verboseMode) {
+                        System.out.println("Canonicalized " + inputFile + " to " + outputFile + ".");
+                    }
+                }
+                return 0;
+            }
+
+            if (outputFile == null) {
+                outputFile = defaultOutputPath(inputFile);
+            }
+
             if (watchMode) {
                 watchFile(inputFile, outputFile, verboseMode, mathMode, mixedMode);
             } else {
@@ -447,11 +507,16 @@ public class Transpiler {
             }
         } catch (IOException e) {
             System.err.println("I/O Error: " + e.getMessage());
-            System.exit(1);
+            return 1;
+        } catch (IllegalArgumentException e) {
+            System.err.println("Usage Error: " + e.getMessage());
+            printUsage();
+            return 1;
         } catch (EuclidException e) {
             System.err.println("Transpilation Error: " + e.getMessage());
-            System.exit(1);
+            return 1;
         }
+        return 0;
     }
 
     private static void printUsage() {
@@ -459,11 +524,15 @@ public class Transpiler {
         System.out.println();
         System.out.println("Usage:");
         System.out.println("  java -jar euclid-transpiler.jar [options] <input.ed> [output.md]");
+        System.out.println("  java -jar euclid-transpiler.jar --check [--mixed] <input.ed>");
+        System.out.println("  java -jar euclid-transpiler.jar --canonicalize <input.ed> [output.ed]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  --watch, -w      Watch mode: automatically retranspile when file changes");
         System.out.println("  --verbose, -v    Verbose mode: show tokenization output and AST");
         System.out.println("  --debug, -d      Debug mode: same as --verbose");
+        System.out.println("  --check, -c      Check source and print diagnostics without writing output");
+        System.out.println("  --canonicalize   Rewrite compatibility aliases to canonical Euclid spellings");
         System.out.println("  --mixed, -m      Mixed mode: conservatively transpile obvious inline Euclid in prose");
         System.out.println("  --inline, -i     Wrap output in inline math mode ($...$)");
         System.out.println("  --display, -D    Wrap output in display math mode ($$...$$)");
@@ -471,15 +540,52 @@ public class Transpiler {
         System.out.println("Arguments:");
         System.out.println("  input.ed         Input Euclid file");
         System.out.println("  output.md        Output Markdown file (optional, defaults to input.md)");
+        System.out.println("  output.ed        Canonicalized Euclid file (optional, defaults to stdout)");
         System.out.println();
         System.out.println("Examples:");
         System.out.println("  java -jar euclid-transpiler.jar example.ed");
         System.out.println("  java -jar euclid-transpiler.jar example.ed output.md");
+        System.out.println("  java -jar euclid-transpiler.jar --check example.ed");
+        System.out.println("  java -jar euclid-transpiler.jar --canonicalize example.ed normalized.ed");
         System.out.println("  java -jar euclid-transpiler.jar --watch example.ed");
         System.out.println("  java -jar euclid-transpiler.jar -v example.ed");
         System.out.println("  java -jar euclid-transpiler.jar --inline example.ed");
         System.out.println("  java -jar euclid-transpiler.jar --display example.ed");
         System.out.println("  java -jar euclid-transpiler.jar --watch --inline --verbose example.ed");
+    }
+
+    private static void validateCliOptions(
+            boolean watchMode,
+            boolean mixedMode,
+            boolean checkMode,
+            boolean canonicalizeMode,
+            MathMode mathMode,
+            String outputFile) {
+        if (checkMode && canonicalizeMode) {
+            throw new IllegalArgumentException("--check and --canonicalize are mutually exclusive");
+        }
+        if ((checkMode || canonicalizeMode) && watchMode) {
+            throw new IllegalArgumentException("--watch only applies to transpilation mode");
+        }
+        if (checkMode && outputFile != null) {
+            throw new IllegalArgumentException("--check does not accept an output file");
+        }
+        if (checkMode && mathMode != MathMode.NONE) {
+            throw new IllegalArgumentException("--check does not support --inline or --display");
+        }
+        if (canonicalizeMode && mixedMode) {
+            throw new IllegalArgumentException("--canonicalize does not support --mixed because it would rewrite prose");
+        }
+        if (canonicalizeMode && mathMode != MathMode.NONE) {
+            throw new IllegalArgumentException("--canonicalize does not support --inline or --display");
+        }
+    }
+
+    private static String defaultOutputPath(String inputFile) {
+        if (inputFile.endsWith(".ed")) {
+            return inputFile.substring(0, inputFile.length() - 3) + ".md";
+        }
+        return inputFile + ".md";
     }
 
     private static void printDiagnostics(List<Diagnostic> diagnostics, boolean verbose) {
