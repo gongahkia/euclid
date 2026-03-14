@@ -248,6 +248,16 @@ public class Parser {
             return new LiteralExpr(previous().getLiteral());
         }
 
+        // String literals
+        if (match(TokenType.STRING)) {
+            return new LiteralExpr(previous().getLiteral());
+        }
+
+        // Standalone logical symbols
+        if (match(TokenType.AND, TokenType.OR, TokenType.NOT)) {
+            return new LiteralExpr(previous().getType());
+        }
+
         // Constants
         if (isConstantToken(peek()) && !isFunctionToken(peek())) {
             Token constant = advance();
