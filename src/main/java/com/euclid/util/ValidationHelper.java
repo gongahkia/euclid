@@ -62,12 +62,24 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.PM, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.TIMES, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.DIV, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.CDOT, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.AST, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.STAR, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.CIRC, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.BULLET, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.CAP, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.CUP, 2);
         
         // Set operations (2 arguments)
         FUNCTION_ARG_COUNTS.put(TokenType.SUBSET, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.SUPSET, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.SUBSETEQ, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.SUPSETEQ, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.UNION, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.INTERSECTION, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.SET_DIFF, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.ELEMENT_OF, 2);
+        FUNCTION_ARG_COUNTS.put(TokenType.NOT_ELEMENT_OF, 2);
         
         // Logical operators
         FUNCTION_ARG_COUNTS.put(TokenType.AND, 2);
@@ -119,6 +131,17 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.CURL, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.LAPLACIAN, 1);
 
+        // Accents and text (1 arg)
+        FUNCTION_ARG_COUNTS.put(TokenType.HAT, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.TILDE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.BAR, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.VEC, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.DOT, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.DDOT, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.OVERLINE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.UNDERLINE, 1);
+        FUNCTION_ARG_COUNTS.put(TokenType.MATHTEXT, 1);
+
         // Probability
         FUNCTION_ARG_COUNTS.put(TokenType.PROB, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.EXPECT, 1);
@@ -140,6 +163,12 @@ public class ValidationHelper {
         FUNCTION_ARG_COUNTS.put(TokenType.CANCEL, 1);
         FUNCTION_ARG_COUNTS.put(TokenType.UNDERBRACE, 2);
         FUNCTION_ARG_COUNTS.put(TokenType.OVERBRACE, 2);
+
+        // Structured layout
+        FUNCTION_ARG_COUNTS.put(TokenType.PIECEWISE, -5); // even number of args, at least 2
+        FUNCTION_ARG_COUNTS.put(TokenType.CASES, -5); // even number of args, at least 2
+        FUNCTION_ARG_COUNTS.put(TokenType.ALIGN, -6); // at least 1 argument
+        FUNCTION_ARG_COUNTS.put(TokenType.SYSTEM, -6); // at least 1 argument
     }
 
     /**
@@ -158,6 +187,14 @@ public class ValidationHelper {
         
         if (expected == -1) {
             // Variable arguments, any count is valid
+            if ((function.getType() == TokenType.VECTOR || function.getType() == TokenType.MATRIX) && argumentCount < 1) {
+                throw new ParserException(
+                    String.format("Function '%s' expects at least 1 argument, but got %d",
+                                  function.getLexeme(), argumentCount),
+                    function.getLine(),
+                    function.getColumn()
+                );
+            }
             return;
         }
         
@@ -192,6 +229,32 @@ public class ValidationHelper {
             if (argumentCount != 1 && argumentCount != 3 && argumentCount != 4) {
                 throw new ParserException(
                     String.format("Function '%s' expects 1, 3, or 4 arguments, but got %d",
+                                  function.getLexeme(), argumentCount),
+                    function.getLine(),
+                    function.getColumn()
+                );
+            }
+            return;
+        }
+
+        if (expected == -5) {
+            // Even number of arguments, at least 2
+            if (argumentCount < 2 || argumentCount % 2 != 0) {
+                throw new ParserException(
+                    String.format("Function '%s' expects an even number of arguments and at least 2, but got %d",
+                                  function.getLexeme(), argumentCount),
+                    function.getLine(),
+                    function.getColumn()
+                );
+            }
+            return;
+        }
+
+        if (expected == -6) {
+            // At least 1 argument
+            if (argumentCount < 1) {
+                throw new ParserException(
+                    String.format("Function '%s' expects at least 1 argument, but got %d",
                                   function.getLexeme(), argumentCount),
                     function.getLine(),
                     function.getColumn()
