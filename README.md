@@ -29,6 +29,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 * logical expressions support canonical infix syntax like `p AND q`, `p OR q`, and `NOT(p)`
 * a small compatibility alias set is still accepted and can be canonicalized, including `INF -> INFINITY`, `choose -> binom`, and `proper_subset -> subset`, but alias usage now emits warnings
 * pure CLI transpilation is strict Euclid; prose-heavy Markdown authoring is an explicit `--mixed` workflow
+* CLI transpilation now prints structured warnings and refuses to write output files when the source still has errors
 * capability metadata and canonical rewrites are available programmatically through the core transpiler API
 
 ## Usage
@@ -67,6 +68,8 @@ For prose-heavy Markdown documents with embedded Euclid expressions, use mixed m
 $ java -jar target/euclid-2.0-SNAPSHOT.jar --mixed input.ed output.md
 ```
 
+Mixed mode is intentionally conservative: it only rewrites obvious Euclid candidates, leaves existing inline code and `$...$` spans untouched, and no longer rewrites bare constants such as `INF` inside prose.
+
 4. Additionally launch the `Euclid` REPL to test `.ed` expressions.
 
 ```console
@@ -83,7 +86,7 @@ $ euclid> exit
 `Euclid` is optimized for three concrete workflows.
 
 * formula translation: turn readable Euclid into exact LaTeX without writing raw backslashes and braces
-* Markdown authoring: write prose and math together, then use mixed mode plus diagnostics to keep valid output
+* Markdown authoring: write prose and obvious Euclid expressions together, then use mixed mode plus diagnostics to keep valid output without touching protected Markdown spans
 * notation audit: inspect the capability manifest, canonical spellings, signatures, and aliases before publishing
 
 ## Verification
