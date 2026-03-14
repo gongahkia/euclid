@@ -68,12 +68,12 @@ public class Transpiler {
      * @param source    The Euclid source code
      * @param verbose   Whether to print debug information
      * @param mathMode  The math mode for wrapping output
-     * @param mixedMode Whether to use mixed content mode (auto-detect inline math)
+     * @param mixedMode Whether to use conservative mixed content mode for prose-heavy documents
      * @return The transpiled LaTeX/Markdown
      * @throws EuclidException if an error occurs during transpilation
      */
     public static String transpile(String source, boolean verbose, MathMode mathMode, boolean mixedMode) throws EuclidException {
-        // If mixed mode, use the mixed content processor
+        // If mixed mode, use the conservative mixed content processor
         if (mixedMode) {
             return MixedContentProcessor.processDocument(source);
         }
@@ -227,7 +227,7 @@ public class Transpiler {
      * @param outputPath The output .md file path
      * @param verbose    Whether to print debug information
      * @param mathMode   The math mode for wrapping output
-     * @param mixedMode  Whether to use mixed content mode
+     * @param mixedMode  Whether to use conservative mixed content mode
      * @throws IOException     if an I/O error occurs
      * @throws EuclidException if a transpilation error occurs
      */
@@ -464,7 +464,7 @@ public class Transpiler {
         System.out.println("  --watch, -w      Watch mode: automatically retranspile when file changes");
         System.out.println("  --verbose, -v    Verbose mode: show tokenization output and AST");
         System.out.println("  --debug, -d      Debug mode: same as --verbose");
-        System.out.println("  --mixed, -m      Mixed mode: auto-detect and transpile inline math in prose");
+        System.out.println("  --mixed, -m      Mixed mode: conservatively transpile obvious inline Euclid in prose");
         System.out.println("  --inline, -i     Wrap output in inline math mode ($...$)");
         System.out.println("  --display, -D    Wrap output in display math mode ($$...$$)");
         System.out.println();
