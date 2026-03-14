@@ -218,7 +218,7 @@ public enum TokenType {
     GRAD, DIVERGENCE, CURL, LAPLACIAN,
 
     // Probability and statistics
-    PROB, EXPECT, VAR, COV,
+    PROB, EXPECT, VAR, COV, GIVEN,
 
     // Linear algebra extended
     DET, TRACE, DIM, RANK, KER, TRANSPOSE, INVERSE,
