@@ -16,6 +16,7 @@ import com.euclid.transpiler.MathMode;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.nio.file.StandardWatchEventKinds.*;
@@ -242,19 +243,23 @@ public class Transpiler {
             System.out.println();
         }
 
-        // Transpile
-        String result = transpile(source, verbose, mathMode, mixedMode);
+        TranspileResult result = transpileWithDiagnostics(source, verbose, mathMode, mixedMode);
+        printDiagnostics(result.diagnostics(), verbose);
+
+        if (result.hasErrors() || result.output() == null) {
+            throw new EuclidException(summarizeFailure(result.diagnostics()));
+        }
 
         if (verbose) {
             System.out.println("═══════════════════════════════════════════════════════════");
             System.out.println("TRANSPILED OUTPUT");
             System.out.println("═══════════════════════════════════════════════════════════");
-            System.out.println(result);
+            System.out.println(result.output());
             System.out.println();
         }
 
         // Write output file
-        Files.writeString(Paths.get(outputPath), result);
+        Files.writeString(Paths.get(outputPath), result.output());
     }
 
     /**
@@ -475,5 +480,22 @@ public class Transpiler {
         System.out.println("  java -jar euclid-transpiler.jar --inline example.ed");
         System.out.println("  java -jar euclid-transpiler.jar --display example.ed");
         System.out.println("  java -jar euclid-transpiler.jar --watch --inline --verbose example.ed");
+    }
+
+    private static void printDiagnostics(List<Diagnostic> diagnostics, boolean verbose) {
+        for (Diagnostic diagnostic : diagnostics) {
+            if (diagnostic.getSeverity() == Diagnostic.Severity.INFO && !verbose) {
+                continue;
+            }
+            System.err.println(diagnostic);
+        }
+    }
+
+    private static String summarizeFailure(List<Diagnostic> diagnostics) {
+        return diagnostics.stream()
+                .filter(diagnostic -> diagnostic.getSeverity() == Diagnostic.Severity.ERROR)
+                .min(Comparator.comparingInt(Diagnostic::getLine).thenComparingInt(Diagnostic::getColumn))
+                .map(diagnostic -> diagnostic.getMessage() + " at " + diagnostic.getLine() + ":" + diagnostic.getColumn())
+                .orElse("Compilation failed without a stable diagnostic.");
     }
 }
