@@ -5,6 +5,8 @@ import com.euclid.exception.LexerException;
 import com.euclid.lang.EuclidAliasPolicy;
 import com.euclid.lang.EuclidCapability;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public final class RunSmoke {
@@ -56,6 +58,19 @@ public final class RunSmoke {
                 .findFirst();
         assertTrue(infinity.isPresent(), "capability manifest contains INFINITY");
         assertEquals(EuclidAliasPolicy.WARN.name(), infinity.get().aliasPolicy().name(), "alias policy");
+
+        Path checkFile = Files.createTempFile("euclid-check-smoke", ".ed");
+        Files.writeString(checkFile, "INF");
+        TranspileResult checkResult = Transpiler.checkFile(checkFile.toString(), false, false);
+        assertTrue(!checkResult.hasErrors(), "check mode success");
+        assertTrue(checkResult.diagnostics().stream().anyMatch(d ->
+                d.getSeverity() == Diagnostic.Severity.WARNING && "canonical.rewrite".equals(d.getCode())), "check mode warning");
+
+        Path canonicalizeInput = Files.createTempFile("euclid-canonicalize-smoke", ".ed");
+        Path canonicalizeOutput = Files.createTempFile("euclid-canonicalize-smoke", ".out");
+        Files.writeString(canonicalizeInput, "INF + choose(n, k)");
+        Transpiler.canonicalizeFile(canonicalizeInput.toString(), canonicalizeOutput.toString());
+        assertEquals("INFINITY + binom(n, k)", Files.readString(canonicalizeOutput), "canonicalize file");
 
         System.out.println("Core Euclid smoke checks passed.");
     }
