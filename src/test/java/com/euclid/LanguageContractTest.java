@@ -40,8 +40,29 @@ public class LanguageContractTest {
     }
 
     @Test
+    public void testDivisionAndFractionSemanticsStayDistinct() throws Exception {
+        assertEquals("a / b", Transpiler.transpile("a / b"));
+        assertEquals("\\frac{a}{b}", Transpiler.transpile("a \\\\ b"));
+    }
+
+    @Test
+    public void testSetRelationsRemainExplicit() throws Exception {
+        assertEquals("A \\subset B", Transpiler.transpile("subset(A, B)"));
+        assertEquals("A \\subseteq B", Transpiler.transpile("subseteq(A, B)"));
+        assertEquals("x \\notin A", Transpiler.transpile("not_element_of(x, A)"));
+    }
+
+    @Test
     public void testInfixDotNotationIsSupported() throws Exception {
         assertEquals("u \\cdot v", Transpiler.transpile("u dot v"));
+    }
+
+    @Test
+    public void testAggregateOrderAndPrecedenceMatchTheContract() throws Exception {
+        assertEquals("\\sum_{i=1}^{n} i", Transpiler.transpile("sum(i, i, 1, n)"));
+        assertEquals("\\prod_{i=1}^{n} i", Transpiler.transpile("prod(i, i, 1, n)"));
+        assertEquals(Transpiler.transpile("(p AND q) = r"), Transpiler.transpile("p AND q = r"));
+        assertEquals(Transpiler.transpile("p = (q OR r)"), Transpiler.transpile("p = q OR r"));
     }
 
     @Test
