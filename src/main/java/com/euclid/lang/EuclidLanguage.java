@@ -363,6 +363,7 @@ public final class EuclidLanguage {
                     name,
                     classify(name, type),
                     type,
+                    aliasPolicy(name),
                     ALIASES_BY_CANONICAL.getOrDefault(name, List.of()),
                     SIGNATURES.get(name)
             ));
@@ -395,6 +396,12 @@ public final class EuclidLanguage {
             return EuclidCapabilityKind.KEYWORD;
         }
         return Character.isUpperCase(name.charAt(0)) ? EuclidCapabilityKind.CONSTANT : EuclidCapabilityKind.KEYWORD;
+    }
+
+    private static EuclidAliasPolicy aliasPolicy(String name) {
+        return ALIASES_BY_CANONICAL.containsKey(name)
+                ? EuclidAliasPolicy.WARN
+                : EuclidAliasPolicy.NONE;
     }
 
     private static Map<String, List<String>> reverseAliases(Map<String, String> aliasToCanonical) {
