@@ -16,7 +16,7 @@ public class TranspilerFileContractTest {
         Path output = Files.createTempFile("euclid-warning", ".md");
         Files.writeString(input, "INF");
 
-        Transpiler.transpileFile(input.toString(), output.toString(), false, com.euclid.transpiler.MathMode.NONE, false);
+        Transpiler.transpileFile(input.toString(), output.toString(), false, com.euclid.transpiler.MathMode.NONE);
 
         assertEquals("\\infty", Files.readString(output));
     }
@@ -29,7 +29,7 @@ public class TranspilerFileContractTest {
         Files.writeString(input, "piecewise(x, geq(x, 0), -x)");
 
         assertThrows(EuclidException.class,
-                () -> Transpiler.transpileFile(input.toString(), output.toString(), false, com.euclid.transpiler.MathMode.NONE, false));
+                () -> Transpiler.transpileFile(input.toString(), output.toString(), false, com.euclid.transpiler.MathMode.NONE));
         assertFalse(Files.exists(output));
     }
 }
