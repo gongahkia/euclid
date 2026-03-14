@@ -223,6 +223,13 @@ To validate the file without writing output, use:
 java -jar target/euclid-transpiler.jar --check equation.ed
 ```
 
+To get machine-readable diagnostics or enforce canonical spellings only:
+
+```bash
+java -jar target/euclid-transpiler.jar --check --json equation.ed
+java -jar target/euclid-transpiler.jar --check --strict-aliases equation.ed
+```
+
 ### REPL (Interactive Mode)
 
 Start the REPL:
