@@ -112,7 +112,7 @@ public class Transpiler {
     }
 
     /**
-     * Returns the shared capability manifest for editor and web clients.
+     * Returns the shared capability manifest for editor and CLI-adjacent tooling.
      */
     public static EuclidCapabilityManifest capabilityManifest() {
         return EuclidLanguage.capabilityManifest();
