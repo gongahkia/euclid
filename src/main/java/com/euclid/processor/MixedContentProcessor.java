@@ -28,10 +28,6 @@ public class MixedContentProcessor {
         "cap|cup|subset|supset|subseteq|supseteq|union|intersection|set_diff|" +
         "element_of|not_element_of|AND|OR|NOT|implies|iff|forall|exists|given)(?![a-zA-Z])\\s*\\([^)]*\\)" +
         "|" +
-        // Constants: strict word boundaries
-        "(?<![a-zA-Z])(PI|GAMMA|PHI|INFINITY|INF|ALPHA|BETA|DELTA|EPSILON|ZETA|ETA|THETA|" +
-        "KAPPA|LAMBDA|MU|NU|XI|OMICRON|RHO|SIGMA|TAU|UPSILON|CHI|PSI|OMEGA|emptyset)(?![a-zA-Z])" +
-        "|" +
         // Arithmetic: require at least one operator between numbers
         "\\d+\\s*[+\\-*/^]\\s*\\d+" +
         "|" +
@@ -41,6 +37,8 @@ public class MixedContentProcessor {
         // Power operator: 2 ^ 3
         "\\w+\\s*\\^\\s*\\w+"
     );
+    private static final Pattern PROTECTED_SPAN_PATTERN = Pattern.compile(
+            "`[^`]*`|\\$\\$[^$\\n]*\\$\\$|\\$[^$\\n]*\\$");
 
     /**
      * Processes a line of mixed content, detecting and transpiling math expressions.
@@ -60,29 +58,16 @@ public class MixedContentProcessor {
         }
 
         StringBuilder result = new StringBuilder();
-        Matcher matcher = MATH_PATTERN.matcher(line);
+        Matcher protectedMatcher = PROTECTED_SPAN_PATTERN.matcher(line);
         int lastEnd = 0;
 
-        while (matcher.find()) {
-            // Append text before the math expression
-            result.append(line, lastEnd, matcher.start());
-
-            // Extract and transpile the math expression
-            String mathExpr = matcher.group();
-            TranspileResult transpileResult = Transpiler.transpileWithDiagnostics(mathExpr, false, MathMode.NONE, false);
-            mergeDiagnostics(diagnostics, transpileResult.diagnostics(), lineNumber, matcher.start() + 1);
-
-            if (!transpileResult.hasErrors() && transpileResult.output() != null) {
-                result.append("$").append(transpileResult.output()).append("$");
-            } else {
-                result.append(mathExpr);
-            }
-
-            lastEnd = matcher.end();
+        while (protectedMatcher.find()) {
+            appendProcessedSegment(result, line.substring(lastEnd, protectedMatcher.start()), lineNumber, lastEnd, diagnostics);
+            result.append(protectedMatcher.group());
+            lastEnd = protectedMatcher.end();
         }
 
-        // Append remaining text
-        result.append(line.substring(lastEnd));
+        appendProcessedSegment(result, line.substring(lastEnd), lineNumber, lastEnd, diagnostics);
 
         return result.toString();
     }
@@ -160,5 +145,33 @@ public class MixedContentProcessor {
                     diagnostic.getSuggestion(),
                     diagnostic.getCanonicalRewrite()));
         }
+    }
+
+    private static void appendProcessedSegment(
+            StringBuilder output,
+            String segment,
+            int lineNumber,
+            int lineOffset,
+            DiagnosticCollector diagnostics) {
+        Matcher matcher = MATH_PATTERN.matcher(segment);
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            output.append(segment, lastEnd, matcher.start());
+
+            String mathExpr = matcher.group();
+            TranspileResult transpileResult = Transpiler.transpileWithDiagnostics(mathExpr, false, MathMode.NONE, false);
+            mergeDiagnostics(diagnostics, transpileResult.diagnostics(), lineNumber, lineOffset + matcher.start() + 1);
+
+            if (!transpileResult.hasErrors() && transpileResult.output() != null) {
+                output.append("$").append(transpileResult.output()).append("$");
+            } else {
+                output.append(mathExpr);
+            }
+
+            lastEnd = matcher.end();
+        }
+
+        output.append(segment.substring(lastEnd));
     }
 }
