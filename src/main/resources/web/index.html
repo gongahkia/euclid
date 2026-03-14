@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euclid Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script defer src="/app.js"></script>
+</head>
+<body>
+<div class="shell">
+    <header class="hero panel reveal">
+        <div>
+            <p class="eyebrow">Euclid DSL Playground</p>
+            <h1>Write math like prose, inspect it like a compiler.</h1>
+            <p class="hero-copy">
+                Canonicalize aliases, transpile to LaTeX or Markdown-safe math, browse the supported language surface,
+                and catch diagnostics before they leak into your docs.
+            </p>
+        </div>
+        <div class="hero-meta">
+            <div class="meta-chip">Repo-first contract</div>
+            <div class="meta-chip">Live diagnostics</div>
+            <div class="meta-chip">Capability manifest</div>
+        </div>
+    </header>
+
+    <main class="workspace reveal">
+        <section class="studio">
+            <div class="panel controls">
+                <div class="control-group">
+                    <label for="templateSelect">Workflow</label>
+                    <select id="templateSelect">
+                        <option value="formula">Formula translation</option>
+                        <option value="mixed-doc">Markdown document</option>
+                        <option value="proof">Proof and logic</option>
+                        <option value="linear-algebra">Linear algebra</option>
+                        <option value="stats">Statistics</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="mathModeSelect">Math mode</label>
+                    <select id="mathModeSelect">
+                        <option value="NONE">Raw LaTeX</option>
+                        <option value="INLINE">Inline</option>
+                        <option value="DISPLAY">Display</option>
+                    </select>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="mixedModeToggle">
+                    <span>Mixed markdown mode</span>
+                </label>
+                <div class="button-row">
+                    <button id="loadTemplateButton" class="primary">Load template</button>
+                    <button id="canonicalizeButton">Canonicalize</button>
+                    <button id="transpileButton">Transpile</button>
+                    <button id="copyOutputButton">Copy output</button>
+                </div>
+            </div>
+
+            <div class="grid">
+                <section class="panel editor-panel">
+                    <div class="panel-head">
+                        <h2>Euclid Source</h2>
+                        <span id="statusBadge" class="status-badge">Idle</span>
+                    </div>
+                    <textarea id="sourceEditor" spellcheck="false"></textarea>
+                </section>
+
+                <section class="panel output-panel">
+                    <div class="panel-head">
+                        <h2>Generated Output</h2>
+                        <span id="canonicalBadge" class="subtle-text">Canonical aliases appear below when applicable.</span>
+                    </div>
+                    <div class="stack">
+                        <div>
+                            <p class="label">Canonical source</p>
+                            <pre id="canonicalOutput" class="mono-block"></pre>
+                        </div>
+                        <div>
+                            <p class="label">LaTeX / Markdown output</p>
+                            <pre id="transpileOutput" class="mono-block"></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel preview-panel">
+                    <div class="panel-head">
+                        <h2>Rendered Preview</h2>
+                        <span class="subtle-text">MathJax rendering of the current output.</span>
+                    </div>
+                    <div id="renderedPreview" class="rendered-preview"></div>
+                </section>
+            </div>
+
+            <section class="panel diagnostics-panel">
+                <div class="panel-head">
+                    <h2>Diagnostics</h2>
+                    <span class="subtle-text">Canonical rewrite suggestions and parser feedback appear here.</span>
+                </div>
+                <div id="diagnosticList" class="diagnostic-list"></div>
+            </section>
+        </section>
+
+        <aside class="sidebar">
+            <section class="panel reveal">
+                <div class="panel-head">
+                    <h2>Syntax Catalog</h2>
+                    <span id="capabilityCount" class="subtle-text">Loading...</span>
+                </div>
+                <input id="capabilitySearch" class="search" type="search" placeholder="Search functions, constants, or aliases">
+                <div id="capabilityList" class="capability-list"></div>
+            </section>
+
+            <section class="panel reveal">
+                <div class="panel-head">
+                    <h2>Author Flows</h2>
+                    <span class="subtle-text">Real tasks this surface is optimized for.</span>
+                </div>
+                <div class="flow-list">
+                    <article class="flow-card">
+                        <h3>Formula translation</h3>
+                        <p>Move from readable Euclid syntax to exact LaTeX with minimal symbol noise.</p>
+                    </article>
+                    <article class="flow-card">
+                        <h3>Long-form docs</h3>
+                        <p>Author mixed prose and math while preserving valid output around local errors.</p>
+                    </article>
+                    <article class="flow-card">
+                        <h3>Dense notation</h3>
+                        <p>Inspect canonical spellings, signatures, and supported domain notation before publishing.</p>
+                    </article>
+                </div>
+            </section>
+        </aside>
+    </main>
+</div>
+</body>
+</html>
