@@ -23,12 +23,20 @@
  * </p>
  * <pre>
  * document    → expression*
- * expression  → term ((PLUS | MINUS) term)*
- * term        → factor ((MULTIPLY | DIVIDE | MODULO) factor)*
- * factor      → unary (POWER unary)*
- * unary       → (MINUS | PLUS) unary | call
- * call        → primary (LPAREN arguments? RPAREN)?
- * primary     → NUMBER | IDENTIFIER | constant | grouping
+ * expression  → equality
+ * equality    → logicalOr (EQUALS logicalOr)*
+ * logicalOr   → logicalAnd (OR logicalAnd)*
+ * logicalAnd  → addition (AND addition)*
+ * addition    → multiplication ((PLUS | MINUS) multiplication)*
+ * multiplication
+ *             → power ((MULTIPLY | DIVIDE | MODULO | BACKSLASH_BACKSLASH | DOT) power
+ *             | implicitMultiply power)*
+ * power       → unary ((POWER | UNDERSCORE) unary)*
+ * unary       → (MINUS | PLUS | NOT) unary | postfix
+ * postfix     → call (BANG)*
+ * call        → functionCall | primary
+ * functionCall→ functionToken LPAREN arguments? RPAREN
+ * primary     → NUMBER | STRING | IDENTIFIER | constant | grouping
  * grouping    → LPAREN expression RPAREN
  *             | LBRACKET expression RBRACKET
  *             | LBRACE expression RBRACE
@@ -50,14 +58,14 @@
  *
  * <h2>Example Usage</h2>
  * <pre>{@code
- * String source = "sin(PI / 4) + log(E, 2)";
+ * String source = "p AND q = r";
  * Lexer lexer = new Lexer(source);
  * List<Token> tokens = lexer.tokenize();
  *
  * Parser parser = new Parser(tokens, source);
  * DocumentNode ast = parser.parse();
  *
- * // ast contains a tree of BinaryExpr, CallExpr, and LiteralExpr nodes
+ * // ast contains a tree that respects Euclid's logic and equality precedence
  * }</pre>
  *
  * @see com.euclid.parser.Parser
