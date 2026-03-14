@@ -3,6 +3,10 @@ package com.euclid.lsp;
 import com.euclid.TranspileResult;
 import com.euclid.Transpiler;
 import com.euclid.exception.Diagnostic;
+import com.euclid.lang.EuclidCapability;
+import com.euclid.lang.EuclidCapabilityKind;
+import com.euclid.lang.EuclidLanguage;
+import com.euclid.lang.EuclidSignature;
 import com.euclid.exception.EuclidException;
 import com.euclid.lexer.Lexer;
 import com.euclid.token.Token;
@@ -81,17 +85,19 @@ public class EuclidTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
         List<CompletionItem> items = new ArrayList<>();
-        Set<String> keywords = Lexer.getKeywordNames();
-        for (String kw : keywords) {
-            CompletionItem item = new CompletionItem(kw);
-            TokenType type = Lexer.getKeywordType(kw);
-            if (isConstantType(type)) {
-                item.setKind(CompletionItemKind.Constant);
-                item.setInsertText(kw);
-            } else {
+        for (EuclidCapability capability : EuclidLanguage.capabilityManifest().capabilities()) {
+            CompletionItem item = new CompletionItem(capability.name());
+            EuclidCapabilityKind kind = capability.kind();
+            if (kind == EuclidCapabilityKind.FUNCTION) {
                 item.setKind(CompletionItemKind.Function);
-                item.setInsertText(kw + "($1)");
+                item.setInsertText(capability.name() + "($1)");
                 item.setInsertTextFormat(InsertTextFormat.Snippet);
+            } else if (kind == EuclidCapabilityKind.CONSTANT) {
+                item.setKind(CompletionItemKind.Constant);
+                item.setInsertText(capability.name());
+            } else {
+                item.setKind(CompletionItemKind.Keyword);
+                item.setInsertText(capability.name());
             }
             items.add(item);
         }
@@ -122,10 +128,10 @@ public class EuclidTextDocumentService implements TextDocumentService {
         }
         if (funcEnd <= 0) return CompletableFuture.completedFuture(null);
         int funcStart = funcEnd - 1;
-        while (funcStart >= 0 && Character.isLetterOrDigit(before.charAt(funcStart))) funcStart--;
+        while (funcStart >= 0 && (Character.isLetterOrDigit(before.charAt(funcStart)) || before.charAt(funcStart) == '_')) funcStart--;
         funcStart++;
         String funcName = before.substring(funcStart, funcEnd);
-        SignatureInformation sigInfo = SIGNATURES.get(funcName);
+        SignatureInformation sigInfo = toSignature(EuclidLanguage.getSignature(funcName));
         if (sigInfo == null) return CompletableFuture.completedFuture(null);
         SignatureHelp help = new SignatureHelp();
         help.setSignatures(List.of(sigInfo));
@@ -182,6 +188,9 @@ public class EuclidTextDocumentService implements TextDocumentService {
                 case WARNING -> DiagnosticSeverity.Warning;
                 case INFO -> DiagnosticSeverity.Information;
             });
+            if (d.getCode() != null) {
+                lspD.setCode(Either.forLeft(d.getCode()));
+            }
             lspD.setSource("euclid");
             lspDiags.add(lspD);
         }
@@ -198,14 +207,7 @@ public class EuclidTextDocumentService implements TextDocumentService {
     }
 
     private boolean isConstantType(TokenType type) {
-        return type == TokenType.PI || type == TokenType.E || type == TokenType.I ||
-               type == TokenType.GAMMA || type == TokenType.PHI || type == TokenType.INFINITY ||
-               type == TokenType.EMPTYSET || type == TokenType.NATURALS || type == TokenType.INTEGERS ||
-               type == TokenType.RATIONALS || type == TokenType.REALS || type == TokenType.COMPLEXES ||
-               type == TokenType.THEREFORE || type == TokenType.BECAUSE || type == TokenType.QED ||
-               type == TokenType.HBAR || type == TokenType.NABLA || type == TokenType.ELL ||
-               type == TokenType.LDOTS || type == TokenType.CDOTS || type == TokenType.VDOTS || type == TokenType.DDOTS ||
-               type == TokenType.RIGHTARROW || type == TokenType.LEFTARROW || type == TokenType.MAPSTO;
+        return EuclidLanguage.isConstantType(type);
     }
 
     private int semanticTypeIndex(TokenType type) {
@@ -219,61 +221,26 @@ public class EuclidTextDocumentService implements TextDocumentService {
     }
 
     private boolean isFunctionType(TokenType t) {
-        return t == TokenType.SIN || t == TokenType.COS || t == TokenType.TAN ||
-               t == TokenType.POW || t == TokenType.SQRT || t == TokenType.LOG || t == TokenType.LN ||
-               t == TokenType.ABS || t == TokenType.EXP || t == TokenType.LIMIT || t == TokenType.DIFF ||
-               t == TokenType.INTEGRAL || t == TokenType.SUM || t == TokenType.PROD ||
-               t == TokenType.BINOM || t == TokenType.NORM || t == TokenType.INNER ||
-               t == TokenType.GRAD || t == TokenType.DET || t == TokenType.PROB ||
-               t == TokenType.ARCSIN || t == TokenType.ARCCOS || t == TokenType.ARCTAN ||
-               t == TokenType.MIN || t == TokenType.MAX || t == TokenType.VECTOR || t == TokenType.MATRIX;
+        return EuclidLanguage.isFunctionType(t);
     }
 
     private boolean isGreekType(TokenType t) {
-        return t == TokenType.ALPHA || t == TokenType.BETA || t == TokenType.DELTA ||
-               t == TokenType.EPSILON || t == TokenType.THETA || t == TokenType.LAMBDA ||
-               t == TokenType.MU || t == TokenType.SIGMA || t == TokenType.OMEGA;
+        return EuclidLanguage.isGreekType(t);
     }
 
     private boolean isOperatorType(TokenType t) {
         return t == TokenType.PLUS || t == TokenType.MINUS || t == TokenType.MULTIPLY ||
                t == TokenType.DIVIDE || t == TokenType.POWER || t == TokenType.EQUALS ||
-               t == TokenType.MODULO;
+               t == TokenType.MODULO || t == TokenType.AND || t == TokenType.OR || t == TokenType.NOT;
     }
 
-    private static final Map<String, SignatureInformation> SIGNATURES = new HashMap<>();
-    static {
-        SIGNATURES.put("sin", sig("sin(x)", "x: angle"));
-        SIGNATURES.put("cos", sig("cos(x)", "x: angle"));
-        SIGNATURES.put("tan", sig("tan(x)", "x: angle"));
-        SIGNATURES.put("pow", sig("pow(base, exponent)", "base: base value", "exponent: power"));
-        SIGNATURES.put("sqrt", sig("sqrt(x) or sqrt(n, x)", "x: radicand", "n: root degree (optional)"));
-        SIGNATURES.put("log", sig("log(x, base)", "x: value", "base: logarithm base"));
-        SIGNATURES.put("ln", sig("ln(x)", "x: value"));
-        SIGNATURES.put("exp", sig("exp(x)", "x: exponent"));
-        SIGNATURES.put("abs", sig("abs(x)", "x: value"));
-        SIGNATURES.put("limit", sig("limit(expr, var, approach)", "expr: expression", "var: variable", "approach: limit point"));
-        SIGNATURES.put("diff", sig("diff(expr, var)", "expr: expression", "var: variable"));
-        SIGNATURES.put("integral", sig("integral(expr, var, lower, upper)", "expr: integrand", "var: variable", "lower: lower bound", "upper: upper bound"));
-        SIGNATURES.put("sum", sig("sum(expr, var, lower, upper)", "expr: summand", "var: index variable", "lower: lower bound", "upper: upper bound"));
-        SIGNATURES.put("prod", sig("prod(expr, var, lower, upper)", "expr: multiplicand", "var: index variable", "lower: lower bound", "upper: upper bound"));
-        SIGNATURES.put("binom", sig("binom(n, k)", "n: total", "k: choose"));
-        SIGNATURES.put("norm", sig("norm(x) or norm(x, p)", "x: vector/value", "p: norm type (optional)"));
-        SIGNATURES.put("inner", sig("inner(x, y)", "x: first vector", "y: second vector"));
-        SIGNATURES.put("grad", sig("grad(f)", "f: scalar field"));
-        SIGNATURES.put("det", sig("det(A)", "A: matrix"));
-        SIGNATURES.put("prob", sig("prob(A)", "A: event"));
-        SIGNATURES.put("expect", sig("expect(X)", "X: random variable"));
-        SIGNATURES.put("var", sig("var(X)", "X: random variable"));
-        SIGNATURES.put("cov", sig("cov(X, Y)", "X: first variable", "Y: second variable"));
-        SIGNATURES.put("vector", sig("vector(a, b, c, ...)", "elements: vector components"));
-        SIGNATURES.put("matrix", sig("matrix([a,b], [c,d], ...)", "rows: matrix rows"));
-    }
-
-    private static SignatureInformation sig(String label, String... paramLabels) {
-        SignatureInformation si = new SignatureInformation(label);
+    private static SignatureInformation toSignature(EuclidSignature signature) {
+        if (signature == null) {
+            return null;
+        }
+        SignatureInformation si = new SignatureInformation(signature.label());
         List<ParameterInformation> params = new ArrayList<>();
-        for (String p : paramLabels) params.add(new ParameterInformation(p));
+        for (String p : signature.parameters()) params.add(new ParameterInformation(p));
         si.setParameters(params);
         return si;
     }
