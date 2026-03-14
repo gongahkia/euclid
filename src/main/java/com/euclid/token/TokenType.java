@@ -104,6 +104,9 @@ public enum TokenType {
     SINH,           // sinh(x)
     COSH,           // cosh(x)
     TANH,           // tanh(x)
+    CSCH,           // csch(x)
+    SECH,           // sech(x)
+    COTH,           // coth(x)
 
     // Logarithmic and exponential functions
     LOG,            // log(x, base)
