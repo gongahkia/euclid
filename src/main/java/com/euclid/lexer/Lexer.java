@@ -193,17 +193,31 @@ public class Lexer {
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
 
-        // speculatively consume underscore if the result is a keyword (set_diff, not_element_of)
-        if (peek() == '_') {
+        // Allow underscore-separated identifiers such as SPEED_OF_LIGHT and PI_VALUE,
+        // but keep mathematical subscripts like x_1 and a_i tokenized as `_`.
+        while (peek() == '_') {
             int saved = current;
             int savedCol = column;
             advance(); // consume _
-            while (isAlphaNumeric(peek()) || peek() == '_') advance();
-            String full = source.substring(start, current);
-            if (!keywords.containsKey(full)) {
-                current = saved; // backtrack: _ is a subscript, not part of keyword
+
+            int segmentStart = current;
+            while (isAlphaNumeric(peek())) advance();
+
+            if (segmentStart == current) {
+                current = saved;
                 column = savedCol;
+                break;
             }
+
+            String full = source.substring(start, current);
+            String segment = source.substring(segmentStart, current);
+            if (keywords.containsKey(full) || shouldRemainIdentifierSegment(segment)) {
+                continue;
+            }
+
+            current = saved;
+            column = savedCol;
+            break;
         }
 
         String text = source.substring(start, current);
@@ -319,6 +333,18 @@ public class Lexer {
      */
     private boolean isAlphaNumeric(char c) {
         return isAlpha(c) || isDigit(c);
+    }
+
+    private boolean shouldRemainIdentifierSegment(String segment) {
+        if (segment.length() <= 1) {
+            return false;
+        }
+        for (int i = 0; i < segment.length(); i++) {
+            if (!Character.isDigit(segment.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

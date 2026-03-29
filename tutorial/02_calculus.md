@@ -1,6 +1,6 @@
 # Writing Calculus in Euclid
 
-This tutorial covers calculus operations in Euclid, including derivatives, integrals, limits, and trigonometric functions.
+This tutorial covers calculus operations in Euclid. Each Euclid snippet shown below is a math-body example that normally lives inside an explicit Markdown math span such as `$...$` or `$$...$$`.
 
 ## Trigonometric Functions
 

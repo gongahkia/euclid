@@ -1,10 +1,8 @@
-[![](https://img.shields.io/badge/euclid_1.0-passing-light_green)](https://github.com/gongahkia/euclid/releases/tag/1.0)
-[![](https://img.shields.io/badge/euclid_2.0-passing-green)](https://github.com/gongahkia/euclid/releases/tag/2.0)
 ![](https://github.com/gongahkia/euclid/actions/workflows/ci.yml/badge.svg)
 
 # `Euclid`
 
-Intuitive extended syntax for beautiful $\LaTeX$-style mathematical expressions in Markdown.
+Readable Euclid math inside Markdown, transpiled to MathJax-ready LaTeX.
 
 ![](https://science4fun.info/wp-content/uploads/2021/06/Euclid.jpg)
 
@@ -14,15 +12,13 @@ Although [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-
 
 Ultimately, this reinforces the unnecessarily high barriers to entry for beginners seeking to integrate mathematical expressions into their markdown documentation.  
 
-`Euclid` eliminates the friction associated with writing mathematical expressions in [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) by providing an intermediate syntax (`.ed` script) identical to [Markdown](https://www.markdownguide.org/) with a straightforward ruleset for parsing mathematical expressions that mirrors the syntax of widespread entry-level programming languages like [Python](https://www.python.org/) and [Javascript](https://devdocs.io/javascript/).  
-
-`.ed` script then transpiles to [GFM](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) and adheres to the [demands](https://en.wikibooks.org/wiki/LaTeX/Mathematics) of $\LaTeX$ and [MathJax](https://docs.mathjax.org/en/latest/). 
+`Euclid` reduces that friction by letting you keep Markdown as the outer document format while writing math spans in a cleaner, programming-language-inspired notation. Euclid then transpiles only those explicit math spans to MathJax-compatible LaTeX.
 
 ## An example
 
-| Euclid Syntax (`.ed`) | Transpiled LaTeX Output | Rendered Result |
+| Markdown + Euclid (`.ed`) | Transpiled Output | Rendered Result |
 |---|---|---|
-| `x = (-b +- sqrt(b^2 - 4*a*c)) / (2*a)` | `$x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$` | $x = \frac{-b \pm \sqrt{b^{2} - 4ac}}{2a}$ |
+| ``The quadratic formula is `$x = (-b + sqrt(b^2 - 4*a*c)) \\ (2*a)$`.`` | ``The quadratic formula is `$x = \frac{-b + \sqrt{b^{2} - 4ac}}{2a}$`.`` | The quadratic formula is $x = \frac{-b + \sqrt{b^{2} - 4ac}}{2a}$. |
 
 ## Usage
 
@@ -32,7 +28,7 @@ Ultimately, this reinforces the unnecessarily high barriers to entry for beginne
 > * [Euclid Language Syntax Specification](./tutorial/06_syntax.md)
 > * [Euclid `.ed` Example Files](./example)
 
-1. First run the below commands to install `Euclid` and create a standalone JAR at `target/euclid-2.0-SNAPSHOT.jar`.
+1. Build the standalone jars.
 
 ```console
 $ git clone https://github.com/gongahkia/euclid && cd euclid
@@ -47,23 +43,32 @@ $ cd euclid
 $ mvn clean compile
 ```
 
-3. Transpile `.ed` files to `.md` with $\LaTeX$.
+3. Transpile Markdown documents that contain explicit Euclid math spans.
 
 ```console
 $ java -jar target/euclid-transpiler.jar input.ed output.md
 ```
 
-4. Check or canonicalize Euclid source without transpiling it.
+4. Use `--strict` when the entire file is pure Euclid rather than Markdown.
+
+```console
+$ java -jar target/euclid-transpiler.jar --strict formula.ed formula.md
+$ java -jar target/euclid-transpiler.jar --strict --inline formula.ed
+```
+
+5. Check or canonicalize source without writing output.
 
 ```console
 $ java -jar target/euclid-transpiler.jar --check input.ed
 $ java -jar target/euclid-transpiler.jar --check --json input.ed
 $ java -jar target/euclid-transpiler.jar --check --strict-aliases input.ed
+$ java -jar target/euclid-transpiler.jar --strict --check formula.ed
 $ java -jar target/euclid-transpiler.jar --canonicalize input.ed normalized.ed
+$ java -jar target/euclid-transpiler.jar --strict --canonicalize formula.ed normalized.ed
 $ java -jar target/euclid-transpiler.jar --manifest --json
 ```
 
-5. Additionally launch the `Euclid` REPL to test `.ed` expressions.
+6. Launch the strict-expression REPL when you want to experiment with raw Euclid expressions.
 
 ```console
 $ java -jar target/euclid-repl.jar
@@ -73,6 +78,12 @@ $ >>> integral(x^2, x)
 $ LaTeX: \int x^{2} \, dx
 $ >>> :quit
 ```
+
+## Mode Summary
+
+- Default CLI mode is Markdown-first: only explicit `$...$` and `$$...$$` regions are parsed as Euclid.
+- `--strict` treats the whole file as pure Euclid and is the right choice for formulas, CI checks on expression corpora, and REPL-like workflows.
+- Library entry points follow the same split: `transpile(...)` is strict, while `transpileDocument(...)` processes Markdown documents conservatively.
 
 ## References
 

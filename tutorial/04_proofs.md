@@ -1,6 +1,6 @@
 # Typesetting Proofs with Euclid
 
-This tutorial covers logic symbols, quantifiers, set theory notation, and proof techniques in Euclid.
+This tutorial covers logic symbols, quantifiers, set theory notation, and proof techniques in Euclid. The expressions shown here are Euclid math bodies intended for explicit Markdown math spans.
 
 ## Logic Symbols
 

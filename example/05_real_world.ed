@@ -1,87 +1,26 @@
-# Euclid Example: Real-World Applications
+# Euclid Example: Real-World Writing
 
-This example demonstrates how to use Euclid for real-world mathematical expressions.
+This example looks like an actual Markdown note instead of a pure expression file.
 
 ## Physics
 
-### Kinetic Energy
-KE = (1 / 2) * m * pow(v, 2)
-
-### Einstein's Mass-Energy Equivalence
-E = m * pow(c, 2)
-
-### Ohm's Law
-V = I * R
-
-### Gravitational Force
-F = G * (m1 * m2) / pow(r, 2)
+- Kinetic energy: `$KE = (1 \\ 2) * m * v^2$`
+- Mass-energy equivalence: `$E = m * c^2$`
+- Ohm's law: `$V = I * R$`
 
 ## Statistics
 
-### Sample Mean
-mean = sum(x_i, i, 1, n) / n
+- Mean: `$mean = sum(x_i, i, 1, n) / n$`
+- Variance: `$variance = sum((x_i - mean)^2, i, 1, n) / (n - 1)$`
+- Gaussian density: `$f(x) = (1 / (sigma * sqrt(2 * PI))) * exp(-((x - mu)^2) / (2 * sigma^2))$`
 
-### Sample Variance
-variance = sum(pow((x_i - mean), 2), i, 1, n) / (n - 1)
+## Probability
 
-### Standard Deviation
-std_dev = sqrt(variance)
-
-### Normal Distribution Probability Density
-f(x) = (1 / (sigma * sqrt(2 * PI))) * exp(-pow((x - mu), 2) / (2 * pow(sigma, 2)))
-
-## Geometry
-
-### Pythagorean Theorem
-pow(a, 2) + pow(b, 2) = pow(c, 2)
-
-### Area of Circle
-A = PI * pow(r, 2)
-
-### Volume of Sphere
-V = (4 / 3) * PI * pow(r, 3)
-
-### Distance Formula in 2D
-d = sqrt(pow((x2 - x1), 2) + pow((y2 - y1), 2))
-
-## Finance
-
-### Compound Interest
-A = P * pow((1 + r / n), (n * t))
-
-### Present Value
-PV = FV / pow((1 + r), t)
-
-## Trigonometry
-
-### Law of Cosines
-pow(c, 2) = pow(a, 2) + pow(b, 2) - 2 * a * b * cos(GAMMA)
-
-### Sine Rule
-a / sin(ALPHA) = b / sin(BETA) = c / sin(GAMMA)
-
-## Probability and Statistics
-
-Probability: prob(A)
-Expected value: expect(X)
-Variance: var(X)
-Covariance: cov(X, Y)
-Bayes' theorem: prob(given(A, B)) = (prob(given(B, A)) * prob(A)) / prob(B)
+- Conditional probability: `$prob(given(A, B))$`
+- Expected value: `$expect(X)$`
+- Covariance: `$cov(X, Y)$`
 
 ## Visual Notation
 
-Boxed result: boxed(E = m * c^2)
-Cancelled term: cancel(x)
-Underbrace: underbrace(a + b + c, "n terms")
-Overbrace: overbrace(x_1 + x_2 + ldots + x_n, "n terms")
-
-## Computer Science
-
-### Big O Notation (logarithmic)
-T(n) = O(log(n, 2))
-
-### Big O Notation (polynomial)
-T(n) = O(pow(n, 2))
-
-### Fibonacci Sequence (closed form)
-F(n) = (pow(PHI, n) - pow((1 - PHI), n)) / sqrt(5)
+- Boxed result: `$boxed(E = m * c^2)$`
+- Labeled underbrace: `$underbrace(x_1 + x_2 + ldots + x_n, "n terms")$`

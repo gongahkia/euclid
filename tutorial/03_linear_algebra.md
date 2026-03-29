@@ -1,6 +1,6 @@
 # Linear Algebra with Euclid
 
-This tutorial covers vectors, matrices, and linear algebra operations in Euclid.
+This tutorial covers vectors, matrices, and linear algebra operations in Euclid. The snippets are strict Euclid math bodies that you embed inside explicit Markdown math spans in document mode.
 
 ## Vectors
 

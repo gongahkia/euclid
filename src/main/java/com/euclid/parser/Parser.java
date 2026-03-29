@@ -1,21 +1,38 @@
 package com.euclid.parser;
 
-import com.euclid.ast.*;
-import com.euclid.token.Token;
-import com.euclid.token.TokenType;
+import com.euclid.ast.AstNode;
+import com.euclid.ast.BinaryExpr;
+import com.euclid.ast.CallExpr;
+import com.euclid.ast.DisplayMathExpr;
+import com.euclid.ast.DocumentNode;
+import com.euclid.ast.GroupingExpr;
+import com.euclid.ast.IdentifierExpr;
+import com.euclid.ast.InlineMathExpr;
+import com.euclid.ast.LiteralExpr;
+import com.euclid.ast.UnaryExpr;
 import com.euclid.exception.DiagnosticCollector;
 import com.euclid.exception.ParserException;
 import com.euclid.lang.EuclidLanguage;
+import com.euclid.token.Token;
+import com.euclid.token.TokenType;
 import com.euclid.util.ValidationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Recursive descent parser for the Euclid language.
- * Converts a stream of tokens into an Abstract Syntax Tree (AST).
+ * Handwritten Pratt parser for strict Euclid expressions.
  */
 public class Parser {
+    private static final int PREC_EQUALITY = 10;
+    private static final int PREC_OR = 20;
+    private static final int PREC_AND = 30;
+    private static final int PREC_ADDITIVE = 40;
+    private static final int PREC_MULTIPLICATIVE = 50;
+    private static final int PREC_POWER = 60;
+    private static final int PREC_PREFIX = 70;
+    private static final int PREC_POSTFIX = 80;
+
     private final List<Token> tokens;
     private final String source;
     private final DiagnosticCollector diagnostics;
@@ -42,321 +59,314 @@ public class Parser {
      * @throws ParserException if a parsing error occurs
      */
     public DocumentNode parse() throws ParserException {
-        // Validate balanced delimiters before parsing
         ValidationHelper.validateBalancedDelimiters(tokens);
 
         List<AstNode> nodes = new ArrayList<>();
-
         while (!isAtEnd()) {
-            if (match(TokenType.NEWLINE)) {
-                continue;
+            skipNewlines();
+            if (isAtEnd()) {
+                break;
             }
+
             if (diagnostics != null) {
                 try {
-                    nodes.add(expression());
-                } catch (ParserException e) {
+                    nodes.add(parseTopLevelExpression());
+                } catch (ParserException exception) {
                     diagnostics.addError(
-                            e.getCode(),
-                            e.getMessage(),
-                            e.getLine(),
-                            e.getColumn(),
-                            e.getSuggestion(),
-                            e.getCanonicalRewrite());
+                            exception.getCode(),
+                            exception.getMessage(),
+                            exception.getLine(),
+                            exception.getColumn(),
+                            exception.getSuggestion(),
+                            exception.getCanonicalRewrite());
                     synchronize();
                 }
             } else {
-                nodes.add(expression());
+                nodes.add(parseTopLevelExpression());
             }
         }
 
         return new DocumentNode(nodes);
     }
 
-    /**
-     * Parses an expression (top level).
-     */
-    private AstNode expression() throws ParserException {
-        return equality();
+    private AstNode parseTopLevelExpression() throws ParserException {
+        AstNode expression = parseExpression(0, true);
+        if (!check(TokenType.EOF) && !check(TokenType.NEWLINE)) {
+            Token token = peek();
+            throw parserError(
+                    "parser.same-line-expression",
+                    token,
+                    "Unexpected token '" + token.getLexeme() + "'",
+                    "Top-level Euclid expressions must be separated by newlines or connected with an operator");
+        }
+        return expression;
     }
 
-    /**
-     * Parses equality chains.
-     */
-    private AstNode equality() throws ParserException {
-        AstNode expr = logicalOr();
-
-        while (match(TokenType.EQUALS)) {
-            Token operator = previous();
-            AstNode right = logicalOr();
-            expr = new BinaryExpr(expr, operator, right);
+    private AstNode parseExpression(int minBindingPower, boolean stopAtNewline) throws ParserException {
+        if (!stopAtNewline) {
+            skipNewlines();
+        }
+        if (shouldStop(stopAtNewline)) {
+            Token token = peek();
+            throw parserError(
+                    "parser.missing-expression",
+                    token,
+                    "Expected an expression",
+                    "Provide an operand, literal, or grouped Euclid expression here");
         }
 
-        return expr;
-    }
-
-    /**
-     * Parses logical disjunction.
-     */
-    private AstNode logicalOr() throws ParserException {
-        AstNode expr = logicalAnd();
-
-        while (match(TokenType.OR)) {
-            Token operator = previous();
-            AstNode right = logicalAnd();
-            expr = new BinaryExpr(expr, operator, right);
-        }
-
-        return expr;
-    }
-
-    /**
-     * Parses logical conjunction.
-     */
-    private AstNode logicalAnd() throws ParserException {
-        AstNode expr = addition();
-
-        while (match(TokenType.AND)) {
-            Token operator = previous();
-            AstNode right = addition();
-            expr = new BinaryExpr(expr, operator, right);
-        }
-
-        return expr;
-    }
-
-    /**
-     * Parses addition and subtraction (lowest precedence).
-     */
-    private AstNode addition() throws ParserException {
-        AstNode expr = multiplication();
-
-        while (match(TokenType.PLUS, TokenType.MINUS)) {
-            Token operator = previous();
-            AstNode right = multiplication();
-            expr = new BinaryExpr(expr, operator, right);
-        }
-
-        return expr;
-    }
-
-    /**
-     * Parses multiplication, division, and modulo.
-     */
-    private AstNode multiplication() throws ParserException {
-        AstNode expr = power();
+        Token token = advance();
+        AstNode left = nud(token);
 
         while (true) {
-            if (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BACKSLASH_BACKSLASH, TokenType.DOT)) {
-                Token operator = previous();
-                AstNode right = power();
-                expr = new BinaryExpr(expr, operator, right);
-            } else if (isImplicitMultiplyStart(peek())) {
-                Token synth = new Token(TokenType.IMPLICIT_MULTIPLY, "", peek().getLine(), peek().getColumn());
-                AstNode right = power();
-                expr = new BinaryExpr(expr, synth, right);
-            } else {
+            if (!stopAtNewline && check(TokenType.NEWLINE)) {
+                if (!shouldContinueAcrossNewline()) {
+                    break;
+                }
+                skipNewlines();
+            }
+            if (shouldStop(stopAtNewline)) {
                 break;
             }
-        }
 
-        return expr;
-    }
-
-    private boolean isImplicitMultiplyStart(Token token) {
-        TokenType t = token.getType();
-        return t == TokenType.NUMBER || t == TokenType.IDENTIFIER || t == TokenType.LPAREN ||
-               EuclidLanguage.isFunctionType(t) || isGreekLetter(token) || isConstantToken(token);
-    }
-
-    /**
-     * Parses exponentiation (right-associative).
-     */
-    private AstNode power() throws ParserException {
-        AstNode expr = unary();
-
-        while (match(TokenType.POWER, TokenType.UNDERSCORE)) {
-            Token operator = previous();
-            AstNode right = unary(); // right operand (allow chaining x_1^2)
-            expr = new BinaryExpr(expr, operator, right);
-        }
-
-        return expr;
-    }
-
-    /**
-     * Parses unary expressions (-x, +x).
-     */
-    private AstNode unary() throws ParserException {
-        if (match(TokenType.MINUS, TokenType.PLUS, TokenType.NOT)) {
-            Token operator = previous();
-            AstNode right = unary();
-            return new UnaryExpr(operator, right);
-        }
-
-        return postfix();
-    }
-
-    /**
-     * Parses postfix operators (n!, n!!).
-     */
-    private AstNode postfix() throws ParserException {
-        AstNode expr = call();
-        while (match(TokenType.BANG)) {
-            expr = new UnaryExpr(previous(), expr);
-        }
-        return expr;
-    }
-
-    /**
-     * Parses function calls and constants.
-     */
-    private AstNode call() throws ParserException {
-        if (isLogicalFunctionAlias(peek())) {
-            Token function = advance();
-            return parseFunctionCall(function);
-        }
-
-        // Check for function calls
-        if (isFunctionToken(peek())) {
-            Token function = advance();
-
-            // Some functions don't require parentheses (constants)
-            if (isConstantToken(function)) {
-                return new LiteralExpr(function.getType());
+            Operator operator = infixOperator(peek(), previous(), left);
+            if (operator == null || operator.leftBindingPower() < minBindingPower) {
+                break;
             }
 
-            // if no '(' follows, treat as plain identifier (e.g. var in x_var)
-            if (!check(TokenType.LPAREN)) {
-                return new IdentifierExpr(function.getLexeme());
+            if (!operator.implicit()) {
+                advance();
             }
 
-            return parseFunctionCall(function);
+            if (operator.postfix()) {
+                left = new UnaryExpr(operator.token(), left);
+                continue;
+            }
+
+            AstNode right = parseExpression(operator.rightBindingPower(), false);
+            left = new BinaryExpr(left, operator.token(), right);
         }
 
-        return primary();
+        return left;
     }
 
-    /**
-     * Parses primary expressions (literals, identifiers, grouping).
-     */
-    private AstNode primary() throws ParserException {
-        // Numbers
-        if (match(TokenType.NUMBER)) {
-            return new LiteralExpr(previous().getLiteral());
-        }
-
-        // String literals
-        if (match(TokenType.STRING)) {
-            return new LiteralExpr(previous().getLiteral());
-        }
-
-        // Standalone logical symbols
-        if (match(TokenType.AND, TokenType.OR, TokenType.NOT)) {
-            return new LiteralExpr(previous().getType());
-        }
-
-        // Constants
-        if (isConstantToken(peek()) && !isFunctionToken(peek())) {
-            Token constant = advance();
-            return new LiteralExpr(constant.getType());
-        }
-
-        // Greek letters (treated as identifiers)
-        if (isGreekLetter(peek())) {
-            Token greek = advance();
-            return new IdentifierExpr(greek.getLexeme());
-        }
-
-        // Identifiers
-        if (match(TokenType.IDENTIFIER)) {
-            return new IdentifierExpr(previous().getLexeme());
-        }
-
-        // Bracket groups [a, b, c] — used for matrix rows
-        if (match(TokenType.LBRACKET)) {
-            Token bracket = previous();
-            List<AstNode> elements = new ArrayList<>();
-            if (!check(TokenType.RBRACKET)) {
-                do {
-                    elements.add(expression());
-                } while (match(TokenType.COMMA));
+    private AstNode nud(Token token) throws ParserException {
+        TokenType type = token.getType();
+        switch (type) {
+            case NUMBER:
+                return new LiteralExpr(token.getLiteral());
+            case STRING:
+                return new LiteralExpr(token.getLiteral());
+            case IDENTIFIER:
+                if (check(TokenType.LPAREN)) {
+                    return parseCallArguments(token, false);
+                }
+                return new IdentifierExpr(token.getLexeme());
+            case MINUS:
+                return new UnaryExpr(token, parseExpression(PREC_PREFIX, false));
+            case PLUS:
+                throw parserError(
+                        "parser.unexpected-prefix-plus",
+                        token,
+                        "Leading '+' is not valid in strict Euclid",
+                        "Remove the leading '+' or use '-' for unary negation");
+            case NOT:
+                return new UnaryExpr(token, parseExpression(PREC_PREFIX, false));
+            case LPAREN: {
+                AstNode expression = parseExpression(0, false);
+                consume(TokenType.RPAREN, "Expected ')' after expression");
+                return new GroupingExpr(expression);
             }
-            consume(TokenType.RBRACKET, "Expected ']' after bracket group");
-            Token rowToken = new Token(TokenType.LBRACKET, "[]", bracket.getLine(), bracket.getColumn());
-            return new CallExpr(rowToken, elements);
+            case LBRACKET:
+                return parseBracketGroup(token);
+            case DOLLAR: {
+                AstNode expression = parseExpression(0, false);
+                consume(TokenType.DOLLAR, "Expected '$' to close inline math");
+                return new InlineMathExpr(expression);
+            }
+            case DOUBLE_DOLLAR: {
+                AstNode expression = parseExpression(0, false);
+                consume(TokenType.DOUBLE_DOLLAR, "Expected '$$' to close display math");
+                return new DisplayMathExpr(expression);
+            }
+            default:
+                break;
         }
 
-        // Grouped expressions
-        if (match(TokenType.LPAREN)) {
-            AstNode expr = expression();
-            consume(TokenType.RPAREN, "Expected ')' after expression");
-            return new GroupingExpr(expr);
+        if (EuclidLanguage.isConstantType(type) || EuclidLanguage.isGreekType(type)) {
+            return new LiteralExpr(type);
         }
 
-        // Inline math mode ($ ... $)
-        if (match(TokenType.DOLLAR)) {
-            AstNode expr = expression();
-            consume(TokenType.DOLLAR, "Expected '$' to close inline math");
-            return new InlineMathExpr(expr);
+        if (type == TokenType.AND || type == TokenType.OR) {
+            if (check(TokenType.LPAREN)) {
+                return parseFunctionCall(token);
+            }
+            throw parserError(
+                    "parser.unexpected-token",
+                    token,
+                    "Unexpected token '" + token.getLexeme() + "'",
+                    "Use infix logical syntax like 'p " + token.getLexeme() + " q'");
         }
 
-        // Display math mode ($$ ... $$)
-        if (match(TokenType.DOUBLE_DOLLAR)) {
-            AstNode expr = expression();
-            consume(TokenType.DOUBLE_DOLLAR, "Expected '$$' to close display math");
-            return new DisplayMathExpr(expr);
+        if (EuclidLanguage.isFunctionType(type)) {
+            if (check(TokenType.LPAREN)) {
+                return parseFunctionCall(token);
+            }
+            return new IdentifierExpr(token.getLexeme());
         }
 
-        // Text (plain markdown)
-        if (match(TokenType.TEXT)) {
-            return new TextExpr(previous().getLexeme());
-        }
-
-        // If we reach here, we have an unexpected token
-        Token token = peek();
-        String suggestion = "Try using a number, identifier, or function call here";
-        if (source != null) {
-            throw new ParserException(
+        throw parserError(
                 "parser.unexpected-token",
+                token,
                 "Unexpected token '" + token.getLexeme() + "'",
-                token.getLine(),
-                token.getColumn(),
-                source,
-                suggestion
-            );
-        } else {
-            throw new ParserException(
-                "Unexpected token '" + token.getLexeme() + "'",
-                token.getLine(),
-                token.getColumn()
-            );
+                "Try using a number, identifier, grouping, or supported Euclid function here");
+    }
+
+    private AstNode parseBracketGroup(Token bracket) throws ParserException {
+        List<AstNode> elements = new ArrayList<>();
+        if (!check(TokenType.RBRACKET)) {
+            do {
+                elements.add(parseExpression(0, false));
+            } while (match(TokenType.COMMA));
+        }
+        consume(TokenType.RBRACKET, "Expected ']' after bracket group");
+        return new CallExpr(new Token(TokenType.LBRACKET, "[]", bracket.getLine(), bracket.getColumn()), elements);
+    }
+
+    private AstNode parseFunctionCall(Token function) throws ParserException {
+        return parseCallArguments(function, true);
+    }
+
+    private AstNode parseCallArguments(Token function, boolean validateArity) throws ParserException {
+        consume(TokenType.LPAREN, "Expected '(' after function name");
+        List<AstNode> arguments = new ArrayList<>();
+
+        if (!check(TokenType.RPAREN)) {
+            do {
+                arguments.add(parseExpression(0, false));
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RPAREN, "Expected ')' after function arguments");
+        if (validateArity) {
+            ValidationHelper.validateArgumentCount(function, arguments.size());
+        }
+        return new CallExpr(function, arguments);
+    }
+
+    private Operator infixOperator(Token next, Token previousToken, AstNode left) {
+        TokenType type = next.getType();
+        return switch (type) {
+            case BANG -> new Operator(new Token(TokenType.BANG, "!", next.getLine(), next.getColumn()),
+                    PREC_POSTFIX, PREC_POSTFIX, false, false);
+            case POWER, UNDERSCORE -> new Operator(next, PREC_POWER, PREC_POWER, false, false);
+            case MULTIPLY, DIVIDE, MODULO, BACKSLASH_BACKSLASH, DOT ->
+                    new Operator(next, PREC_MULTIPLICATIVE, PREC_MULTIPLICATIVE + 1, false, false);
+            case PLUS, MINUS -> new Operator(next, PREC_ADDITIVE, PREC_ADDITIVE + 1, false, false);
+            case AND -> new Operator(next, PREC_AND, PREC_AND + 1, false, false);
+            case OR -> new Operator(next, PREC_OR, PREC_OR + 1, false, false);
+            case EQUALS -> new Operator(next, PREC_EQUALITY, PREC_EQUALITY + 1, false, false);
+            default -> implicitMultiplyOperator(previousToken, left, next);
+        };
+    }
+
+    private Operator implicitMultiplyOperator(Token previousToken, AstNode left, Token next) {
+        if (!startsImplicitMultiplication(previousToken, left, next)) {
+            return null;
+        }
+        return new Operator(
+                new Token(TokenType.IMPLICIT_MULTIPLY, "", next.getLine(), next.getColumn()),
+                PREC_MULTIPLICATIVE,
+                PREC_MULTIPLICATIVE + 1,
+                true,
+                false);
+    }
+
+    private boolean startsImplicitMultiplication(Token previousToken, AstNode left, Token next) {
+        TokenType nextType = next.getType();
+        if (!(nextType == TokenType.LPAREN
+                || nextType == TokenType.NUMBER
+                || nextType == TokenType.IDENTIFIER
+                || EuclidLanguage.isConstantType(nextType)
+                || EuclidLanguage.isGreekType(nextType)
+                || EuclidLanguage.isFunctionType(nextType))) {
+            return false;
+        }
+
+        TokenType previousType = previousToken.getType();
+        if (nextType == TokenType.IDENTIFIER) {
+            return previousType == TokenType.NUMBER
+                    || EuclidLanguage.isConstantType(previousType)
+                    || EuclidLanguage.isGreekType(previousType)
+                    || previousType == TokenType.RPAREN
+                    || previousType == TokenType.RBRACKET
+                    || previousType == TokenType.BANG
+                    || left instanceof CallExpr;
+        }
+
+        if (nextType == TokenType.NUMBER) {
+            return previousType == TokenType.RPAREN
+                    || previousType == TokenType.RBRACKET
+                    || previousType == TokenType.BANG
+                    || previousType == TokenType.IDENTIFIER
+                    || EuclidLanguage.isConstantType(previousType)
+                    || EuclidLanguage.isGreekType(previousType)
+                    || left instanceof CallExpr;
+        }
+
+        return previousType != TokenType.IDENTIFIER || nextType == TokenType.LPAREN || nextType == TokenType.NUMBER;
+    }
+
+    private boolean shouldContinueAcrossNewline() {
+        int lookahead = current;
+        while (lookahead < tokens.size() && tokens.get(lookahead).getType() == TokenType.NEWLINE) {
+            lookahead++;
+        }
+        if (lookahead >= tokens.size()) {
+            return false;
+        }
+        return switch (tokens.get(lookahead).getType()) {
+            case BANG, POWER, UNDERSCORE, MULTIPLY, DIVIDE, MODULO, BACKSLASH_BACKSLASH, DOT,
+                    PLUS, MINUS, AND, OR, EQUALS -> true;
+            default -> false;
+        };
+    }
+
+    private boolean shouldStop(boolean stopAtNewline) {
+        if (check(TokenType.EOF)
+                || check(TokenType.RPAREN)
+                || check(TokenType.RBRACKET)
+                || check(TokenType.RBRACE)
+                || check(TokenType.COMMA)
+                || check(TokenType.DOLLAR)
+                || check(TokenType.DOUBLE_DOLLAR)) {
+            return true;
+        }
+        return stopAtNewline && check(TokenType.NEWLINE);
+    }
+
+    private ParserException parserError(String code, Token token, String message, String suggestion) {
+        if (source == null) {
+            return new ParserException(code, message, token.getLine(), token.getColumn(), suggestion);
+        }
+        return new ParserException(code, message, token.getLine(), token.getColumn(), source, suggestion);
+    }
+
+    private void skipNewlines() {
+        while (match(TokenType.NEWLINE)) {
+            // keep consuming
         }
     }
 
-    /**
-     * Checks if a token is a function token.
-     */
-    private boolean isFunctionToken(Token token) {
-        return EuclidLanguage.isFunctionType(token.getType()) || isConstantToken(token);
+    private void synchronize() {
+        while (!isAtEnd()) {
+            if (match(TokenType.NEWLINE)) {
+                return;
+            }
+            advance();
+        }
     }
 
-    /**
-     * Checks if a token is a constant (doesn't require parentheses).
-     */
-    private boolean isConstantToken(Token token) {
-        return EuclidLanguage.isConstantType(token.getType());
-    }
-
-    /**
-     * Checks if a token is a Greek letter.
-     */
-    private boolean isGreekLetter(Token token) {
-        return EuclidLanguage.isGreekType(token.getType());
-    }
-
-    /**
-     * Checks if the current token matches any of the given types.
-     */
     private boolean match(TokenType... types) {
         for (TokenType type : types) {
             if (check(type)) {
@@ -367,24 +377,20 @@ public class Parser {
         return false;
     }
 
-    /**
-     * Checks if the current token is of the given type.
-     */
     private boolean check(TokenType type) {
-        if (isAtEnd()) return false;
+        if (isAtEnd()) {
+            return type == TokenType.EOF;
+        }
         return peek().getType() == type;
     }
 
-    /**
-     * Consumes the current token if it matches the given type.
-     */
     private Token consume(TokenType type, String message) throws ParserException {
-        if (check(type)) return advance();
+        if (check(type)) {
+            return advance();
+        }
 
         Token token = peek();
         String suggestion = null;
-        
-        // Provide helpful suggestions based on context
         if (type == TokenType.RPAREN) {
             suggestion = "Check for unbalanced parentheses - every '(' needs a matching ')'";
         } else if (type == TokenType.RBRACKET) {
@@ -392,82 +398,33 @@ public class Parser {
         } else if (type == TokenType.COMMA) {
             suggestion = "Function arguments should be separated by commas";
         }
-        
-        if (source != null && suggestion != null) {
-            throw new ParserException("parser.consume", message, token.getLine(), token.getColumn(), source, suggestion);
-        } else {
-            throw new ParserException(message, token.getLine(), token.getColumn());
-        }
+        throw parserError("parser.consume", token, message, suggestion);
     }
 
-    private AstNode parseFunctionCall(Token function) throws ParserException {
-        consume(TokenType.LPAREN, "Expected '('");
-        List<AstNode> arguments = new ArrayList<>();
-
-        if (!check(TokenType.RPAREN)) {
-            do {
-                arguments.add(expression());
-            } while (match(TokenType.COMMA));
-        }
-
-        consume(TokenType.RPAREN, "Expected ')' after function arguments");
-        ValidationHelper.validateArgumentCount(function, arguments.size());
-        return new CallExpr(function, arguments);
-    }
-
-    private boolean isLogicalFunctionAlias(Token token) {
-        return (token.getType() == TokenType.AND || token.getType() == TokenType.OR || token.getType() == TokenType.NOT)
-                && checkNext(TokenType.LPAREN);
-    }
-
-    private boolean checkNext(TokenType type) {
-        if (current + 1 >= tokens.size()) {
-            return false;
-        }
-        return tokens.get(current + 1).getType() == type;
-    }
-
-    private void synchronize() {
-        while (!isAtEnd()) {
-            if (check(TokenType.NEWLINE)) {
-                advance();
-                return;
-            }
-
-            if (check(TokenType.EOF)) {
-                return;
-            }
-
-            advance();
-        }
-    }
-
-    /**
-     * Advances to the next token.
-     */
     private Token advance() {
-        if (!isAtEnd()) current++;
+        if (!isAtEnd()) {
+            current++;
+        }
         return previous();
     }
 
-    /**
-     * Checks if we're at the end of the token stream.
-     */
     private boolean isAtEnd() {
         return peek().getType() == TokenType.EOF;
     }
 
-    /**
-     * Returns the current token without consuming it.
-     */
     private Token peek() {
         return tokens.get(current);
     }
 
-    /**
-     * Returns the previous token.
-     */
     private Token previous() {
         return tokens.get(current - 1);
+    }
+
+    private record Operator(
+            Token token,
+            int leftBindingPower,
+            int rightBindingPower,
+            boolean implicit,
+            boolean postfix) {
     }
 }

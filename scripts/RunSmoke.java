@@ -23,6 +23,19 @@ public final class RunSmoke {
         assertEquals("INFINITY + subset(A, B) + binom(n, k)",
                 Transpiler.canonicalize("INF + proper_subset(A, B) + choose(n, k)"),
                 "canonicalization");
+        assertEquals("Notes $x^{2}$ and `code $PI$`",
+                Transpiler.transpileDocument("Notes $x^2$ and `code $PI$`"),
+                "document transpilation");
+        assertEquals("<div>\n$PI$\n</div>",
+                Transpiler.transpileDocument("<div>\n$PI$\n</div>"),
+                "raw html protection");
+        assertContains(
+                Transpiler.transpileDocument("[calc $PI$](https://example.com/f(x)) and $x^2$"),
+                "[calc $PI$](https://example.com/f(x))",
+                "link protection");
+        assertEquals("Prose INF and $INFINITY + binom(n, k)$",
+                Transpiler.canonicalizeDocument("Prose INF and $INF + choose(n, k)$"),
+                "document canonicalization");
         assertEquals("mathtext(\"INF\") # choose\nINFINITY",
                 Transpiler.canonicalize("mathtext(\"INF\") # choose\nINF"),
                 "token-aware canonicalization");
@@ -62,6 +75,26 @@ public final class RunSmoke {
         Files.writeString(canonicalizeInput, "INF + choose(n, k)");
         Transpiler.canonicalizeFile(canonicalizeInput.toString(), canonicalizeOutput.toString());
         assertEquals("INFINITY + binom(n, k)", Files.readString(canonicalizeOutput), "canonicalize file");
+
+        Path documentCheckFile = Files.createTempFile("euclid-document-check-smoke", ".ed");
+        Files.writeString(documentCheckFile, "The limit is $INF$.");
+        TranspileResult documentCheckResult = Transpiler.checkDocumentFile(
+                documentCheckFile.toString(),
+                false,
+                EuclidAliasHandling.WARN);
+        assertTrue(!documentCheckResult.hasErrors(), "document check success");
+        assertTrue(documentCheckResult.diagnostics().stream().anyMatch(d ->
+                d.getSeverity() == Diagnostic.Severity.WARNING && "canonical.rewrite".equals(d.getCode())),
+                "document alias warning");
+
+        TranspileResult strictDocumentAliasResult = Transpiler.checkDocumentFile(
+                documentCheckFile.toString(),
+                false,
+                EuclidAliasHandling.ERROR);
+        assertTrue(strictDocumentAliasResult.hasErrors(), "document strict alias mode errors");
+        assertTrue(strictDocumentAliasResult.diagnostics().stream().anyMatch(d ->
+                d.getSeverity() == Diagnostic.Severity.ERROR && "alias.noncanonical".equals(d.getCode())),
+                "document strict alias diagnostic");
 
         System.out.println("Core Euclid smoke checks passed.");
     }

@@ -18,6 +18,7 @@ public final class EuclidLanguage {
     private static final Map<String, String> ALIAS_TO_CANONICAL;
     private static final Map<String, List<String>> ALIASES_BY_CANONICAL;
     private static final Map<String, EuclidSignature> SIGNATURES;
+    private static final Map<String, EuclidArity> ARITIES;
 
     private static final Set<TokenType> FUNCTION_TYPES = EnumSet.of(
             TokenType.POW, TokenType.ABS, TokenType.CEIL, TokenType.FLOOR, TokenType.MOD, TokenType.GCD,
@@ -65,6 +66,7 @@ public final class EuclidLanguage {
         LinkedHashMap<String, TokenType> keywords = new LinkedHashMap<>();
         LinkedHashMap<String, String> aliasToCanonical = new LinkedHashMap<>();
         LinkedHashMap<String, EuclidSignature> signatures = new LinkedHashMap<>();
+        LinkedHashMap<String, EuclidArity> arities = new LinkedHashMap<>();
 
         registerKeyword(keywords, "PI", TokenType.PI);
         registerKeyword(keywords, "E", TokenType.E);
@@ -259,53 +261,166 @@ public final class EuclidLanguage {
         registerKeyword(keywords, "overbrace", TokenType.OVERBRACE);
 
         registerSignature(signatures, "pow", "pow(base, exponent)", "base: base value", "exponent: power");
+        registerArity(arities, "pow", EuclidArity.exact(2));
         registerSignature(signatures, "abs", "abs(x)", "x: value");
+        registerArity(arities, "abs", EuclidArity.exact(1));
         registerSignature(signatures, "ceil", "ceil(x)", "x: value");
+        registerArity(arities, "ceil", EuclidArity.exact(1));
         registerSignature(signatures, "floor", "floor(x)", "x: value");
+        registerArity(arities, "floor", EuclidArity.exact(1));
         registerSignature(signatures, "sqrt", "sqrt(x) or sqrt(n, x)", "x: radicand", "n: root degree");
+        registerArity(arities, "sqrt", EuclidArity.oneOf("1 or 2", 1, 2));
         registerSignature(signatures, "log", "log(x, base)", "x: value", "base: logarithm base");
+        registerArity(arities, "log", EuclidArity.exact(2));
         registerSignature(signatures, "ln", "ln(x)", "x: value");
+        registerArity(arities, "ln", EuclidArity.exact(1));
         registerSignature(signatures, "exp", "exp(x)", "x: exponent");
+        registerArity(arities, "exp", EuclidArity.exact(1));
         registerSignature(signatures, "sin", "sin(x)", "x: angle");
+        registerArity(arities, "sin", EuclidArity.exact(1));
         registerSignature(signatures, "cos", "cos(x)", "x: angle");
+        registerArity(arities, "cos", EuclidArity.exact(1));
         registerSignature(signatures, "tan", "tan(x)", "x: angle");
+        registerArity(arities, "tan", EuclidArity.exact(1));
         registerSignature(signatures, "csc", "csc(x)", "x: angle");
+        registerArity(arities, "csc", EuclidArity.exact(1));
         registerSignature(signatures, "sec", "sec(x)", "x: angle");
+        registerArity(arities, "sec", EuclidArity.exact(1));
         registerSignature(signatures, "cot", "cot(x)", "x: angle");
+        registerArity(arities, "cot", EuclidArity.exact(1));
         registerSignature(signatures, "sinh", "sinh(x)", "x: value");
+        registerArity(arities, "sinh", EuclidArity.exact(1));
         registerSignature(signatures, "cosh", "cosh(x)", "x: value");
+        registerArity(arities, "cosh", EuclidArity.exact(1));
         registerSignature(signatures, "tanh", "tanh(x)", "x: value");
+        registerArity(arities, "tanh", EuclidArity.exact(1));
         registerSignature(signatures, "csch", "csch(x)", "x: value");
+        registerArity(arities, "csch", EuclidArity.exact(1));
         registerSignature(signatures, "sech", "sech(x)", "x: value");
+        registerArity(arities, "sech", EuclidArity.exact(1));
         registerSignature(signatures, "coth", "coth(x)", "x: value");
+        registerArity(arities, "coth", EuclidArity.exact(1));
         registerSignature(signatures, "limit", "limit(expr, var, approach)", "expr: expression", "var: variable", "approach: limit point");
+        registerArity(arities, "limit", EuclidArity.exact(3));
         registerSignature(signatures, "diff", "diff(expr, var)", "expr: expression", "var: differentiation variable");
+        registerArity(arities, "diff", EuclidArity.exact(2));
         registerSignature(signatures, "partial", "partial(expr, var)", "expr: expression", "var: partial variable");
+        registerArity(arities, "partial", EuclidArity.exact(2));
         registerSignature(signatures, "integral", "integral(expr, var) or integral(expr, var, lower, upper)", "expr: integrand", "var: variable", "lower: lower bound", "upper: upper bound");
+        registerArity(arities, "integral", EuclidArity.oneOf("2 or 4", 2, 4));
         registerSignature(signatures, "sum", "sum(expr, var, lower, upper)", "expr: summand", "var: index variable", "lower: lower bound", "upper: upper bound");
+        registerArity(arities, "sum", EuclidArity.oneOf("1, 3, or 4", 1, 3, 4));
         registerSignature(signatures, "prod", "prod(expr, var, lower, upper)", "expr: multiplicand", "var: index variable", "lower: lower bound", "upper: upper bound");
+        registerArity(arities, "prod", EuclidArity.oneOf("1, 3, or 4", 1, 3, 4));
         registerSignature(signatures, "forall", "forall(var, predicate)", "var: quantified variable", "predicate: body");
+        registerArity(arities, "forall", EuclidArity.exact(2));
         registerSignature(signatures, "exists", "exists(var, predicate)", "var: quantified variable", "predicate: body");
+        registerArity(arities, "exists", EuclidArity.exact(2));
         registerSignature(signatures, "implies", "implies(left, right)", "left: premise", "right: consequence");
+        registerArity(arities, "implies", EuclidArity.exact(2));
         registerSignature(signatures, "iff", "iff(left, right)", "left: proposition", "right: proposition");
+        registerArity(arities, "iff", EuclidArity.exact(2));
         registerSignature(signatures, "matrix", "matrix([[a, b], [c, d]]) or matrix([a, b], [c, d])", "rowN: bracketed row");
+        registerArity(arities, "matrix", EuclidArity.range("at least 1", 1, Integer.MAX_VALUE));
         registerSignature(signatures, "vector", "vector([a, b, c]) or vector(a, b, c)", "a..n: vector elements");
+        registerArity(arities, "vector", EuclidArity.range("at least 1", 1, Integer.MAX_VALUE));
         registerSignature(signatures, "piecewise", "piecewise(expr1, cond1, expr2, cond2, ...)", "exprN: branch result", "condN: branch condition");
+        registerArity(arities, "piecewise", EuclidArity.evenAtLeast(2));
         registerSignature(signatures, "align", "align(eq1, eq2, ...)", "eqN: aligned expression");
+        registerArity(arities, "align", EuclidArity.range("at least 1", 1, Integer.MAX_VALUE));
         registerSignature(signatures, "system", "system(eq1, eq2, ...)", "eqN: system equation");
+        registerArity(arities, "system", EuclidArity.range("at least 1", 1, Integer.MAX_VALUE));
         registerSignature(signatures, "binom", "binom(n, k)", "n: total", "k: chosen");
+        registerArity(arities, "binom", EuclidArity.exact(2));
         registerSignature(signatures, "norm", "norm(x) or norm(x, p)", "x: expression", "p: norm order");
+        registerArity(arities, "norm", EuclidArity.oneOf("1 or 2", 1, 2));
         registerSignature(signatures, "inner", "inner(x, y)", "x: left vector", "y: right vector");
+        registerArity(arities, "inner", EuclidArity.exact(2));
         registerSignature(signatures, "prob", "prob(event)", "event: event expression");
+        registerArity(arities, "prob", EuclidArity.exact(1));
         registerSignature(signatures, "expect", "expect(expr)", "expr: random variable or expression");
+        registerArity(arities, "expect", EuclidArity.exact(1));
         registerSignature(signatures, "var", "var(expr)", "expr: random variable or expression");
+        registerArity(arities, "var", EuclidArity.exact(1));
         registerSignature(signatures, "cov", "cov(x, y)", "x: first variable", "y: second variable");
+        registerArity(arities, "cov", EuclidArity.exact(2));
         registerSignature(signatures, "given", "given(event, condition)", "event: left-hand event", "condition: right-hand event");
+        registerArity(arities, "given", EuclidArity.exact(2));
+        registerArity(arities, "mod", EuclidArity.exact(2));
+        registerArity(arities, "gcd", EuclidArity.exact(2));
+        registerArity(arities, "lcm", EuclidArity.exact(2));
+        registerArity(arities, "lt", EuclidArity.exact(2));
+        registerArity(arities, "gt", EuclidArity.exact(2));
+        registerArity(arities, "leq", EuclidArity.exact(2));
+        registerArity(arities, "geq", EuclidArity.exact(2));
+        registerArity(arities, "approx", EuclidArity.exact(2));
+        registerArity(arities, "neq", EuclidArity.exact(2));
+        registerArity(arities, "equiv", EuclidArity.exact(2));
+        registerArity(arities, "pm", EuclidArity.exact(2));
+        registerArity(arities, "times", EuclidArity.exact(2));
+        registerArity(arities, "div", EuclidArity.exact(2));
+        registerArity(arities, "cdot", EuclidArity.exact(2));
+        registerArity(arities, "ast", EuclidArity.exact(2));
+        registerArity(arities, "star", EuclidArity.exact(2));
+        registerArity(arities, "circ", EuclidArity.exact(2));
+        registerArity(arities, "bullet", EuclidArity.exact(2));
+        registerArity(arities, "cap", EuclidArity.exact(2));
+        registerArity(arities, "cup", EuclidArity.exact(2));
+        registerArity(arities, "subset", EuclidArity.exact(2));
+        registerArity(arities, "supset", EuclidArity.exact(2));
+        registerArity(arities, "subseteq", EuclidArity.exact(2));
+        registerArity(arities, "supseteq", EuclidArity.exact(2));
+        registerArity(arities, "union", EuclidArity.exact(2));
+        registerArity(arities, "intersection", EuclidArity.exact(2));
+        registerArity(arities, "set_diff", EuclidArity.exact(2));
+        registerArity(arities, "element_of", EuclidArity.exact(2));
+        registerArity(arities, "not_element_of", EuclidArity.exact(2));
+        registerArity(arities, "AND", EuclidArity.exact(2));
+        registerArity(arities, "OR", EuclidArity.exact(2));
+        registerArity(arities, "NOT", EuclidArity.exact(1));
+        registerArity(arities, "hat", EuclidArity.exact(1));
+        registerArity(arities, "tilde", EuclidArity.exact(1));
+        registerArity(arities, "bar", EuclidArity.exact(1));
+        registerArity(arities, "vec", EuclidArity.exact(1));
+        registerArity(arities, "dot", EuclidArity.oneOf("1 or 2", 1, 2));
+        registerArity(arities, "ddot", EuclidArity.exact(1));
+        registerArity(arities, "overline", EuclidArity.exact(1));
+        registerArity(arities, "underline", EuclidArity.exact(1));
+        registerArity(arities, "mathtext", EuclidArity.exact(1));
+        registerArity(arities, "cases", EuclidArity.evenAtLeast(2));
+        registerArity(arities, "arcsin", EuclidArity.exact(1));
+        registerArity(arities, "arccos", EuclidArity.exact(1));
+        registerArity(arities, "arctan", EuclidArity.exact(1));
+        registerArity(arities, "arccsc", EuclidArity.exact(1));
+        registerArity(arities, "arcsec", EuclidArity.exact(1));
+        registerArity(arities, "arccot", EuclidArity.exact(1));
+        registerArity(arities, "min", EuclidArity.exact(1));
+        registerArity(arities, "max", EuclidArity.exact(1));
+        registerArity(arities, "sup", EuclidArity.exact(1));
+        registerArity(arities, "inf", EuclidArity.exact(1));
+        registerArity(arities, "limsup", EuclidArity.exact(1));
+        registerArity(arities, "liminf", EuclidArity.exact(1));
+        registerArity(arities, "grad", EuclidArity.exact(1));
+        registerArity(arities, "divergence", EuclidArity.exact(1));
+        registerArity(arities, "curl", EuclidArity.exact(1));
+        registerArity(arities, "laplacian", EuclidArity.exact(1));
+        registerArity(arities, "det", EuclidArity.exact(1));
+        registerArity(arities, "trace", EuclidArity.exact(1));
+        registerArity(arities, "dim", EuclidArity.exact(1));
+        registerArity(arities, "rank", EuclidArity.exact(1));
+        registerArity(arities, "ker", EuclidArity.exact(1));
+        registerArity(arities, "transpose", EuclidArity.exact(1));
+        registerArity(arities, "inverse", EuclidArity.exact(1));
+        registerArity(arities, "boxed", EuclidArity.exact(1));
+        registerArity(arities, "cancel", EuclidArity.exact(1));
+        registerArity(arities, "underbrace", EuclidArity.exact(2));
+        registerArity(arities, "overbrace", EuclidArity.exact(2));
 
         KEYWORDS = Collections.unmodifiableMap(keywords);
         ALIAS_TO_CANONICAL = Collections.unmodifiableMap(aliasToCanonical);
         ALIASES_BY_CANONICAL = Collections.unmodifiableMap(reverseAliases(aliasToCanonical));
         SIGNATURES = Collections.unmodifiableMap(signatures);
+        ARITIES = Collections.unmodifiableMap(arities);
     }
 
     private EuclidLanguage() {
@@ -337,6 +452,10 @@ public final class EuclidLanguage {
         return SIGNATURES.get(getCanonicalName(name));
     }
 
+    public static EuclidArity getArity(String name) {
+        return ARITIES.get(getCanonicalName(name));
+    }
+
     public static Map<String, List<String>> getAliasesByCanonical() {
         return ALIASES_BY_CANONICAL;
     }
@@ -359,7 +478,10 @@ public final class EuclidLanguage {
             TokenType type = KEYWORDS.get(name);
             capabilities.add(new EuclidCapability(
                     name,
+                    name,
                     classify(name, type),
+                    fixity(name, type),
+                    ARITIES.get(name),
                     type,
                     aliasPolicy(name),
                     ALIASES_BY_CANONICAL.getOrDefault(name, List.of()),
@@ -466,6 +588,25 @@ public final class EuclidLanguage {
                 : EuclidAliasPolicy.NONE;
     }
 
+    private static EuclidFixity fixity(String name, TokenType type) {
+        if (isConstantType(type) || isGreekType(type)) {
+            return EuclidFixity.CONSTANT;
+        }
+        if (type == TokenType.AND || type == TokenType.OR) {
+            return EuclidFixity.INFIX;
+        }
+        if (type == TokenType.NOT) {
+            return EuclidFixity.PREFIX;
+        }
+        if (type == TokenType.DOT) {
+            return EuclidFixity.MIXED;
+        }
+        if (type == TokenType.FROM || type == TokenType.TO) {
+            return EuclidFixity.CONSTANT;
+        }
+        return EuclidFixity.FUNCTION;
+    }
+
     private static boolean isIdentifierStart(char c) {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
@@ -543,5 +684,9 @@ public final class EuclidLanguage {
 
     private static void registerSignature(Map<String, EuclidSignature> signatures, String name, String label, String... parameters) {
         signatures.put(name, new EuclidSignature(label, List.of(parameters)));
+    }
+
+    private static void registerArity(Map<String, EuclidArity> arities, String name, EuclidArity arity) {
+        arities.put(name, arity);
     }
 }

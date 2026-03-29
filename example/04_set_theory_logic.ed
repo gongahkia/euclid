@@ -1,83 +1,19 @@
-# Euclid Example: Set Theory and Logic
+# Euclid Example: Sets and Logic
 
-This example demonstrates set theory and logic operations in Euclid.
+## Set Relations
 
-## Set Notation
+- Membership: `$element_of(x, A)$`
+- Subset: `$subseteq(A, B)$`
+- Difference: `$set_diff(A, B)$`
+- Number sets: `$subset(NATURALS, INTEGERS) AND subset(INTEGERS, REALS)$`
 
-Empty set: emptyset
-Element of: element_of(x, A)
-Subset: subset(A, B)
-Union: union(A, B)
-Intersection: intersection(A, B)
+## Logical Structure
 
-## Comparison Operators
-
-Less than: lt(a, b) means a < b
-Greater than: gt(a, b) means a > b
-Less than or equal: leq(a, b) means a <= b
-Greater than or equal: geq(a, b) means a >= b
-Approximately equal: approx(a, b) means a ≈ b
-Not equal: neq(a, b) means a ≠ b
-Equivalent: equiv(a, b) means a ≡ b
-
-## Logical Operators
-
-AND: P AND Q
-OR: P OR Q
-NOT: NOT(P)
-Implies: implies(P, Q)
-If and only if: iff(P, Q)
-
-## Quantifiers
-
-For all: forall(x, P(x))
-There exists: exists(x, P(x))
-
-## Logic Examples
-
-De Morgan's law: equiv(NOT(P AND Q), NOT(P) OR NOT(Q))
-Contrapositive: equiv(implies(P, Q), implies(NOT(Q), NOT(P)))
-
-## Number Theory
-
-Greatest common divisor: gcd(a, b)
-Least common multiple: lcm(a, b)
-Modulo: mod(a, b)
-Plus-minus: pm(a, b)
-Times symbol: times(a, b)
-Division symbol: div(a, b)
-
-## Floor and Ceiling
-
-Floor: floor(x)
-Ceiling: ceil(x)
-Absolute value: abs(x)
-
-## Arrows
-
-Right arrow: rightarrow
-Left arrow: leftarrow
-Double right arrow: Rightarrow
-Maps to: mapsto
-
-## Dot Sequences
-
-Horizontal dots: ldots
-Centered dots: cdots
-Vertical dots: vdots
-Diagonal dots: ddots
+- Infix logic: `$p AND q = r$`
+- Implication: `$implies(p, q)$`
+- Quantifiers: `$forall(x, implies(element_of(x, A), element_of(x, B)))$`
 
 ## Proof Notation
 
-Therefore: therefore
-Because: because
-QED: qed
-
-## Geometry
-
-Perpendicular: perp
-Parallel: parallel
-Angle: angle
-Triangle: triangle
-Congruent: cong
-Similar: sim
+- Conclusion markers: `$therefore p$`
+- Direction arrows: `$x mapsto x^2$`

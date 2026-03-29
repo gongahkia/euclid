@@ -1,265 +1,94 @@
 package com.euclid;
 
-import com.euclid.exception.EuclidException;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
+import net.jqwik.api.Combinators;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.Provide;
 
-import java.util.Random;
-import java.util.stream.IntStream;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Property-based tests that verify certain properties hold for randomly generated inputs.
- * Uses JUnit 5's RepeatedTest to run each property test multiple times with random data.
+ * Property-based tests for strict Euclid expressions and Markdown document mode.
  */
 public class PropertyBasedTest {
-    
-    private static final Random random = new Random(42); // Fixed seed for reproducibility
 
-    // ========== IDENTITY PROPERTIES ==========
+    @Provide
+    Arbitrary<String> strictExpressions() {
+        Arbitrary<String> atoms = Arbitraries.of("x", "y", "z", "n", "k", "2", "3", "PI", "ALPHA");
+        Arbitrary<String> unaryFunctions = Combinators.combine(
+                Arbitraries.of("sin", "cos", "abs", "sqrt"),
+                atoms).as((function, argument) -> function + "(" + argument + ")");
+        Arbitrary<String> powers = Combinators.combine(atoms, atoms)
+                .as((base, exponent) -> "pow(" + base + ", " + exponent + ")");
+        Arbitrary<String> binaryFunctions = Combinators.combine(
+                Arbitraries.of("subset", "geq", "given"),
+                atoms,
+                atoms).as((function, left, right) -> function + "(" + left + ", " + right + ")");
+        Arbitrary<String> infix = Combinators.combine(
+                atoms,
+                Arbitraries.of("+", "-", "*", "/", "="),
+                atoms).as((left, operator, right) -> left + " " + operator + " " + right);
+        Arbitrary<String> implicit = Combinators.combine(
+                Arbitraries.integers().between(2, 9).map(String::valueOf),
+                Arbitraries.of("x", "y", "z"))
+                .as((coefficient, variable) -> coefficient + variable);
+        Arbitrary<String> aggregates = Arbitraries.of("sum(i, i, 1, n)", "prod(i, i, 1, n)");
 
-    /**
-     * Property: Transpiling the same input twice should produce the same output.
-     * This tests idempotence.
-     */
-    @RepeatedTest(20)
-    public void transpilingTwiceGivesSameResult() throws Exception {
-        String input = generateRandomExpression();
-        
-        try {
-            String result1 = Transpiler.transpile(input);
-            String result2 = Transpiler.transpile(input);
-            assertEquals(result1, result2, "Transpiling twice should give same result");
-        } catch (EuclidException e) {
-            // Both should fail in the same way - test consistency
-            assertThrows(EuclidException.class, () -> Transpiler.transpile(input));
-        }
+        return Arbitraries.oneOf(atoms, unaryFunctions, powers, binaryFunctions, infix, implicit, aggregates);
     }
 
-    /**
-     * Property: Empty input should always produce empty output.
-     */
-    @Test
-    public void emptyInputProducesEmptyOutput() throws Exception {
-        String result = Transpiler.transpile("");
-        assertTrue(result == null || result.trim().isEmpty(), 
-                  "Empty input should produce empty output");
+    @Provide
+    Arbitrary<String> aliasExpressions() {
+        return Arbitraries.of("INF", "choose(n, k)", "proper_subset(A, B)");
     }
 
-    /**
-     * Property: Whitespace-only input should produce empty or whitespace output.
-     */
-    @RepeatedTest(10)
-    public void whitespaceOnlyInputProducesEmptyOutput() throws Exception {
-        int spaces = random.nextInt(50);
-        String input = " ".repeat(spaces);
-        
-        String result = Transpiler.transpile(input);
-        assertTrue(result == null || result.trim().isEmpty(),
-                  "Whitespace-only input should produce empty output");
+    @Provide
+    Arbitrary<String> mathSpanExpressions() {
+        return Arbitraries.of("x^2 + y^2", "2x^2 + 1", "sin(PI / 2)", "sum(i, i, 1, n)", "subset(A, B)");
     }
 
-    // ========== STRUCTURE PROPERTIES ==========
-
-    /**
-     * Property: Valid numeric input should parse without error.
-     */
-    @RepeatedTest(30)
-    public void validNumbersParseSuccessfully() throws Exception {
-        double number = random.nextDouble() * 1000 - 500; // Range: -500 to 500
-        assumeTrue(!Double.isNaN(number) && !Double.isInfinite(number));
-        
-        String input = String.valueOf(number);
-        String result = Transpiler.transpile(input);
-        
-        assertNotNull(result, "Valid number should produce output");
-        assertFalse(result.trim().isEmpty(), "Output should not be empty");
+    @Property(tries = 40)
+    void strictTranspilationIsDeterministic(@ForAll("strictExpressions") String expression) throws Exception {
+        assertEquals(Transpiler.transpile(expression), Transpiler.transpile(expression));
     }
 
-    /**
-     * Property: Adding parentheses around an expression should not break parsing.
-     */
-    @RepeatedTest(20)
-    public void parenthesesDontBreakParsing() throws Exception {
-        String expr = generateSimpleExpression();
-        
-        try {
-            String withoutParens = Transpiler.transpile(expr);
-            String withParens = Transpiler.transpile("(" + expr + ")");
-            
-            assertNotNull(withoutParens, "Expression without parentheses should parse");
-            assertNotNull(withParens, "Expression with parentheses should parse");
-        } catch (EuclidException e) {
-            // If original fails, that's OK for this test
-        }
+    @Property(tries = 40)
+    void strictOutputsKeepBracesBalanced(@ForAll("strictExpressions") String expression) throws Exception {
+        String output = Transpiler.transpile(expression);
+        assertEquals(count(output, '{'), count(output, '}'));
+        assertEquals(count(output, '('), count(output, ')'));
     }
 
-    // ========== COMMUTATIVE PROPERTIES ==========
+    @Property(tries = 25)
+    void canonicalizeDocumentOnlyTouchesExplicitMath(@ForAll("aliasExpressions") String aliasExpression) {
+        String source = "Prose " + aliasExpression + " and $" + aliasExpression + "$ and `" + aliasExpression + "`";
+        String canonical = Transpiler.canonicalizeDocument(source);
 
-    /**
-     * Property: Addition should handle operands in any order (for valid expressions).
-     */
-    @RepeatedTest(25)
-    public void additionHandlesBothOrders() throws Exception {
-        int a = random.nextInt(1000) - 500;
-        int b = random.nextInt(1000) - 500;
-        
-        String result1 = Transpiler.transpile(a + " + " + b);
-        String result2 = Transpiler.transpile(b + " + " + a);
-        
-        assertNotNull(result1, "First order should parse");
-        assertNotNull(result2, "Second order should parse");
-        assertTrue(result1.contains(String.valueOf(a)) || result1.contains(a + ".0"),
-                  "Should contain " + a);
-        assertTrue(result1.contains(String.valueOf(b)) || result1.contains(b + ".0"),
-                  "Should contain " + b);
+        assertTrue(canonical.contains("Prose " + aliasExpression + " and $"));
+        assertTrue(canonical.contains("$" + Transpiler.canonicalize(aliasExpression) + "$"));
+        assertTrue(canonical.contains("`" + aliasExpression + "`"));
     }
 
-    /**
-     * Property: Multiplication should handle operands in any order.
-     */
-    @RepeatedTest(25)
-    public void multiplicationHandlesBothOrders() throws Exception {
-        int a = random.nextInt(100);
-        int b = random.nextInt(100);
-        
-        String result1 = Transpiler.transpile(a + " * " + b);
-        String result2 = Transpiler.transpile(b + " * " + a);
-        
-        assertNotNull(result1, "First order should parse");
-        assertNotNull(result2, "Second order should parse");
+    @Property(tries = 25)
+    void protectedMarkdownRegionsSurviveDocumentTranspilation(@ForAll("mathSpanExpressions") String expression) throws Exception {
+        String source = "Inline $" + expression + "$ with `code $" + expression + "$` and "
+                + "[link $" + expression + "$](https://example.com?q=$INF$)";
+        String rendered = Transpiler.transpileDocument(source);
+
+        assertTrue(rendered.contains("Inline $" + Transpiler.transpile(expression) + "$"));
+        assertTrue(rendered.contains("`code $" + expression + "$`"));
+        assertTrue(rendered.contains("[link $" + expression + "$](https://example.com?q=$INF$)"));
     }
 
-    // ========== OUTPUT FORMAT PROPERTIES ==========
-
-    /**
-     * Property: Transpiled output should not contain unbalanced braces.
-     */
-    @RepeatedTest(30)
-    public void outputDoesNotContainUnbalancedBraces() throws Exception {
-        String input = generateRandomExpression();
-        
-        try {
-            String result = Transpiler.transpile(input);
-            
-            // Count braces
-            int openCount = countOccurrences(result, "{");
-            int closeCount = countOccurrences(result, "}");
-            
-            assertEquals(openCount, closeCount, 
-                        "Braces should be balanced in output: " + result);
-        } catch (EuclidException e) {
-            // Invalid input is OK - just testing valid outputs
-        }
-    }
-
-    /**
-     * Property: Trigonometric functions should produce LaTeX commands.
-     */
-    @RepeatedTest(15)
-    public void trigFunctionsProduceLatexCommands() throws Exception {
-        String[] functions = {"sin", "cos", "tan"};
-        String func = functions[random.nextInt(functions.length)];
-        String input = func + "(x)";
-        
-        String result = Transpiler.transpile(input);
-        assertTrue(result.contains("\\" + func), 
-                  func + " should produce \\" + func + " in output");
-    }
-
-    // ========== ERROR HANDLING PROPERTIES ==========
-
-    /**
-     * Property: Invalid characters should throw meaningful exceptions.
-     */
-    @RepeatedTest(10)
-    public void invalidInputThrowsMeaningfulException() {
-        char[] invalidChars = {'@', '$', '%', '&', '!', '~', '`'};
-        char invalidChar = invalidChars[random.nextInt(invalidChars.length)];
-        
-        String input = "x + " + invalidChar;
-        try {
-            Transpiler.transpile(input);
-            // Some chars might be valid in certain contexts
-        } catch (EuclidException e) {
-            assertNotNull(e.getMessage(), "Exception should have message");
-            assertFalse(e.getMessage().isEmpty(), "Exception message should not be empty");
-            assertTrue(e.getMessage().contains("line") || 
-                      e.getMessage().contains("column") ||
-                      e.getMessage().contains("Unexpected") ||
-                      e.getMessage().contains("error"),
-                      "Should mention error location or cause");
-        }
-    }
-
-    /**
-     * Property: Unbalanced delimiters should be caught.
-     */
-    @RepeatedTest(20)
-    public void unbalancedDelimitersAreCaught() {
-        int openCount = random.nextInt(5) + 1;
-        int closeCount = random.nextInt(5);
-        assumeTrue(openCount != closeCount);
-        
-        String input = "x " + "(".repeat(openCount) + ")".repeat(closeCount);
-        
-        try {
-            Transpiler.transpile(input);
-            // If it parses, the delimiters must have balanced somehow
-        } catch (EuclidException e) {
-            assertNotNull(e.getMessage(), "Exception should have message");
-        }
-    }
-
-    // ========== HELPER METHODS ==========
-
-    /**
-     * Generate a random simple expression for testing.
-     */
-    private String generateSimpleExpression() {
-        String[] variables = {"x", "y", "z", "a", "b"};
-        String[] operators = {"+", "-", "*", "/"};
-        
-        String var1 = variables[random.nextInt(variables.length)];
-        String op = operators[random.nextInt(operators.length)];
-        String var2 = variables[random.nextInt(variables.length)];
-        
-        return var1 + " " + op + " " + var2;
-    }
-
-    /**
-     * Generate a random mathematical expression for testing.
-     */
-    private String generateRandomExpression() {
-        int choice = random.nextInt(5);
-        
-        return switch (choice) {
-            case 0 -> generateSimpleExpression();
-            case 1 -> String.valueOf(random.nextInt(100));
-            case 2 -> {
-                String[] funcs = {"sin", "cos", "tan", "abs", "floor", "ceil"};
-                yield funcs[random.nextInt(funcs.length)] + "(x)";
-            }
-            case 3 -> {
-                String[] constants = {"PI", "E"};
-                yield constants[random.nextInt(constants.length)];
-            }
-            case 4 -> "pow(" + random.nextInt(10) + ", " + random.nextInt(5) + ")";
-            default -> "x";
-        };
-    }
-
-    /**
-     * Count occurrences of a substring in a string.
-     */
-    private int countOccurrences(String str, String substring) {
+    private int count(String text, char needle) {
         int count = 0;
-        int index = 0;
-        while ((index = str.indexOf(substring, index)) != -1) {
-            count++;
-            index += substring.length();
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == needle) {
+                count++;
+            }
         }
         return count;
     }

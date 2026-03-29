@@ -61,12 +61,13 @@ public class TranspilerCliModeTest {
     @Test
     public void checkModeCanEmitMachineReadableJson() throws Exception {
         Path input = Files.createTempFile("euclid-check-json", ".ed");
-        Files.writeString(input, "INF");
+        Files.writeString(input, "The limit is $INF$.");
 
         CliInvocationResult result = runCli("--check", "--json", input.toString());
 
         assertEquals(0, result.exitCode());
         assertTrue(result.stdout().contains("\"ok\":true"));
+        assertTrue(result.stdout().contains("\"mode\":\"document\""));
         assertTrue(result.stdout().contains("\"code\":\"canonical.rewrite\""));
     }
 
@@ -82,13 +83,14 @@ public class TranspilerCliModeTest {
     @Test
     public void strictAliasesMakeCheckModeFail() throws Exception {
         Path input = Files.createTempFile("euclid-check-strict-alias", ".ed");
-        Files.writeString(input, "INF");
+        Files.writeString(input, "$INF$");
 
         CliInvocationResult result = runCli("--check", "--json", "--strict-aliases", input.toString());
 
         assertEquals(1, result.exitCode());
         assertTrue(result.stdout().contains("\"code\":\"alias.noncanonical\""));
         assertTrue(result.stdout().contains("\"severity\":\"ERROR\""));
+        assertTrue(result.stdout().contains("\"mode\":\"document\""));
     }
 
     private static CliInvocationResult runCli(String... args) {

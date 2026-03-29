@@ -52,7 +52,7 @@ public class CanonicalizationContractTest {
 
     @Test
     public void precedenceKeepsImplicitMultiplyAndFractionsTighterThanAddition() throws Exception {
-        assertEquals(Transpiler.transpile("(2 * (x^2)) + 1"), Transpiler.transpile("2x^2 + 1"));
-        assertEquals(Transpiler.transpile("(a \\\\ b) + c"), Transpiler.transpile("a \\\\ b + c"));
+        assertEquals("2x^{2} + 1", Transpiler.transpile("2x^2 + 1"));
+        assertEquals("\\frac{a}{b} + c", Transpiler.transpile("a \\\\ b + c"));
     }
 }

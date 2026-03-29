@@ -12,6 +12,7 @@ import com.euclid.lang.EuclidCanonicalizationResult;
 import com.euclid.lang.EuclidLanguage;
 import com.euclid.lexer.Lexer;
 import com.euclid.parser.Parser;
+import com.euclid.processor.MarkdownDocumentProcessor;
 import com.euclid.token.Token;
 import com.euclid.transpiler.LatexTranspiler;
 import com.euclid.transpiler.MathMode;
@@ -108,6 +109,13 @@ public class Transpiler {
     }
 
     /**
+     * Canonicalizes only the explicit Euclid math spans inside a Markdown document.
+     */
+    public static String canonicalizeDocument(String source) {
+        return MarkdownDocumentProcessor.canonicalizeDocument(source);
+    }
+
+    /**
      * Canonicalizes lexical aliases and returns exact alias occurrence metadata.
      */
     public static EuclidCanonicalizationResult canonicalizeWithMetadata(String source) {
@@ -168,6 +176,37 @@ public class Transpiler {
                     canonicalSource.equals(source) ? null : canonicalSource);
             return new TranspileResult(null, collector.getAll());
         }
+    }
+
+    /**
+     * Transpiles a Markdown document by processing only explicit `$...$` and `$$...$$` Euclid spans.
+     */
+    public static String transpileDocument(String source) throws EuclidException {
+        TranspileResult result = transpileDocumentWithDiagnostics(source, false, EuclidAliasHandling.WARN);
+        if (result.hasErrors() || result.output() == null) {
+            throw new EuclidException(summarizeFailure(result.diagnostics()));
+        }
+        return result.output();
+    }
+
+    /**
+     * Checks a Markdown document and returns the rendered output together with diagnostics.
+     */
+    public static TranspileResult checkDocument(
+            String source,
+            boolean verbose,
+            EuclidAliasHandling aliasHandling) {
+        return MarkdownDocumentProcessor.checkDocument(source, verbose, aliasHandling);
+    }
+
+    /**
+     * Transpiles a Markdown document and returns the rendered output together with diagnostics.
+     */
+    public static TranspileResult transpileDocumentWithDiagnostics(
+            String source,
+            boolean verbose,
+            EuclidAliasHandling aliasHandling) {
+        return MarkdownDocumentProcessor.transpileDocument(source, verbose, aliasHandling);
     }
 
     /**
@@ -266,6 +305,23 @@ public class Transpiler {
     }
 
     /**
+     * Transpiles a Markdown document file with explicit Euclid math spans.
+     */
+    public static void transpileDocumentFile(
+            String inputPath,
+            String outputPath,
+            boolean verbose,
+            EuclidAliasHandling aliasHandling) throws IOException, EuclidException {
+        String source = Files.readString(Paths.get(inputPath));
+        TranspileResult result = transpileDocumentWithDiagnostics(source, verbose, aliasHandling);
+        printDiagnostics(result.diagnostics(), verbose);
+        if (result.hasErrors() || result.output() == null) {
+            throw new EuclidException(summarizeFailure(result.diagnostics()));
+        }
+        Files.writeString(Paths.get(outputPath), result.output());
+    }
+
+    /**
      * Checks a file for Euclid diagnostics without writing output.
      */
     public static TranspileResult checkFile(String inputPath, boolean verbose) throws IOException {
@@ -281,6 +337,14 @@ public class Transpiler {
     }
 
     /**
+     * Checks a Markdown document file for Euclid diagnostics without writing output.
+     */
+    public static TranspileResult checkDocumentFile(String inputPath, boolean verbose, EuclidAliasHandling aliasHandling) throws IOException {
+        String source = Files.readString(Paths.get(inputPath));
+        return checkDocument(source, verbose, aliasHandling);
+    }
+
+    /**
      * Canonicalizes a file's Euclid source without transpiling it.
      */
     public static String canonicalizeFile(String inputPath) throws IOException {
@@ -292,6 +356,14 @@ public class Transpiler {
      */
     public static void canonicalizeFile(String inputPath, String outputPath) throws IOException {
         Files.writeString(Paths.get(outputPath), canonicalizeFile(inputPath));
+    }
+
+    /**
+     * Canonicalizes explicit Euclid math spans in a Markdown document.
+     */
+    public static void canonicalizeDocumentFile(String inputPath, String outputPath) throws IOException {
+        Files.writeString(outputPath == null ? Paths.get(inputPath) : Paths.get(outputPath),
+                canonicalizeDocument(Files.readString(Paths.get(inputPath))));
     }
 
     /**
@@ -410,6 +482,94 @@ public class Transpiler {
     }
 
     /**
+     * Watches a Markdown document file for changes and retranspiles explicit Euclid math spans.
+     */
+    public static void watchDocumentFile(
+            String inputPath,
+            String outputPath,
+            boolean verbose,
+            EuclidAliasHandling aliasHandling) throws IOException, EuclidException {
+        watchFileInternal(inputPath, outputPath, () -> {
+            try {
+                transpileDocumentFile(inputPath, outputPath, verbose, aliasHandling);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (EuclidException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private static void watchFileInternal(String inputPath, String outputPath, CheckedRunnable action)
+            throws IOException, EuclidException {
+        Path path = Paths.get(inputPath);
+        Path dir = path.getParent();
+        String fileName = path.getFileName().toString();
+
+        if (dir == null) {
+            dir = Paths.get(".");
+        }
+
+        System.out.println("Initial transpilation of " + inputPath + " to " + outputPath + "...");
+        action.run();
+        System.out.println("✓ Transpilation complete!");
+        System.out.println();
+        System.out.println("Watching " + inputPath + " for changes... (Press Ctrl+C to stop)");
+
+        try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
+            dir.register(watchService, ENTRY_MODIFY, ENTRY_CREATE);
+
+            while (true) {
+                WatchKey key;
+                try {
+                    key = watchService.take();
+                } catch (InterruptedException e) {
+                    System.out.println("\nWatch service interrupted. Exiting...");
+                    return;
+                }
+
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    WatchEvent.Kind<?> kind = event.kind();
+                    if (kind == OVERFLOW) {
+                        continue;
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                    Path changedFile = ev.context();
+                    if (!changedFile.toString().equals(fileName)) {
+                        continue;
+                    }
+
+                    System.out.println("\n[" + java.time.LocalDateTime.now().format(
+                            java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")) + "] File changed, retranspiling...");
+                    try {
+                        Thread.sleep(100);
+                        action.run();
+                        System.out.println("✓ Retranspilation complete!");
+                    } catch (RuntimeException e) {
+                        Throwable cause = e.getCause();
+                        if (cause instanceof EuclidException euclidException) {
+                            System.err.println("✗ Transpilation Error: " + euclidException.getMessage());
+                        } else if (cause instanceof IOException ioException) {
+                            System.err.println("✗ I/O Error: " + ioException.getMessage());
+                        } else {
+                            throw e;
+                        }
+                    } catch (InterruptedException e) {
+                        System.out.println("\nWatch service interrupted. Exiting...");
+                        return;
+                    }
+                }
+
+                if (!key.reset()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * Main entry point for the transpiler CLI.
      *
      * @param args Command line arguments
@@ -431,6 +591,7 @@ public class Transpiler {
         boolean canonicalizeMode = false;
         boolean manifestMode = false;
         boolean jsonMode = false;
+        boolean strictMode = false;
         EuclidAliasHandling aliasHandling = EuclidAliasHandling.WARN;
         MathMode mathMode = MathMode.NONE;
         String inputFile = null;
@@ -452,12 +613,16 @@ public class Transpiler {
                 jsonMode = true;
             } else if (args[i].equals("--strict-aliases")) {
                 aliasHandling = EuclidAliasHandling.ERROR;
+            } else if (args[i].equals("--strict")) {
+                strictMode = true;
             } else if (args[i].equals("--inline") || args[i].equals("-i")) {
                 mathMode = MathMode.INLINE;
             } else if (args[i].equals("--display") || args[i].equals("-D")) {
                 mathMode = MathMode.DISPLAY;
             } else if (args[i].startsWith("-")) {
-                throw new IllegalArgumentException("Unknown option: " + args[i]);
+                System.err.println("Usage Error: Unknown option: " + args[i]);
+                printUsage();
+                return 1;
             } else if (inputFile == null) {
                 inputFile = args[i];
             } else if (outputFile == null) {
@@ -471,7 +636,8 @@ public class Transpiler {
         }
 
         try {
-            validateCliOptions(watchMode, checkMode, canonicalizeMode, manifestMode, jsonMode, aliasHandling, mathMode, inputFile, outputFile);
+            validateCliOptions(watchMode, checkMode, canonicalizeMode, manifestMode, jsonMode, strictMode,
+                    aliasHandling, mathMode, inputFile, outputFile);
 
             if (manifestMode) {
                 if (jsonMode) {
@@ -484,11 +650,13 @@ public class Transpiler {
 
             if (checkMode) {
                 if (!verboseMode && !jsonMode) {
-                    System.out.println("Checking " + inputFile + "...");
+                    System.out.println("Checking " + inputFile + " in " + cliMode(strictMode) + " mode...");
                 }
-                TranspileResult result = checkFile(inputFile, verboseMode, aliasHandling);
+                TranspileResult result = strictMode
+                        ? checkFile(inputFile, verboseMode, aliasHandling)
+                        : checkDocumentFile(inputFile, verboseMode, aliasHandling);
                 if (jsonMode) {
-                    System.out.println(serializeCheckResultJson(result));
+                    System.out.println(serializeCheckResultJson(result, cliMode(strictMode)));
                 } else {
                     printDiagnostics(result.diagnostics(), verboseMode);
                 }
@@ -505,7 +673,9 @@ public class Transpiler {
             }
 
             if (canonicalizeMode) {
-                String canonicalSource = canonicalizeFile(inputFile);
+                String canonicalSource = strictMode
+                        ? canonicalizeFile(inputFile)
+                        : canonicalizeDocument(Files.readString(Paths.get(inputFile)));
                 if (outputFile == null) {
                     System.out.print(canonicalSource);
                 } else {
@@ -522,12 +692,21 @@ public class Transpiler {
             }
 
             if (watchMode) {
-                watchFile(inputFile, outputFile, verboseMode, mathMode, aliasHandling);
+                if (strictMode) {
+                    watchFile(inputFile, outputFile, verboseMode, mathMode, aliasHandling);
+                } else {
+                    watchDocumentFile(inputFile, outputFile, verboseMode, aliasHandling);
+                }
             } else {
                 if (!verboseMode) {
-                    System.out.println("Transpiling " + inputFile + " to " + outputFile + "...");
+                    System.out.println("Transpiling " + inputFile + " to " + outputFile + " in "
+                            + cliMode(strictMode) + " mode...");
                 }
-                transpileFile(inputFile, outputFile, verboseMode, mathMode, aliasHandling);
+                if (strictMode) {
+                    transpileFile(inputFile, outputFile, verboseMode, mathMode, aliasHandling);
+                } else {
+                    transpileDocumentFile(inputFile, outputFile, verboseMode, aliasHandling);
+                }
                 if (!verboseMode) {
                     System.out.println("Transpilation complete!");
                 }
@@ -551,8 +730,8 @@ public class Transpiler {
         System.out.println();
         System.out.println("Usage:");
         System.out.println("  java -jar target/euclid-transpiler.jar [options] <input.ed> [output.md]");
-        System.out.println("  java -jar target/euclid-transpiler.jar --check <input.ed>");
-        System.out.println("  java -jar target/euclid-transpiler.jar --canonicalize <input.ed> [output.ed]");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --check <input.ed>");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --canonicalize <input.ed> [output.ed]");
         System.out.println("  java -jar target/euclid-transpiler.jar --manifest [--json]");
         System.out.println();
         System.out.println("Options:");
@@ -563,6 +742,7 @@ public class Transpiler {
         System.out.println("  --canonicalize   Rewrite compatibility aliases to canonical Euclid spellings");
         System.out.println("  --manifest       Print the Euclid capability manifest");
         System.out.println("  --json           Emit machine-readable JSON for --check or --manifest");
+        System.out.println("  --strict         Treat the entire file as strict Euclid instead of Markdown with explicit math spans");
         System.out.println("  --strict-aliases Reject compatibility aliases instead of warning on them");
         System.out.println("  --inline, -i     Wrap output in inline math mode ($...$)");
         System.out.println("  --display, -D    Wrap output in display math mode ($$...$$)");
@@ -573,17 +753,18 @@ public class Transpiler {
         System.out.println("  output.ed        Canonicalized Euclid file (optional, defaults to stdout)");
         System.out.println();
         System.out.println("Examples:");
-        System.out.println("  java -jar target/euclid-transpiler.jar example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar notes.ed");
         System.out.println("  java -jar target/euclid-transpiler.jar example.ed output.md");
-        System.out.println("  java -jar target/euclid-transpiler.jar --check example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar --check --json example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar --canonicalize example.ed normalized.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --check notes.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --check --json notes.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict formula.ed formula.md");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --canonicalize formula.ed normalized.ed");
         System.out.println("  java -jar target/euclid-transpiler.jar --manifest --json");
         System.out.println("  java -jar target/euclid-transpiler.jar --watch example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar -v example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar --inline example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar --display example.ed");
-        System.out.println("  java -jar target/euclid-transpiler.jar --watch --inline --verbose example.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict -v formula.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --inline formula.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --display formula.ed");
+        System.out.println("  java -jar target/euclid-transpiler.jar --strict --watch --inline --verbose formula.ed");
     }
 
     private static void validateCliOptions(
@@ -592,6 +773,7 @@ public class Transpiler {
             boolean canonicalizeMode,
             boolean manifestMode,
             boolean jsonMode,
+            boolean strictMode,
             EuclidAliasHandling aliasHandling,
             MathMode mathMode,
             String inputFile,
@@ -626,6 +808,9 @@ public class Transpiler {
         if (manifestMode && mathMode != MathMode.NONE) {
             throw new IllegalArgumentException("--manifest does not support --inline or --display");
         }
+        if (!strictMode && mathMode != MathMode.NONE && !checkMode && !canonicalizeMode) {
+            throw new IllegalArgumentException("--inline and --display only apply in --strict mode");
+        }
     }
 
     private static String defaultOutputPath(String inputFile) {
@@ -659,6 +844,11 @@ public class Transpiler {
 
         for (var capability : manifest.capabilities()) {
             output.append(capability.kind()).append(" ").append(capability.name());
+            output.append(" preferred=").append(capability.preferredSpelling());
+            output.append(" fixity=").append(capability.fixity());
+            if (capability.arity() != null) {
+                output.append(" arity=").append(capability.arity().label());
+            }
             output.append(" token=").append(capability.tokenType());
             output.append(" alias_policy=").append(capability.aliasPolicy());
             if (!capability.aliases().isEmpty()) {
@@ -673,9 +863,10 @@ public class Transpiler {
         return output.toString();
     }
 
-    private static String serializeCheckResultJson(TranspileResult result) {
+    private static String serializeCheckResultJson(TranspileResult result, String mode) {
         StringBuilder output = new StringBuilder();
         output.append("{");
+        output.append("\"mode\":").append(jsonString(mode)).append(",");
         output.append("\"ok\":").append(!result.hasErrors()).append(",");
         output.append("\"output\":").append(result.output() == null ? "null" : jsonString(result.output())).append(",");
         output.append("\"diagnostics\":[");
@@ -699,7 +890,22 @@ public class Transpiler {
             var capability = manifest.capabilities().get(i);
             output.append("{");
             output.append("\"name\":").append(jsonString(capability.name())).append(",");
+            output.append("\"preferredSpelling\":").append(jsonString(capability.preferredSpelling())).append(",");
             output.append("\"kind\":").append(jsonString(capability.kind().name())).append(",");
+            output.append("\"fixity\":").append(jsonString(capability.fixity().name())).append(",");
+            output.append("\"arity\":");
+            if (capability.arity() == null) {
+                output.append("null");
+            } else {
+                output.append("{");
+                output.append("\"label\":").append(jsonString(capability.arity().label())).append(",");
+                output.append("\"min\":").append(capability.arity().min()).append(",");
+                output.append("\"max\":").append(capability.arity().max()).append(",");
+                output.append("\"exactAccepted\":").append(serializeIntegerArrayJson(capability.arity().exactAccepted())).append(",");
+                output.append("\"evenOnly\":").append(capability.arity().evenOnly());
+                output.append("}");
+            }
+            output.append(",");
             output.append("\"tokenType\":").append(jsonString(capability.tokenType().name())).append(",");
             output.append("\"aliasPolicy\":").append(jsonString(capability.aliasPolicy().name())).append(",");
             output.append("\"aliases\":").append(serializeStringArrayJson(capability.aliases())).append(",");
@@ -715,6 +921,19 @@ public class Transpiler {
             output.append("}");
         }
         output.append("]}");
+        return output.toString();
+    }
+
+    private static String serializeIntegerArrayJson(List<Integer> values) {
+        StringBuilder output = new StringBuilder();
+        output.append("[");
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                output.append(",");
+            }
+            output.append(values.get(i));
+        }
+        output.append("]");
         return output.toString();
     }
 
@@ -761,5 +980,14 @@ public class Transpiler {
         }
         output.append('"');
         return output.toString();
+    }
+
+    private static String cliMode(boolean strictMode) {
+        return strictMode ? "strict" : "document";
+    }
+
+    @FunctionalInterface
+    private interface CheckedRunnable {
+        void run() throws IOException, EuclidException;
     }
 }

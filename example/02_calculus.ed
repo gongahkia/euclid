@@ -1,66 +1,24 @@
 # Euclid Example: Calculus
 
-This example demonstrates calculus operations in Euclid.
+## Trigonometry
 
-## Trigonometric Functions
+- Identity: `$sin(THETA)^2 + cos(THETA)^2 = 1$`
+- Inverse trig: `$arcsin(x) + arccos(x) = PI \\ 2$`
 
-Sine: sin(x)
-Cosine: cos(x)
-Tangent: tan(x)
-Cosecant: csc(x)
-Secant: sec(x)
-Cotangent: cot(x)
+## Differential and Integral Forms
 
-## Hyperbolic Functions
+- Derivative: `$diff(f(x), x)$`
+- Partial derivative: `$partial(f(x, y), x)$`
+- Definite integral: `$integral(f(x), x, 0, 1)$`
+- Limit: `$limit(sin(x) \\ x, x, 0)$`
 
-Hyperbolic sine: sinh(x)
-Hyperbolic cosine: cosh(x)
-Hyperbolic tangent: tanh(x)
+## Aggregates
 
-## Logarithms and Exponentials
+- Summation: `$sum(i^2, i, 1, n)$`
+- Product: `$prod(i, i, 1, n)$`
 
-Natural logarithm: ln(x)
-Exponential: exp(x)
-Logarithm base 2: log(x, 2)
-Logarithm base 10: log(x, 10)
+## Display Math
 
-## Roots
-
-Square root: sqrt(x)
-Cube root: sqrt(3, x)
-Fourth root: sqrt(4, x)
-
-## Calculus Operations
-
-Limit as x approaches 0: limit(f(x), x, 0)
-Derivative: diff(f(x), x)
-Partial derivative: partial(f(x, y), x)
-Definite integral: integral(f(x), x, 0, 1)
-
-## Summation and Products
-
-Sum from i=1 to n: sum(f(i), i, 1, n)
-Product from i=1 to n: prod(f(i), i, 1, n)
-
-## Inverse Trigonometric Functions
-
-Arcsine: arcsin(x)
-Arccosine: arccos(x)
-Arctangent: arctan(x)
-Arccosecant: arccsc(x)
-Arcsecant: arcsec(x)
-Arccotangent: arccot(x)
-
-## Extrema
-
-Minimum over S: min(S)
-Maximum over S: max(S)
-Supremum: sup(S)
-Infimum: inf(S)
-Limit superior: limsup(a_n)
-Limit inferior: liminf(a_n)
-
-## Complex Expressions
-
-Euler's identity: exp(I * PI) + 1 = 0
-Taylor series for e^x: sum((pow(x, n)) \\ (n!), n, 0, INFINITY)
+$$
+integral(exp(-x^2), x, -INFINITY, INFINITY)
+$$

@@ -160,7 +160,7 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testBasicOperation_Multiplication() throws Exception {
-        assertEquals("a * b", Transpiler.transpile("a * b"));
+        assertEquals("ab", Transpiler.transpile("a * b"));
     }
 
     @Test
@@ -185,7 +185,7 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testBasicOperation_Mod() throws Exception {
-        assertEquals("a \\mod b", Transpiler.transpile("mod(a, b)"));
+        assertEquals("a \\bmod b", Transpiler.transpile("mod(a, b)"));
     }
 
     @Test
@@ -195,7 +195,7 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testBasicOperation_Lcm() throws Exception {
-        assertEquals("\\text{lcm}(a, b)", Transpiler.transpile("lcm(a, b)"));
+        assertEquals("\\operatorname{lcm}(a, b)", Transpiler.transpile("lcm(a, b)"));
     }
 
     // ========== SYMBOLS (from doc/syntax.md) ==========
@@ -447,17 +447,17 @@ public class SyntaxSpecificationTest {
 
     @Test
     public void testLogic_AND() throws Exception {
-        assertEquals("\\land", Transpiler.transpile("AND"));
+        assertEquals("p \\land q", Transpiler.transpile("AND(p, q)"));
     }
 
     @Test
     public void testLogic_OR() throws Exception {
-        assertEquals("\\lor", Transpiler.transpile("OR"));
+        assertEquals("p \\lor q", Transpiler.transpile("OR(p, q)"));
     }
 
     @Test
     public void testLogic_NOT() throws Exception {
-        assertEquals("\\neg", Transpiler.transpile("NOT"));
+        assertEquals("\\neg (p)", Transpiler.transpile("NOT(p)"));
     }
 
     @Test

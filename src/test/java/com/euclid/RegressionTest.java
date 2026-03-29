@@ -113,7 +113,7 @@ public class RegressionTest {
         // 2 + 3 * 4 should be 2 + (3 * 4), not (2 + 3) * 4
         String result = Transpiler.transpile("2 + 3 * 4");
         // Result should maintain proper order
-        assertTrue(result.contains("2 + 3 * 4"));
+        assertEquals("2 + 3 \\cdot 4", result);
     }
 
     @Test

@@ -1,70 +1,21 @@
-# Euclid Example: Basic Arithmetic and Algebra
+# Euclid Example: Arithmetic
 
-This example demonstrates basic arithmetic operations and algebraic expressions in Euclid.
+This document uses explicit Euclid math spans inside normal Markdown prose.
 
-## Simple Arithmetic
+## Core Operations
 
-Addition: 2 + 3
-Subtraction: 5 - 2
-Multiplication: 4 * 6  
-Division: 8 / 2
+- Addition: `$2 + 3$`
+- Multiplication: `$4 * 6$`
+- Fraction: `$a \\ b$`
+- Power: `$x^2 + y^2$`
+- Binomial: `$binom(n, k)$`
 
-## Exponentiation
+## Constants
 
-Power notation: 2 ^ 3
-Using pow function: pow(2, 10)
+- Circle area: `$A = PI * r^2$`
+- Exponential form: `$exp(x)$`
+- Greek letters: `$ALPHA + BETA + THETA$`
 
-## Mathematical Constants
+## Readability
 
-Pi: PI
-Euler's number: E
-Imaginary unit: I
-Golden ratio: PHI
-Infinity: INFINITY
-
-## Fractions
-
-Simple fraction: a \\ b
-Complex fraction: (a + b) / (c - d)
-
-## Greek Letters
-
-Alpha: ALPHA
-Beta: BETA
-Gamma: GAMMA
-Delta: DELTA
-Epsilon: EPSILON
-Theta: THETA
-Lambda: LAMBDA
-Pi (constant): PI
-Omega: OMEGA
-
-## Subscripts and Superscripts
-
-Subscript: x_1 + x_2
-Combined: a_i^2
-Exponent shorthand: x^2 + y^2
-
-## Factorial and Binomial
-
-Factorial: n!
-Binomial coefficient: binom(n, k)
-Binomial theorem term: binom(n, k) * a^(n-k) * b^k
-
-## Implicit Multiplication
-
-Coefficient: 2x + 3y
-Parenthesized: 2(x + 1)
-Juxtaposition: (a)(b)
-
-## Number Sets
-
-Naturals: NATURALS
-Integers: INTEGERS
-Rationals: RATIONALS
-Reals: REALS
-Complex numbers: COMPLEXES
-
-## Expressions
-
-Quadratic formula: (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a)
+Euclid keeps the source close to familiar programming notation while still producing MathJax-ready output such as `$x = (-b + sqrt(b^2 - 4*a*c)) \\ (2*a)$`.

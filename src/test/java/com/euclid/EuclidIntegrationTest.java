@@ -90,8 +90,13 @@ public class EuclidIntegrationTest {
 
     @Test
     public void testTextPassthrough() throws LexerException, ParserException {
-        String result = transpile("This is plain text");
-        assertEquals("This is plain text", result);
+        assertThrows(ParserException.class, () -> transpile("This is plain text"));
+    }
+
+    @Test
+    public void testDocumentModeTextPassthrough() throws Exception {
+        String result = Transpiler.transpileDocument("This is plain text with $x^2$.");
+        assertEquals("This is plain text with $x^{2}$.", result);
     }
 
     @Test

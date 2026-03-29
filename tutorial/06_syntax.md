@@ -1,12 +1,12 @@
 # `Euclid` syntax guide
 
-This document is the canonical language contract for the current `Euclid` DSL.
+This document is the canonical language contract for Euclid math spans.
 
 ## Introduction
 
-`Euclid` source is usually saved with the `.ed` extension.
+`Euclid` source is usually saved with the `.ed` extension and used as a Markdown document by default.
 
-Pure Euclid parsing is strict by default, and `.ed` files are expected to contain Euclid source rather than mixed prose.
+In default CLI mode, only explicit `$...$` and `$$...$$` regions are parsed as Euclid. Use `--strict` when the entire file is pure Euclid source, for example in the REPL or in expression-only corpora.
 
 The language is case-sensitive:
 

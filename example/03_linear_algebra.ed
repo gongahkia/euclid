@@ -1,47 +1,20 @@
 # Euclid Example: Linear Algebra
 
-This example demonstrates linear algebra operations in Euclid.
-
 ## Vectors
 
-2D vector: vector([1, 2])
-3D vector: vector([a, b, c])
-Column vector: vector([x, y, z])
+- Column vector: `$vector([x, y, z])$`
+- Dot product: `$u dot v$`
+- Norm: `$norm(v)$`
+- Inner product: `$inner(u, v)$`
 
 ## Matrices
 
-2x2 matrix: matrix([[a, b], [c, d]])
-3x3 identity matrix: matrix([1, 0, 0], [0, 1, 0], [0, 0, 1])
-
-## Matrix Operations
-
-Determinant of 2x2 matrix: det(matrix([[a, b], [c, d]])) = a * d - b * c
-Trace of matrix: trace(A)
-
-## Vector Operations
-
-Dot product: vector([a, b]) dot vector([c, d]) = a * c + b * d
-Cross product in 3D: times(vector([a1, a2, a3]), vector([b1, b2, b3]))
-
-## Norms and Inner Products
-
-Euclidean norm: sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
-Manhattan norm: abs(x) + abs(y) + abs(z)
-Norm notation: norm(x)
-Inner product: inner(x, y)
-
-## Linear Algebra Functions
-
-Determinant: det(A)
-Trace: trace(A)
-Dimension: dim(V)
-Rank: rank(A)
-Kernel: ker(A)
-Transpose: transpose(A)
+- Matrix literal: `$matrix([[a, b], [c, d]])$`
+- Rotation matrix: `$matrix([cos(THETA), -sin(THETA)], [sin(THETA), cos(THETA)])$`
+- Transpose and inverse: `$transpose(A) * inverse(A)$`
 
 ## Vector Calculus
 
-Gradient: grad(f)
-Divergence: divergence(F)
-Curl: curl(F)
-Laplacian: laplacian(f)
+- Gradient: `$grad(f)$`
+- Divergence: `$divergence(F)$`
+- Curl: `$curl(F)$`

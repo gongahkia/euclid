@@ -1,6 +1,17 @@
 package com.euclid.transpiler;
 
-import com.euclid.ast.*;
+import com.euclid.ast.AstNode;
+import com.euclid.ast.AstVisitor;
+import com.euclid.ast.BinaryExpr;
+import com.euclid.ast.CallExpr;
+import com.euclid.ast.DisplayMathExpr;
+import com.euclid.ast.DocumentNode;
+import com.euclid.ast.GroupingExpr;
+import com.euclid.ast.IdentifierExpr;
+import com.euclid.ast.InlineMathExpr;
+import com.euclid.ast.LiteralExpr;
+import com.euclid.ast.TextExpr;
+import com.euclid.ast.UnaryExpr;
 import com.euclid.token.TokenType;
 import com.euclid.util.StringUtils;
 
@@ -9,50 +20,88 @@ import java.util.stream.Collectors;
 
 /**
  * Transpiler that converts Euclid AST to LaTeX/MathJax.
- * Implements the Visitor pattern for AST traversal.
  */
 public class LatexTranspiler implements AstVisitor<String> {
+    private static final int PREC_EQUALITY = 10;
+    private static final int PREC_OR = 20;
+    private static final int PREC_AND = 30;
+    private static final int PREC_ADDITIVE = 40;
+    private static final int PREC_MULTIPLICATIVE = 50;
+    private static final int PREC_POWER = 60;
+    private static final int PREC_PREFIX = 70;
+    private static final int PREC_POSTFIX = 80;
+    private static final int PREC_PRIMARY = 90;
+
     private final MathMode mathMode;
 
-    /**
-     * Creates a new LatexTranspiler with default math mode (NONE).
-     */
     public LatexTranspiler() {
         this(MathMode.NONE);
     }
 
-    /**
-     * Creates a new LatexTranspiler with the specified math mode.
-     *
-     * @param mathMode The math mode for wrapping LaTeX output
-     */
     public LatexTranspiler(MathMode mathMode) {
         this.mathMode = mathMode;
     }
 
     @Override
     public String visitDocumentNode(DocumentNode node) {
-        StringBuilder result = new StringBuilder();
-        for (AstNode n : node.getNodes()) {
-            String latex = n.accept(this);
-
-            // Apply math mode wrapping for each expression
-            if (n instanceof TextExpr) {
-                // Don't wrap text expressions
-                result.append(latex);
-            } else {
-                result.append(wrapMathMode(latex));
-            }
-        }
-        return result.toString();
+        return node.getNodes().stream()
+                .map(this::renderTopLevel)
+                .collect(Collectors.joining(System.lineSeparator()));
     }
 
-    /**
-     * Wraps the LaTeX code with appropriate math mode delimiters.
-     *
-     * @param latex The raw LaTeX code
-     * @return The wrapped LaTeX code
-     */
+    @Override
+    public String visitLiteralExpr(LiteralExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitIdentifierExpr(IdentifierExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitBinaryExpr(BinaryExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitUnaryExpr(UnaryExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitCallExpr(CallExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitGroupingExpr(GroupingExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitTextExpr(TextExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitInlineMathExpr(InlineMathExpr expr) {
+        return render(expr).latex();
+    }
+
+    @Override
+    public String visitDisplayMathExpr(DisplayMathExpr expr) {
+        return render(expr).latex();
+    }
+
+    private String renderTopLevel(AstNode node) {
+        String latex = render(node).latex();
+        if (node instanceof TextExpr) {
+            return latex;
+        }
+        return wrapMathMode(latex);
+    }
+
     private String wrapMathMode(String latex) {
         return switch (mathMode) {
             case INLINE -> "$" + latex + "$";
@@ -61,614 +110,655 @@ public class LatexTranspiler implements AstVisitor<String> {
         };
     }
 
-    @Override
-    public String visitLiteralExpr(LiteralExpr expr) {
-        Object value = expr.getValue();
-
-        // Handle TokenType constants
-        if (value instanceof TokenType type) {
-            return switch (type) {
-                // Mathematical constants
-                case PI -> "\\pi";
-                case E -> "e";
-                case I -> "i";
-                case GAMMA -> "\\gamma";
-                case PHI -> "\\phi";
-                case INFINITY -> "\\infty";
-
-                // Greek letters
-                case ALPHA -> "\\alpha";
-                case BETA -> "\\beta";
-                case DELTA -> "\\delta";
-                case EPSILON -> "\\epsilon";
-                case ZETA -> "\\zeta";
-                case ETA -> "\\eta";
-                case THETA -> "\\theta";
-                case KAPPA -> "\\kappa";
-                case LAMBDA -> "\\lambda";
-                case MU -> "\\mu";
-                case NU -> "\\nu";
-                case XI -> "\\xi";
-                case OMICRON -> "o";
-                case RHO -> "\\rho";
-                case SIGMA -> "\\sigma";
-                case TAU -> "\\tau";
-                case UPSILON -> "\\upsilon";
-                case CHI -> "\\chi";
-                case PSI -> "\\psi";
-                case OMEGA -> "\\omega";
-
-                // Set notation
-                case EMPTYSET -> "\\emptyset";
-
-                // Logic symbols
-                case AND -> "\\land";
-                case OR -> "\\lor";
-                case NOT -> "\\neg";
-
-                // Number sets
-                case NATURALS -> "\\mathbb{N}";
-                case INTEGERS -> "\\mathbb{Z}";
-                case RATIONALS -> "\\mathbb{Q}";
-                case REALS -> "\\mathbb{R}";
-                case COMPLEXES -> "\\mathbb{C}";
-
-                // Arrows
-                case RIGHTARROW -> "\\rightarrow";
-                case LEFTARROW -> "\\leftarrow";
-                case LEFTRIGHTARROW -> "\\leftrightarrow";
-                case MAPSTO -> "\\mapsto";
-                case UPARROW -> "\\uparrow";
-                case DOWNARROW -> "\\downarrow";
-                case DARROW_RIGHT -> "\\Rightarrow";
-                case DARROW_LEFT -> "\\Leftarrow";
-                case DARROW_LEFTRIGHT -> "\\Leftrightarrow";
-
-                // Dots
-                case LDOTS -> "\\ldots";
-                case CDOTS -> "\\cdots";
-                case VDOTS -> "\\vdots";
-                case DDOTS -> "\\ddots";
-
-                // Proof
-                case THEREFORE -> "\\therefore";
-                case BECAUSE -> "\\because";
-                case QED -> "\\blacksquare";
-
-                // Geometry
-                case PERP -> "\\perp";
-                case PARALLEL -> "\\parallel";
-                case ANGLE -> "\\angle";
-                case TRIANGLE -> "\\triangle";
-                case CONG -> "\\cong";
-                case SIM -> "\\sim";
-                case PROPTO -> "\\propto";
-
-                // Physics
-                case HBAR -> "\\hbar";
-                case NABLA -> "\\nabla";
-                case ELL -> "\\ell";
-
-                default -> value.toString();
-            };
+    private Rendered render(AstNode node) {
+        if (node instanceof LiteralExpr expr) {
+            return renderLiteral(expr);
         }
-
-        // Handle numeric literals
-        return value.toString();
+        if (node instanceof IdentifierExpr expr) {
+            return new Rendered(expr.getName(), PREC_PRIMARY, true);
+        }
+        if (node instanceof BinaryExpr expr) {
+            return renderBinary(expr);
+        }
+        if (node instanceof UnaryExpr expr) {
+            return renderUnary(expr);
+        }
+        if (node instanceof CallExpr expr) {
+            return renderCall(expr);
+        }
+        if (node instanceof GroupingExpr expr) {
+            return new Rendered("(" + render(expr.getExpression()).latex() + ")", PREC_PRIMARY, true);
+        }
+        if (node instanceof TextExpr expr) {
+            return new Rendered(StringUtils.escapeLaTeX(expr.getText()), PREC_PRIMARY, true);
+        }
+        if (node instanceof InlineMathExpr expr) {
+            return new Rendered("$" + render(expr.getExpression()).latex() + "$", PREC_PRIMARY, true);
+        }
+        if (node instanceof DisplayMathExpr expr) {
+            return new Rendered("$$" + render(expr.getExpression()).latex() + "$$", PREC_PRIMARY, true);
+        }
+        if (node instanceof DocumentNode expr) {
+            return new Rendered(visitDocumentNode(expr), PREC_PRIMARY, false);
+        }
+        throw new IllegalStateException("Unsupported AST node: " + node.getClass().getName());
     }
 
-    @Override
-    public String visitIdentifierExpr(IdentifierExpr expr) {
-        return expr.getName();
+    private Rendered renderLiteral(LiteralExpr expr) {
+        Object value = expr.getValue();
+        if (value instanceof TokenType type) {
+            return new Rendered(renderTokenLiteral(type), PREC_PRIMARY, true);
+        }
+        if (value instanceof String text) {
+            return new Rendered(StringUtils.escapeLaTeX(text), PREC_PRIMARY, true);
+        }
+        return new Rendered(value.toString(), PREC_PRIMARY, true);
     }
 
-    @Override
-    public String visitBinaryExpr(BinaryExpr expr) {
-        String left = expr.getLeft().accept(this);
-        String right = expr.getRight().accept(this);
-        TokenType op = expr.getOperator().getType();
-
-        return switch (op) {
-            case PLUS -> left + " + " + right;
-            case MINUS -> left + " - " + right;
-            case MULTIPLY -> left + " * " + right;
-            case DIVIDE -> left + " / " + right;
-            case EQUALS -> left + " = " + right;
-            case AND -> left + " \\land " + right;
-            case OR -> left + " \\lor " + right;
-            case DOT -> left + " \\cdot " + right;
-            case POWER -> left + "^{" + right + "}";
-            case UNDERSCORE -> left + "_{" + right + "}";
-            case IMPLICIT_MULTIPLY -> left + right;
-            case BACKSLASH_BACKSLASH -> "\\frac{" + left + "}{" + right + "}";
-            default -> left + " " + expr.getOperator().getLexeme() + " " + right;
+    private String renderTokenLiteral(TokenType type) {
+        return switch (type) {
+            case PI -> "\\pi";
+            case E -> "e";
+            case I -> "i";
+            case GAMMA -> "\\gamma";
+            case PHI -> "\\phi";
+            case INFINITY -> "\\infty";
+            case ALPHA -> "\\alpha";
+            case BETA -> "\\beta";
+            case DELTA -> "\\delta";
+            case EPSILON -> "\\epsilon";
+            case ZETA -> "\\zeta";
+            case ETA -> "\\eta";
+            case THETA -> "\\theta";
+            case KAPPA -> "\\kappa";
+            case LAMBDA -> "\\lambda";
+            case MU -> "\\mu";
+            case NU -> "\\nu";
+            case XI -> "\\xi";
+            case OMICRON -> "o";
+            case RHO -> "\\rho";
+            case SIGMA -> "\\sigma";
+            case TAU -> "\\tau";
+            case UPSILON -> "\\upsilon";
+            case CHI -> "\\chi";
+            case PSI -> "\\psi";
+            case OMEGA -> "\\omega";
+            case EMPTYSET -> "\\emptyset";
+            case AND -> "\\land";
+            case OR -> "\\lor";
+            case NOT -> "\\neg";
+            case NATURALS -> "\\mathbb{N}";
+            case INTEGERS -> "\\mathbb{Z}";
+            case RATIONALS -> "\\mathbb{Q}";
+            case REALS -> "\\mathbb{R}";
+            case COMPLEXES -> "\\mathbb{C}";
+            case RIGHTARROW -> "\\rightarrow";
+            case LEFTARROW -> "\\leftarrow";
+            case LEFTRIGHTARROW -> "\\leftrightarrow";
+            case MAPSTO -> "\\mapsto";
+            case UPARROW -> "\\uparrow";
+            case DOWNARROW -> "\\downarrow";
+            case DARROW_RIGHT -> "\\Rightarrow";
+            case DARROW_LEFT -> "\\Leftarrow";
+            case DARROW_LEFTRIGHT -> "\\Leftrightarrow";
+            case LDOTS -> "\\ldots";
+            case CDOTS -> "\\cdots";
+            case VDOTS -> "\\vdots";
+            case DDOTS -> "\\ddots";
+            case THEREFORE -> "\\therefore";
+            case BECAUSE -> "\\because";
+            case QED -> "\\blacksquare";
+            case PERP -> "\\perp";
+            case PARALLEL -> "\\parallel";
+            case ANGLE -> "\\angle";
+            case TRIANGLE -> "\\triangle";
+            case CONG -> "\\cong";
+            case SIM -> "\\sim";
+            case PROPTO -> "\\propto";
+            case HBAR -> "\\hbar";
+            case NABLA -> "\\nabla";
+            case ELL -> "\\ell";
+            default -> type.name();
         };
     }
 
-    @Override
-    public String visitUnaryExpr(UnaryExpr expr) {
-        String operand = expr.getOperand().accept(this);
-        TokenType op = expr.getOperator().getType();
-
-        return switch (op) {
-            case MINUS -> "-" + operand;
-            case PLUS -> "+" + operand;
-            case NOT -> "\\neg " + operand;
-            case BANG -> operand + "!";
-            default -> expr.getOperator().getLexeme() + operand;
+    private Rendered renderBinary(BinaryExpr expr) {
+        TokenType operator = expr.getOperator().getType();
+        return switch (operator) {
+            case PLUS -> renderInfix(expr, " + ", PREC_ADDITIVE, Associativity.LEFT);
+            case MINUS -> renderInfix(expr, " - ", PREC_ADDITIVE, Associativity.LEFT);
+            case EQUALS -> renderInfix(expr, " = ", PREC_EQUALITY, Associativity.LEFT);
+            case AND -> renderInfix(expr, " \\land ", PREC_AND, Associativity.LEFT);
+            case OR -> renderInfix(expr, " \\lor ", PREC_OR, Associativity.LEFT);
+            case DIVIDE -> renderInfix(expr, " / ", PREC_MULTIPLICATIVE, Associativity.LEFT);
+            case MODULO -> renderInfix(expr, " \\bmod ", PREC_MULTIPLICATIVE, Associativity.LEFT);
+            case DOT -> renderInfix(expr, " \\cdot ", PREC_MULTIPLICATIVE, Associativity.LEFT);
+            case BACKSLASH_BACKSLASH -> renderFraction(expr);
+            case POWER -> renderPower(expr);
+            case UNDERSCORE -> renderSubscript(expr);
+            case MULTIPLY, IMPLICIT_MULTIPLY -> renderMultiply(expr, operator == TokenType.IMPLICIT_MULTIPLY);
+            default -> renderInfix(expr, " " + expr.getOperator().getLexeme() + " ", PREC_ADDITIVE, Associativity.LEFT);
         };
     }
 
-    @Override
-    public String visitCallExpr(CallExpr expr) {
+    private Rendered renderUnary(UnaryExpr expr) {
+        TokenType operator = expr.getOperator().getType();
+        Rendered operand = render(expr.getOperand());
+        String latex = switch (operator) {
+            case MINUS -> "-" + parenthesizeIfNeeded(operand, PREC_PREFIX, Associativity.RIGHT);
+            case NOT -> "\\neg " + parenthesizeIfNeeded(operand, PREC_PREFIX, Associativity.RIGHT);
+            case BANG -> parenthesizeIfNeeded(operand, PREC_POSTFIX, Associativity.LEFT) + "!";
+            default -> expr.getOperator().getLexeme() + parenthesizeIfNeeded(operand, PREC_PREFIX, Associativity.RIGHT);
+        };
+        int precedence = operator == TokenType.BANG ? PREC_POSTFIX : PREC_PREFIX;
+        return new Rendered(latex, precedence, false);
+    }
+
+    private Rendered renderCall(CallExpr expr) {
         TokenType function = expr.getFunction().getType();
         List<AstNode> args = expr.getArguments();
 
         return switch (function) {
-            // Basic operations
-            case POW -> transpilePow(args);
-            case ABS -> transpileAbs(args);
-            case CEIL -> transpileCeil(args);
-            case FLOOR -> transpileFloor(args);
-            case MOD -> transpileMod(args);
-            case GCD -> transpileGcd(args);
-            case LCM -> transpileLcm(args);
-
-            // Comparison operators
-            case LT -> transpileBinarySymbol(args, "<");
-            case GT -> transpileBinarySymbol(args, ">");
-            case LEQ -> transpileBinarySymbol(args, "\\leq");
-            case GEQ -> transpileBinarySymbol(args, "\\geq");
-            case APPROX -> transpileBinarySymbol(args, "\\approx");
-            case NEQ -> transpileBinarySymbol(args, "\\neq");
-            case EQUIV -> transpileBinarySymbol(args, "\\equiv");
-
-            // Binary operation symbols
-            case PM -> transpileBinarySymbol(args, "\\pm");
-            case TIMES -> transpileBinarySymbol(args, "\\times");
-            case DIV -> transpileBinarySymbol(args, "\\div");
-            case CDOT -> transpileBinarySymbol(args, "\\cdot");
-            case AST -> transpileBinarySymbol(args, "\\ast");
-            case STAR -> transpileBinarySymbol(args, "\\star");
-            case CIRC -> transpileBinarySymbol(args, "\\circ");
-            case BULLET -> transpileBinarySymbol(args, "\\bullet");
-            case CAP -> transpileBinarySymbol(args, "\\cap");
-            case CUP -> transpileBinarySymbol(args, "\\cup");
-
-            // Trigonometric functions
-            case SIN -> transpileTrigFunction("\\sin", args);
-            case COS -> transpileTrigFunction("\\cos", args);
-            case TAN -> transpileTrigFunction("\\tan", args);
-            case CSC -> transpileTrigFunction("\\csc", args);
-            case SEC -> transpileTrigFunction("\\sec", args);
-            case COT -> transpileTrigFunction("\\cot", args);
-
-            // Hyperbolic functions
-            case SINH -> transpileTrigFunction("\\sinh", args);
-            case COSH -> transpileTrigFunction("\\cosh", args);
-            case TANH -> transpileTrigFunction("\\tanh", args);
-            case CSCH -> transpileTrigFunction("\\operatorname{csch}", args);
-            case SECH -> transpileTrigFunction("\\operatorname{sech}", args);
-            case COTH -> transpileTrigFunction("\\coth", args);
-
-            // Logarithmic and exponential
-            case LOG -> transpileLog(args);
-            case LN -> transpileLn(args);
-            case EXP -> transpileExp(args);
-
-            // Roots and fractions
-            case SQRT -> transpileSqrt(args);
-            case PARTIAL -> transpilePartial(args);
-
-            // Calculus
-            case LIMIT -> transpileLimit(args);
-            case DIFF -> transpileDiff(args);
-            case INTEGRAL -> transpileIntegral(args);
-
-            // Summation and product
-            case SUM -> transpileSum(args);
-            case PROD -> transpileProd(args);
-
-            // Matrices and vectors
-            case VECTOR -> transpileVector(args);
-            case MATRIX -> transpileMatrix(args);
-            case LBRACKET -> args.stream().map(a -> a.accept(this)).collect(Collectors.joining(", "));
-
-            // Set operations
-            case SUBSET -> transpileBinarySymbol(args, "\\subset");
-            case SUPSET -> transpileBinarySymbol(args, "\\supset");
-            case SUBSETEQ -> transpileBinarySymbol(args, "\\subseteq");
-            case SUPSETEQ -> transpileBinarySymbol(args, "\\supseteq");
-            case UNION -> transpileBinarySymbol(args, "\\cup");
-            case INTERSECTION -> transpileBinarySymbol(args, "\\cap");
-            case SET_DIFF -> transpileBinarySymbol(args, "\\setminus");
-            case ELEMENT_OF -> transpileBinarySymbol(args, "\\in");
-            case NOT_ELEMENT_OF -> transpileBinarySymbol(args, "\\notin");
-
-            // Logic symbols
-            case IMPLIES -> transpileBinarySymbol(args, "\\implies");
-            case IFF -> transpileBinarySymbol(args, "\\iff");
-            case AND -> transpileBinarySymbol(args, "\\land");
-            case OR -> transpileBinarySymbol(args, "\\lor");
-            case NOT -> transpileNot(args);
-            case FORALL -> transpileForall(args);
-            case EXISTS -> transpileExists(args);
-
-            // Accents and decorations
-            case HAT -> transpileAccent("\\hat", args);
-            case TILDE -> transpileAccent("\\tilde", args);
-            case BAR -> transpileAccent("\\bar", args);
-            case VEC -> transpileAccent("\\vec", args);
-            case DOT -> transpileAccent("\\dot", args);
-            case DDOT -> transpileAccent("\\ddot", args);
-            case OVERLINE -> transpileAccent("\\overline", args);
-            case UNDERLINE -> transpileAccent("\\underline", args);
-
-            // Text in math mode
-            case MATHTEXT -> transpileMathtext(args);
-
-            // Piecewise and cases
-            case PIECEWISE -> transpilePiecewise(args);
-            case CASES -> transpileCases(args);
-
-            // Aligned equations
-            case ALIGN -> transpileAlign(args);
-            case SYSTEM -> transpileSystem(args);
-
-            // Inverse trig
-            case ARCSIN -> transpileTrigFunction("\\arcsin", args);
-            case ARCCOS -> transpileTrigFunction("\\arccos", args);
-            case ARCTAN -> transpileTrigFunction("\\arctan", args);
-            case ARCCSC -> transpileTrigFunction("\\operatorname{arccsc}", args);
-            case ARCSEC -> transpileTrigFunction("\\operatorname{arcsec}", args);
-            case ARCCOT -> transpileTrigFunction("\\operatorname{arccot}", args);
-
-            // Extrema
-            case MIN -> transpileTrigFunction("\\min", args);
-            case MAX -> transpileTrigFunction("\\max", args);
-            case SUP -> transpileTrigFunction("\\sup", args);
-            case INF -> transpileTrigFunction("\\inf", args);
-            case LIMSUP -> transpileTrigFunction("\\limsup", args);
-            case LIMINF -> transpileTrigFunction("\\liminf", args);
-
-            // Binomial
-            case BINOM -> transpileBinom(args);
-
-            // Norm / inner product
-            case NORM -> transpileNorm(args);
-            case INNER -> transpileInner(args);
-
-            // Vector calculus
-            case GRAD -> "\\nabla " + args.get(0).accept(this);
-            case DIVERGENCE -> "\\nabla \\cdot " + args.get(0).accept(this);
-            case CURL -> "\\nabla \\times " + args.get(0).accept(this);
-            case LAPLACIAN -> "\\nabla^{2} " + args.get(0).accept(this);
-
-            // Probability
-            case PROB -> "P(" + args.get(0).accept(this) + ")";
-            case EXPECT -> "\\mathbb{E}[" + args.get(0).accept(this) + "]";
-            case VAR -> "\\text{Var}(" + args.get(0).accept(this) + ")";
-            case COV -> "\\text{Cov}(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
-            case GIVEN -> transpileBinarySymbol(args, "\\mid");
-
-            // Linear algebra
-            case DET -> transpileTrigFunction("\\det", args);
-            case TRACE -> transpileTrigFunction("\\text{tr}", args);
-            case DIM -> transpileTrigFunction("\\dim", args);
-            case RANK -> transpileTrigFunction("\\text{rank}", args);
-            case KER -> transpileTrigFunction("\\ker", args);
-            case TRANSPOSE -> args.get(0).accept(this) + "^{T}";
-            case INVERSE -> args.get(0).accept(this) + "^{-1}";
-
-            // Visual decorations
-            case BOXED -> transpileAccent("\\boxed", args);
-            case CANCEL -> transpileAccent("\\cancel", args);
-            case UNDERBRACE -> transpileUnderbrace(args);
-            case OVERBRACE -> transpileOverbrace(args);
-
-            default -> unsupportedFunction(function);
+            case LBRACKET -> new Rendered(
+                    args.stream().map(arg -> render(arg).latex()).collect(Collectors.joining(", ")),
+                    PREC_PRIMARY,
+                    false);
+            case POW -> renderFunctionStylePower(args);
+            case ABS -> unaryFunction(args, "abs", value -> "|" + value + "|");
+            case CEIL -> unaryFunction(args, "ceil", value -> "\\lceil " + value + " \\rceil");
+            case FLOOR -> unaryFunction(args, "floor", value -> "\\lfloor " + value + " \\rfloor");
+            case MOD -> binarySymbol(args, "mod", " \\bmod ");
+            case GCD -> naryNamedFunction("\\gcd", "gcd", args);
+            case LCM -> naryNamedFunction("\\operatorname{lcm}", "lcm", args);
+            case LT -> binarySymbol(args, "lt", " < ");
+            case GT -> binarySymbol(args, "gt", " > ");
+            case LEQ -> binarySymbol(args, "leq", " \\leq ");
+            case GEQ -> binarySymbol(args, "geq", " \\geq ");
+            case APPROX -> binarySymbol(args, "approx", " \\approx ");
+            case NEQ -> binarySymbol(args, "neq", " \\neq ");
+            case EQUIV -> binarySymbol(args, "equiv", " \\equiv ");
+            case PM -> binarySymbol(args, "pm", " \\pm ");
+            case TIMES -> binarySymbol(args, "times", " \\times ");
+            case DIV -> binarySymbol(args, "div", " \\div ");
+            case CDOT -> binarySymbol(args, "cdot", " \\cdot ");
+            case AST -> binarySymbol(args, "ast", " \\ast ");
+            case STAR -> binarySymbol(args, "star", " \\star ");
+            case CIRC -> binarySymbol(args, "circ", " \\circ ");
+            case BULLET -> binarySymbol(args, "bullet", " \\bullet ");
+            case CAP -> binarySymbol(args, "cap", " \\cap ");
+            case CUP -> binarySymbol(args, "cup", " \\cup ");
+            case SIN -> namedFunction("\\sin", args);
+            case COS -> namedFunction("\\cos", args);
+            case TAN -> namedFunction("\\tan", args);
+            case CSC -> namedFunction("\\csc", args);
+            case SEC -> namedFunction("\\sec", args);
+            case COT -> namedFunction("\\cot", args);
+            case SINH -> namedFunction("\\sinh", args);
+            case COSH -> namedFunction("\\cosh", args);
+            case TANH -> namedFunction("\\tanh", args);
+            case CSCH -> namedFunction("\\operatorname{csch}", args);
+            case SECH -> namedFunction("\\operatorname{sech}", args);
+            case COTH -> namedFunction("\\coth", args);
+            case LOG -> renderLog(args);
+            case LN -> namedFunction("\\ln", args);
+            case EXP -> unaryFunction(args, "exp", value -> "e^{" + value + "}");
+            case SQRT -> renderSqrt(args);
+            case PARTIAL -> renderPartial(args);
+            case LIMIT -> renderLimit(args);
+            case DIFF -> renderDiff(args);
+            case INTEGRAL -> renderIntegral(args);
+            case SUM -> renderAggregate("\\sum", "sum", args);
+            case PROD -> renderAggregate("\\prod", "prod", args);
+            case VECTOR -> renderVector(args);
+            case MATRIX -> renderMatrix(args);
+            case SUBSET -> binarySymbol(args, "subset", " \\subset ");
+            case SUPSET -> binarySymbol(args, "supset", " \\supset ");
+            case SUBSETEQ -> binarySymbol(args, "subseteq", " \\subseteq ");
+            case SUPSETEQ -> binarySymbol(args, "supseteq", " \\supseteq ");
+            case UNION -> binarySymbol(args, "union", " \\cup ");
+            case INTERSECTION -> binarySymbol(args, "intersection", " \\cap ");
+            case SET_DIFF -> binarySymbol(args, "set_diff", " \\setminus ");
+            case ELEMENT_OF -> binarySymbol(args, "element_of", " \\in ");
+            case NOT_ELEMENT_OF -> binarySymbol(args, "not_element_of", " \\notin ");
+            case IMPLIES -> binarySymbol(args, "implies", " \\implies ");
+            case IFF -> binarySymbol(args, "iff", " \\iff ");
+            case AND -> binarySymbol(args, "AND", " \\land ");
+            case OR -> binarySymbol(args, "OR", " \\lor ");
+            case HAT -> accent("\\hat", args);
+            case TILDE -> accent("\\tilde", args);
+            case BAR -> accent("\\bar", args);
+            case VEC -> accent("\\vec", args);
+            case DOT -> renderDotFunction(args);
+            case DDOT -> accent("\\ddot", args);
+            case OVERLINE -> accent("\\overline", args);
+            case UNDERLINE -> accent("\\underline", args);
+            case MATHTEXT -> renderMathText(args);
+            case PIECEWISE, CASES -> renderPiecewise(args);
+            case ALIGN -> renderAlignment(args);
+            case SYSTEM -> renderSystem(args);
+            case ARCSIN -> namedFunction("\\arcsin", args);
+            case ARCCOS -> namedFunction("\\arccos", args);
+            case ARCTAN -> namedFunction("\\arctan", args);
+            case ARCCSC -> namedFunction("\\operatorname{arccsc}", args);
+            case ARCSEC -> namedFunction("\\operatorname{arcsec}", args);
+            case ARCCOT -> namedFunction("\\operatorname{arccot}", args);
+            case MIN -> namedFunction("\\min", args);
+            case MAX -> namedFunction("\\max", args);
+            case SUP -> namedFunction("\\sup", args);
+            case INF -> namedFunction("\\inf", args);
+            case LIMSUP -> namedFunction("\\limsup", args);
+            case LIMINF -> namedFunction("\\liminf", args);
+            case BINOM -> renderBinom(args);
+            case NORM -> renderNorm(args);
+            case INNER -> renderInner(args);
+            case FORALL -> renderQuantifier("\\forall", args);
+            case EXISTS -> renderQuantifier("\\exists", args);
+            case GRAD -> unaryFunction(args, "grad", value -> "\\nabla " + value);
+            case DIVERGENCE -> unaryFunction(args, "divergence", value -> "\\nabla \\cdot " + value);
+            case CURL -> unaryFunction(args, "curl", value -> "\\nabla \\times " + value);
+            case LAPLACIAN -> unaryFunction(args, "laplacian", value -> "\\nabla^{2} " + value);
+            case PROB -> unaryFunction(args, "prob", value -> "P(" + value + ")");
+            case EXPECT -> unaryFunction(args, "expect", value -> "\\mathbb{E}[" + value + "]");
+            case VAR -> unaryFunction(args, "var", value -> "\\operatorname{Var}(" + value + ")");
+            case COV -> binaryFunction("\\operatorname{Cov}", "cov", args);
+            case GIVEN -> binarySymbol(args, "given", " \\mid ");
+            case DET -> namedFunction("\\det", args);
+            case TRACE -> namedFunction("\\operatorname{tr}", args);
+            case DIM -> namedFunction("\\dim", args);
+            case RANK -> namedFunction("\\operatorname{rank}", args);
+            case KER -> namedFunction("\\ker", args);
+            case TRANSPOSE -> unaryFunction(args, "transpose", value -> value + "^{T}");
+            case INVERSE -> unaryFunction(args, "inverse", value -> value + "^{-1}");
+            case BOXED -> accent("\\boxed", args);
+            case CANCEL -> accent("\\cancel", args);
+            case UNDERBRACE -> renderBraceAnnotation("\\underbrace", "_", args);
+            case OVERBRACE -> renderBraceAnnotation("\\overbrace", "^", args);
+            case IDENTIFIER -> renderGenericCall(expr.getFunction().getLexeme(), args);
+            default -> renderGenericCall(expr.getFunction().getLexeme(), args);
         };
     }
 
-    @Override
-    public String visitGroupingExpr(GroupingExpr expr) {
-        return "(" + expr.getExpression().accept(this) + ")";
-    }
-
-    @Override
-    public String visitTextExpr(TextExpr expr) {
-        return StringUtils.escapeLaTeX(expr.getText());
-    }
-
-    @Override
-    public String visitInlineMathExpr(InlineMathExpr expr) {
-        // Transpile the inner expression and wrap in $ delimiters
-        String latex = expr.getExpression().accept(this);
-        return "$" + latex + "$";
-    }
-
-    @Override
-    public String visitDisplayMathExpr(DisplayMathExpr expr) {
-        // Transpile the inner expression and wrap in $$ delimiters
-        String latex = expr.getExpression().accept(this);
-        return "$$" + latex + "$$";
-    }
-
-    // Helper methods for specific function transpilation
-
-    private String transpilePow(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("pow", args.size(), "2");
-        return args.get(0).accept(this) + "^{" + args.get(1).accept(this) + "}";
-    }
-
-    private String transpileAbs(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("abs", args.size(), "1");
-        return "|" + args.get(0).accept(this) + "|";
-    }
-
-    private String transpileCeil(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("ceil", args.size(), "1");
-        return "\\lceil " + args.get(0).accept(this) + " \\rceil";
-    }
-
-    private String transpileFloor(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("floor", args.size(), "1");
-        return "\\lfloor " + args.get(0).accept(this) + " \\rfloor";
-    }
-
-    private String transpileMod(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("mod", args.size(), "2");
-        return args.get(0).accept(this) + " \\mod " + args.get(1).accept(this);
-    }
-
-    private String transpileGcd(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("gcd", args.size(), "2");
-        return "\\gcd(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
-    }
-
-    private String transpileLcm(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("lcm", args.size(), "2");
-        return "\\text{lcm}(" + args.get(0).accept(this) + ", " + args.get(1).accept(this) + ")";
-    }
-
-    private String transpileBinarySymbol(List<AstNode> args, String symbol) {
-        if (args.size() != 2) return invalidArguments(symbol, args.size(), "2");
-        return args.get(0).accept(this) + " " + symbol + " " + args.get(1).accept(this);
-    }
-
-    private String transpileTrigFunction(String funcName, List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments(funcName, args.size(), "1");
-        return funcName + "(" + args.get(0).accept(this) + ")";
-    }
-
-    private String transpileLog(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("log", args.size(), "2");
-        return "\\log_{" + args.get(1).accept(this) + "}(" + args.get(0).accept(this) + ")";
-    }
-
-    private String transpileLn(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("ln", args.size(), "1");
-        return "\\ln(" + args.get(0).accept(this) + ")";
-    }
-
-    private String transpileExp(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("exp", args.size(), "1");
-        return "e^{" + args.get(0).accept(this) + "}";
-    }
-
-    private String transpileSqrt(List<AstNode> args) {
-        if (args.size() == 1) {
-            return "\\sqrt{" + args.get(0).accept(this) + "}";
-        } else if (args.size() == 2) {
-            return "\\sqrt[" + args.get(0).accept(this) + "]{" + args.get(1).accept(this) + "}";
-        }
-        return invalidArguments("sqrt", args.size(), "1 or 2");
-    }
-
-    private String transpilePartial(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("partial", args.size(), "2");
-        return "\\frac{\\partial}{\\partial " + args.get(1).accept(this) + "} " + args.get(0).accept(this);
-    }
-
-    private String transpileLimit(List<AstNode> args) {
-        if (args.size() != 3) return invalidArguments("limit", args.size(), "3");
-        return "\\lim_{{" + args.get(1).accept(this) + " \\to " + args.get(2).accept(this) + "}} " + args.get(0).accept(this);
-    }
-
-    private String transpileDiff(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("diff", args.size(), "2");
-        return "\\frac{d}{d" + args.get(1).accept(this) + "} " + args.get(0).accept(this);
-    }
-
-    private String transpileIntegral(List<AstNode> args) {
-        if (args.size() == 2) {
-            return "\\int " + args.get(0).accept(this) + " \\, d" + args.get(1).accept(this);
-        } else if (args.size() == 4) {
-            return "\\int_{" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " +
-                   args.get(0).accept(this) + " \\, d" + args.get(1).accept(this);
-        }
-        return invalidArguments("integral", args.size(), "2 or 4");
-    }
-
-    private String transpileSum(List<AstNode> args) {
-        if (args.isEmpty()) return invalidArguments("sum", args.size(), "1, 3, or 4");
-        if (args.size() == 1) return "\\sum " + args.get(0).accept(this);
-        if (args.size() == 3) return "\\sum_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
-        if (args.size() == 4) return "\\sum_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
-        return invalidArguments("sum", args.size(), "1, 3, or 4");
-    }
-
-    private String transpileProd(List<AstNode> args) {
-        if (args.isEmpty()) return invalidArguments("prod", args.size(), "1, 3, or 4");
-        if (args.size() == 1) return "\\prod " + args.get(0).accept(this);
-        if (args.size() == 3) return "\\prod_{" + args.get(1).accept(this) + "}^{" + args.get(2).accept(this) + "} " + args.get(0).accept(this);
-        if (args.size() == 4) return "\\prod_{" + args.get(1).accept(this) + "=" + args.get(2).accept(this) + "}^{" + args.get(3).accept(this) + "} " + args.get(0).accept(this);
-        return invalidArguments("prod", args.size(), "1, 3, or 4");
-    }
-
-    private String transpileVector(List<AstNode> args) {
-        List<AstNode> elements = args;
-        if (args.size() == 1 && args.get(0) instanceof CallExpr row && row.getFunction().getType() == TokenType.LBRACKET) {
-            elements = row.getArguments();
-        }
-
-        String content = elements.stream()
-                .map(arg -> arg.accept(this))
-                .collect(Collectors.joining(" \\\\ "));
-        return "\\begin{pmatrix} " + content + " \\end{pmatrix}";
-    }
-
-    private String transpileMatrix(List<AstNode> args) {
-        List<AstNode> rows = args;
-        if (args.size() == 1 && args.get(0) instanceof CallExpr outerRow && outerRow.getFunction().getType() == TokenType.LBRACKET) {
-            rows = outerRow.getArguments();
-        }
-
-        StringBuilder sb = new StringBuilder("\\begin{pmatrix} ");
-        for (int i = 0; i < rows.size(); i++) {
-            AstNode arg = rows.get(i);
-            if (arg instanceof CallExpr row && row.getFunction().getType() == TokenType.LBRACKET) {
-                // row node: join elements with &
-                sb.append(row.getArguments().stream()
-                    .map(e -> e.accept(this))
-                    .collect(Collectors.joining(" & ")));
-            } else {
-                sb.append(arg.accept(this));
+    private Rendered renderInfix(BinaryExpr expr, String operatorLatex, int precedence, Associativity associativity) {
+        Rendered left = render(expr.getLeft());
+        Rendered right = render(expr.getRight());
+        String latex = parenthesizeIfNeeded(left, precedence, Associativity.LEFT)
+                + operatorLatex
+                + parenthesizeIfNeeded(right, precedence, associativity == Associativity.RIGHT
+                        ? Associativity.RIGHT
+                        : Associativity.LEFT_CHILD_OF_LEFT_ASSOC);
+        if (expr.getOperator().getType() == TokenType.EQUALS) {
+            String leftLatex = left.latex();
+            String rightLatex = parenthesizeIfNeeded(right, precedence, Associativity.LEFT_CHILD_OF_LEFT_ASSOC);
+            if (expr.getLeft() instanceof BinaryExpr binaryLeft && isLogicalBinary(binaryLeft.getOperator().getType())) {
+                leftLatex = "(" + leftLatex + ")";
             }
-            if (i < rows.size() - 1) sb.append(" \\\\ ");
+            if (expr.getRight() instanceof BinaryExpr binaryRight && isLogicalBinary(binaryRight.getOperator().getType())) {
+                rightLatex = "(" + right.latex() + ")";
+            }
+            latex = leftLatex + operatorLatex + rightLatex;
         }
-        sb.append(" \\end{pmatrix}");
-        return sb.toString();
+        return new Rendered(latex, precedence, false);
     }
 
-    private String transpileForall(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("forall", args.size(), "2");
-        return "\\forall " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
+    private Rendered renderFraction(BinaryExpr expr) {
+        String left = renderFractionOperand(expr.getLeft());
+        String right = renderFractionOperand(expr.getRight());
+        return new Rendered("\\frac{" + left + "}{" + right + "}", PREC_MULTIPLICATIVE, false);
     }
 
-    private String transpileExists(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("exists", args.size(), "2");
-        return "\\exists " + args.get(0).accept(this) + " \\, " + args.get(1).accept(this);
+    private Rendered renderPower(BinaryExpr expr) {
+        Rendered left = render(expr.getLeft());
+        Rendered right = render(expr.getRight());
+        String latex = parenthesizeIfNeeded(left, PREC_POWER, Associativity.RIGHT) + "^{" + right.latex() + "}";
+        return new Rendered(latex, PREC_POWER, false);
     }
 
-    private String transpileNot(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("NOT", args.size(), "1");
-        return "\\neg " + args.get(0).accept(this);
+    private Rendered renderSubscript(BinaryExpr expr) {
+        Rendered left = render(expr.getLeft());
+        Rendered right = render(expr.getRight());
+        String latex = parenthesizeIfNeeded(left, PREC_POWER, Associativity.RIGHT) + "_{" + right.latex() + "}";
+        return new Rendered(latex, PREC_POWER, false);
     }
 
-    // Accents and decorations
-    private String transpileAccent(String command, List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments(command, args.size(), "1");
-        return command + "{" + args.get(0).accept(this) + "}";
+    private Rendered renderMultiply(BinaryExpr expr, boolean implicit) {
+        Rendered left = render(expr.getLeft());
+        Rendered right = render(expr.getRight());
+        String leftLatex = parenthesizeIfNeeded(left, PREC_MULTIPLICATIVE, Associativity.LEFT);
+        String rightLatex = parenthesizeIfNeeded(right, PREC_MULTIPLICATIVE, Associativity.LEFT_CHILD_OF_LEFT_ASSOC);
+        String joiner = implicit ? "" : multiplicationJoiner(leftLatex, rightLatex);
+        return new Rendered(leftLatex + joiner + rightLatex, PREC_MULTIPLICATIVE, false);
     }
 
-    // Text in math mode
-    private String transpileMathtext(List<AstNode> args) {
-        if (args.size() != 1) return invalidArguments("mathtext", args.size(), "1");
-        // The argument should be a string literal
-        String text = args.get(0).accept(this);
-        // Remove quotes if present using StringUtils
-        text = StringUtils.removeQuotes(text);
-        return "\\text{" + text + "}";
+    private String multiplicationJoiner(String left, String right) {
+        if (startsWithDigit(left) && startsWithDigit(right)) {
+            return " \\cdot ";
+        }
+        if (startsWithDigit(left) && startsWithDigitOrLetter(right)) {
+            return "";
+        }
+        if (endsWithBracket(left) || startsWithBracket(right)) {
+            return "";
+        }
+        if (left.startsWith("\\") || right.startsWith("\\")) {
+            return "";
+        }
+        if (startsWithLetter(left) && startsWithLetter(right)) {
+            return "";
+        }
+        return " \\cdot ";
     }
 
-    // Piecewise functions
-    private String transpilePiecewise(List<AstNode> args) {
-        // piecewise(expr1, cond1, expr2, cond2, ...)
-        // Generates: \begin{cases} expr1 & cond1 \\ expr2 & cond2 \\ ... \end{cases}
-        if (args.size() % 2 != 0) return invalidArguments("piecewise", args.size(), "an even number");
+    private Rendered renderGenericCall(String functionName, List<AstNode> args) {
+        String arguments = args.stream()
+                .map(arg -> render(arg).latex())
+                .collect(Collectors.joining(", "));
+        return new Rendered(functionName + "(" + arguments + ")", PREC_PRIMARY, true);
+    }
 
+    private Rendered renderFunctionStylePower(List<AstNode> args) {
+        ensureArity("pow", args, 2);
+        return new Rendered(
+                parenthesizeIfNeeded(render(args.get(0)), PREC_POWER, Associativity.RIGHT) + "^{" + render(args.get(1)).latex() + "}",
+                PREC_POWER,
+                false);
+    }
+
+    private Rendered unaryFunction(List<AstNode> args, String name, java.util.function.Function<String, String> formatter) {
+        ensureArity(name, args, 1);
+        return new Rendered(formatter.apply(render(args.get(0)).latex()), PREC_PRIMARY, true);
+    }
+
+    private Rendered namedFunction(String functionName, List<AstNode> args) {
+        ensureArity(functionName, args, 1);
+        return new Rendered(functionName + "(" + render(args.get(0)).latex() + ")", PREC_PRIMARY, true);
+    }
+
+    private Rendered binaryFunction(String functionName, String name, List<AstNode> args) {
+        ensureArity(name, args, 2);
+        return new Rendered(functionName + "(" + render(args.get(0)).latex() + ", " + render(args.get(1)).latex() + ")",
+                PREC_PRIMARY,
+                true);
+    }
+
+    private Rendered naryNamedFunction(String functionName, String name, List<AstNode> args) {
+        if (args.isEmpty()) {
+            throw invalidArguments(name, args.size(), "at least 1");
+        }
+        String arguments = args.stream()
+                .map(arg -> render(arg).latex())
+                .collect(Collectors.joining(", "));
+        return new Rendered(functionName + "(" + arguments + ")", PREC_PRIMARY, true);
+    }
+
+    private Rendered binarySymbol(List<AstNode> args, String name, String symbol) {
+        ensureArity(name, args, 2);
+        return new Rendered(render(args.get(0)).latex() + symbol + render(args.get(1)).latex(), PREC_PRIMARY, false);
+    }
+
+    private Rendered renderLog(List<AstNode> args) {
+        ensureArity("log", args, 2);
+        return new Rendered("\\log_{" + render(args.get(1)).latex() + "}(" + render(args.get(0)).latex() + ")",
+                PREC_PRIMARY,
+                true);
+    }
+
+    private Rendered renderSqrt(List<AstNode> args) {
+        if (args.size() == 1) {
+            return new Rendered("\\sqrt{" + render(args.get(0)).latex() + "}", PREC_PRIMARY, true);
+        }
+        if (args.size() == 2) {
+            return new Rendered("\\sqrt[" + render(args.get(0)).latex() + "]{" + render(args.get(1)).latex() + "}",
+                    PREC_PRIMARY,
+                    true);
+        }
+        throw invalidArguments("sqrt", args.size(), "1 or 2");
+    }
+
+    private Rendered renderPartial(List<AstNode> args) {
+        ensureArity("partial", args, 2);
+        return new Rendered("\\frac{\\partial}{\\partial " + render(args.get(1)).latex() + "} " + render(args.get(0)).latex(),
+                PREC_PRIMARY,
+                false);
+    }
+
+    private Rendered renderLimit(List<AstNode> args) {
+        ensureArity("limit", args, 3);
+        return new Rendered("\\lim_{" + render(args.get(1)).latex() + " \\to " + render(args.get(2)).latex() + "} "
+                + render(args.get(0)).latex(), PREC_PRIMARY, false);
+    }
+
+    private Rendered renderDiff(List<AstNode> args) {
+        ensureArity("diff", args, 2);
+        return new Rendered("\\frac{d}{d" + render(args.get(1)).latex() + "} " + render(args.get(0)).latex(), PREC_PRIMARY, false);
+    }
+
+    private Rendered renderIntegral(List<AstNode> args) {
+        if (args.size() == 2) {
+            return new Rendered("\\int " + render(args.get(0)).latex() + " \\, d" + render(args.get(1)).latex(),
+                    PREC_PRIMARY,
+                    false);
+        }
+        if (args.size() == 4) {
+            return new Rendered("\\int_{" + render(args.get(2)).latex() + "}^{" + render(args.get(3)).latex() + "} "
+                    + render(args.get(0)).latex() + " \\, d" + render(args.get(1)).latex(), PREC_PRIMARY, false);
+        }
+        throw invalidArguments("integral", args.size(), "2 or 4");
+    }
+
+    private Rendered renderAggregate(String operator, String name, List<AstNode> args) {
+        if (args.isEmpty()) {
+            throw invalidArguments(name, args.size(), "1, 3, or 4");
+        }
+        if (args.size() == 1) {
+            return new Rendered(operator + " " + render(args.get(0)).latex(), PREC_PRIMARY, false);
+        }
+        if (args.size() == 3) {
+            return new Rendered(operator + "_{" + render(args.get(1)).latex() + "}^{" + render(args.get(2)).latex() + "} "
+                    + render(args.get(0)).latex(), PREC_PRIMARY, false);
+        }
+        if (args.size() == 4) {
+            return new Rendered(operator + "_{" + render(args.get(1)).latex() + "=" + render(args.get(2)).latex() + "}^{"
+                    + render(args.get(3)).latex() + "} " + render(args.get(0)).latex(), PREC_PRIMARY, false);
+        }
+        throw invalidArguments(name, args.size(), "1, 3, or 4");
+    }
+
+    private Rendered renderVector(List<AstNode> args) {
+        List<AstNode> elements = flattenSingleBracketGroup(args);
+        String content = elements.stream().map(arg -> render(arg).latex()).collect(Collectors.joining(" \\\\ "));
+        return new Rendered("\\begin{pmatrix} " + content + " \\end{pmatrix}", PREC_PRIMARY, false);
+    }
+
+    private Rendered renderMatrix(List<AstNode> args) {
+        List<AstNode> rows = flattenSingleBracketGroup(args);
+        StringBuilder builder = new StringBuilder("\\begin{pmatrix} ");
+        for (int i = 0; i < rows.size(); i++) {
+            AstNode row = rows.get(i);
+            if (row instanceof CallExpr call && call.getFunction().getType() == TokenType.LBRACKET) {
+                builder.append(call.getArguments().stream()
+                        .map(arg -> render(arg).latex())
+                        .collect(Collectors.joining(" & ")));
+            } else {
+                builder.append(render(row).latex());
+            }
+            if (i < rows.size() - 1) {
+                builder.append(" \\\\ ");
+            }
+        }
+        builder.append(" \\end{pmatrix}");
+        return new Rendered(builder.toString(), PREC_PRIMARY, false);
+    }
+
+    private List<AstNode> flattenSingleBracketGroup(List<AstNode> args) {
+        if (args.size() == 1 && args.get(0) instanceof CallExpr call && call.getFunction().getType() == TokenType.LBRACKET) {
+            return call.getArguments();
+        }
+        return args;
+    }
+
+    private Rendered accent(String command, List<AstNode> args) {
+        ensureArity(command, args, 1);
+        return new Rendered(command + "{" + render(args.get(0)).latex() + "}", PREC_PRIMARY, true);
+    }
+
+    private Rendered renderDotFunction(List<AstNode> args) {
+        if (args.size() == 1) {
+            return new Rendered("\\dot{" + render(args.get(0)).latex() + "}", PREC_PRIMARY, true);
+        }
+        if (args.size() == 2) {
+            return new Rendered(render(args.get(0)).latex() + " \\cdot " + render(args.get(1)).latex(), PREC_PRIMARY, false);
+        }
+        throw invalidArguments("dot", args.size(), "1 or 2");
+    }
+
+    private Rendered renderMathText(List<AstNode> args) {
+        ensureArity("mathtext", args, 1);
+        return new Rendered("\\text{" + render(args.get(0)).latex() + "}", PREC_PRIMARY, true);
+    }
+
+    private Rendered renderPiecewise(List<AstNode> args) {
+        if (args.size() < 2 || args.size() % 2 != 0) {
+            throw invalidArguments("piecewise", args.size(), "an even number and at least 2");
+        }
         StringBuilder result = new StringBuilder("\\begin{cases}\n");
         for (int i = 0; i < args.size(); i += 2) {
-            String expr = args.get(i).accept(this);
-            String cond = args.get(i + 1).accept(this);
-            result.append(expr).append(" & \\text{if } ").append(cond);
+            result.append(render(args.get(i)).latex())
+                    .append(" & \\text{if } ")
+                    .append(render(args.get(i + 1)).latex());
             if (i + 2 < args.size()) {
                 result.append(" \\\\");
             }
-            result.append("\n");
+            result.append('\n');
         }
         result.append("\\end{cases}");
-        return result.toString();
+        return new Rendered(result.toString(), PREC_PRIMARY, false);
     }
 
-    // Cases environment
-    private String transpileCases(List<AstNode> args) {
-        // Similar to piecewise but more flexible
-        // cases(expr1, cond1, expr2, cond2, ...)
-        return transpilePiecewise(args);
-    }
-
-    // Aligned equations
-    private String transpileAlign(List<AstNode> args) {
-        // align(eq1, eq2, eq3, ...)
-        // Generates: \begin{align*} eq1 \\ eq2 \\ eq3 \\ ... \end{align*}
-        if (args.isEmpty()) return invalidArguments("align", args.size(), "at least 1");
-
-        StringBuilder result = new StringBuilder("\\begin{align*}\n");
-        for (int i = 0; i < args.size(); i++) {
-            result.append(args.get(i).accept(this));
-            if (i < args.size() - 1) {
-                result.append(" \\\\");
-            }
-            result.append("\n");
+    private Rendered renderAlignment(List<AstNode> args) {
+        if (args.isEmpty()) {
+            throw invalidArguments("align", args.size(), "at least 1");
         }
-        result.append("\\end{align*}");
-        return result.toString();
+        String body = args.stream().map(arg -> render(arg).latex()).collect(Collectors.joining(" \\\\\n"));
+        return new Rendered("\\begin{align*}\n" + body + "\n\\end{align*}", PREC_PRIMARY, false);
     }
 
-    private String transpileBinom(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("binom", args.size(), "2");
-        return "\\binom{" + args.get(0).accept(this) + "}{" + args.get(1).accept(this) + "}";
-    }
-
-    private String transpileNorm(List<AstNode> args) {
-        if (args.size() == 1) return "\\|" + args.get(0).accept(this) + "\\|";
-        if (args.size() == 2) return "\\|" + args.get(0).accept(this) + "\\|_{" + args.get(1).accept(this) + "}";
-        return invalidArguments("norm", args.size(), "1 or 2");
-    }
-
-    private String transpileInner(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("inner", args.size(), "2");
-        return "\\langle " + args.get(0).accept(this) + ", " + args.get(1).accept(this) + " \\rangle";
-    }
-
-    private String transpileUnderbrace(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("underbrace", args.size(), "2");
-        return "\\underbrace{" + args.get(0).accept(this) + "}_{" + args.get(1).accept(this) + "}";
-    }
-
-    private String transpileOverbrace(List<AstNode> args) {
-        if (args.size() != 2) return invalidArguments("overbrace", args.size(), "2");
-        return "\\overbrace{" + args.get(0).accept(this) + "}^{" + args.get(1).accept(this) + "}";
-    }
-
-    // Systems of equations
-    private String transpileSystem(List<AstNode> args) {
-        // system(eq1, eq2, eq3, ...)
-        // Generates: \begin{cases} eq1 \\ eq2 \\ eq3 \\ ... \end{cases}
-        if (args.isEmpty()) return invalidArguments("system", args.size(), "at least 1");
-
-        StringBuilder result = new StringBuilder("\\begin{cases}\n");
-        for (int i = 0; i < args.size(); i++) {
-            result.append(args.get(i).accept(this));
-            if (i < args.size() - 1) {
-                result.append(" \\\\");
-            }
-            result.append("\n");
+    private Rendered renderSystem(List<AstNode> args) {
+        if (args.isEmpty()) {
+            throw invalidArguments("system", args.size(), "at least 1");
         }
-        result.append("\\end{cases}");
-        return result.toString();
+        String body = args.stream().map(arg -> render(arg).latex()).collect(Collectors.joining(" \\\\\n"));
+        return new Rendered("\\begin{cases}\n" + body + "\n\\end{cases}", PREC_PRIMARY, false);
     }
 
-    private String invalidArguments(String function, int actual, String expected) {
-        throw new IllegalStateException(
+    private Rendered renderBinom(List<AstNode> args) {
+        ensureArity("binom", args, 2);
+        return new Rendered("\\binom{" + render(args.get(0)).latex() + "}{" + render(args.get(1)).latex() + "}",
+                PREC_PRIMARY,
+                true);
+    }
+
+    private Rendered renderNorm(List<AstNode> args) {
+        if (args.size() == 1) {
+            return new Rendered("\\|" + render(args.get(0)).latex() + "\\|", PREC_PRIMARY, true);
+        }
+        if (args.size() == 2) {
+            return new Rendered("\\|" + render(args.get(0)).latex() + "\\|_{" + render(args.get(1)).latex() + "}",
+                    PREC_PRIMARY,
+                    true);
+        }
+        throw invalidArguments("norm", args.size(), "1 or 2");
+    }
+
+    private Rendered renderInner(List<AstNode> args) {
+        ensureArity("inner", args, 2);
+        return new Rendered("\\langle " + render(args.get(0)).latex() + ", " + render(args.get(1)).latex() + " \\rangle",
+                PREC_PRIMARY,
+                true);
+    }
+
+    private Rendered renderQuantifier(String symbol, List<AstNode> args) {
+        ensureArity(symbol, args, 2);
+        return new Rendered(symbol + " " + render(args.get(0)).latex() + " \\, " + render(args.get(1)).latex(),
+                PREC_PRIMARY,
+                false);
+    }
+
+    private Rendered renderBraceAnnotation(String command, String direction, List<AstNode> args) {
+        ensureArity(command, args, 2);
+        String annotation = args.get(1) instanceof LiteralExpr literal && literal.getValue() instanceof String
+                ? "\\text{" + render(literal).latex() + "}"
+                : render(args.get(1)).latex();
+        return new Rendered(command + "{" + render(args.get(0)).latex() + "}" + direction + "{" + annotation + "}",
+                PREC_PRIMARY,
+                true);
+    }
+
+    private String parenthesizeIfNeeded(Rendered child, int parentPrecedence, Associativity associativity) {
+        if (needsParentheses(child, parentPrecedence, associativity)) {
+            return "(" + child.latex() + ")";
+        }
+        return child.latex();
+    }
+
+    private boolean needsParentheses(Rendered child, int parentPrecedence, Associativity associativity) {
+        if (child.precedence() < parentPrecedence) {
+            return true;
+        }
+        if (child.precedence() > parentPrecedence) {
+            return false;
+        }
+        return associativity == Associativity.RIGHT || associativity == Associativity.LEFT_CHILD_OF_LEFT_ASSOC;
+    }
+
+    private void ensureArity(String function, List<AstNode> args, int expected) {
+        if (args.size() != expected) {
+            throw invalidArguments(function, args.size(), String.valueOf(expected));
+        }
+    }
+
+    private IllegalStateException invalidArguments(String function, int actual, String expected) {
+        return new IllegalStateException(
                 "Internal Euclid contract error: function '" + function + "' received "
                         + actual + " arguments; expected " + expected + ".");
     }
 
-    private String unsupportedFunction(TokenType function) {
-        throw new IllegalStateException(
-                "Internal Euclid contract error: unsupported function '" + function + "' reached the LaTeX transpiler.");
+    private boolean startsWithDigit(String value) {
+        return !value.isEmpty() && Character.isDigit(value.charAt(0));
+    }
+
+    private boolean startsWithLetter(String value) {
+        return !value.isEmpty() && Character.isLetter(value.charAt(0));
+    }
+
+    private boolean startsWithDigitOrLetter(String value) {
+        return !value.isEmpty() && Character.isLetterOrDigit(value.charAt(0));
+    }
+
+    private boolean startsWithBracket(String value) {
+        return value.startsWith("(") || value.startsWith("[") || value.startsWith("{");
+    }
+
+    private boolean endsWithBracket(String value) {
+        return value.endsWith(")") || value.endsWith("]") || value.endsWith("}");
+    }
+
+    private boolean isLogicalBinary(TokenType tokenType) {
+        return tokenType == TokenType.AND || tokenType == TokenType.OR;
+    }
+
+    private String renderFractionOperand(AstNode node) {
+        if (node instanceof GroupingExpr groupingExpr) {
+            return render(groupingExpr.getExpression()).latex();
+        }
+        return render(node).latex();
+    }
+
+    private enum Associativity {
+        LEFT,
+        LEFT_CHILD_OF_LEFT_ASSOC,
+        RIGHT
+    }
+
+    private record Rendered(String latex, int precedence, boolean simple) {
     }
 }

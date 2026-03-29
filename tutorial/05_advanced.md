@@ -1,6 +1,6 @@
 # Advanced Euclid Techniques
 
-This tutorial covers complex expressions, best practices, debugging strategies, and advanced patterns for power users.
+This tutorial covers complex expressions, best practices, debugging strategies, and advanced patterns for power users. Unless otherwise stated, treat each Euclid snippet as the contents of a Markdown math span; use `--strict` only when you want the whole file parsed as Euclid.
 
 ## Complex Nested Expressions
 

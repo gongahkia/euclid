@@ -1,6 +1,6 @@
 # Getting Started with Euclid
 
-Welcome to Euclid! This tutorial will help you write your first mathematical expressions using Euclid's intuitive syntax.
+Welcome to Euclid. In normal document workflows, the snippets below are the contents you place inside `$...$` or `$$...$$` spans in Markdown. Use `--strict` or the REPL only when the entire input is pure Euclid.
 
 ## What is Euclid?
 
@@ -209,7 +209,7 @@ Save your Euclid code to a file (e.g., `equation.ed`):
 E = m * pow(c, 2)
 ```
 
-Then transpile it:
+Then transpile it as a Markdown document:
 
 ```bash
 java -jar target/euclid-transpiler.jar equation.ed
@@ -217,7 +217,7 @@ java -jar target/euclid-transpiler.jar equation.ed
 
 This creates `equation.md` with your LaTeX code.
 
-To validate the file without writing output, use:
+To treat the file as a pure Euclid formula source instead, use `--strict`. To validate without writing output, use:
 
 ```bash
 java -jar target/euclid-transpiler.jar --check equation.ed

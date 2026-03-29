@@ -1,15 +1,19 @@
-# Euclid example document
+# Euclid Example Document
 
-## Hello
+Euclid works best as a Markdown-first authoring tool with explicit math spans.
 
-Euclid extends Markdown with an intuitive syntax for mathematical expressions.
+## Inline Math
 
-## Body
+Euclid supports constants like $\pi$, $e$, $i$, $\gamma$, and $\phi$.
 
-Euclid supports common constants such as $\pi$, $e$, $i$, $\gamma$, and $\phi$.
+It also renders readable formulas such as $2 + 3 \cdot 2^{3}$, $\sqrt[3]{27}$, and $\frac{7}{8}$.
 
-We can even write out operations like $2 + 3 * 2^3$, $\sqrt[3]{27}$ with $\frac{7}{8}$ and they will all render nicely.
+## Display Math
 
-## Goodbye
+$$
+x = \frac{-b + \sqrt{b^{2} - 4ac}}{2a}
+$$
 
-Thanks for sticking around!
+## Strict Mode
+
+When you want a file to be treated as pure Euclid instead of Markdown, invoke the CLI with `--strict`.
