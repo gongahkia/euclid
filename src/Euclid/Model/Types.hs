@@ -11,6 +11,7 @@ module Euclid.Model.Types
     , StateChange(..)
     , entityFieldAt
     , FunctionSig(..)
+    , CausalKind(..)
     , Relationship(..)
     , TimePoint(..)
     , TimeRange(..)
@@ -165,11 +166,15 @@ entityFieldAt entity field tp =
         Just v -> Just v
         Nothing -> Map.lookup field (entityFields entity)
 
+data CausalKind = CausalNone | CausalCauses | CausalEnables
+    deriving (Eq, Ord, Show)
+
 data Relationship = Relationship
     { relSource :: Text
     , relLabel :: Maybe Text
     , relTarget :: Text
     , relDirected :: Bool
+    , relCausalKind :: CausalKind
     , relTemporalScope :: Maybe TimeRange
     , relSourceSpan :: Maybe SourceSpan
     }

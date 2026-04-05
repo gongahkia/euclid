@@ -164,6 +164,7 @@ validateRelationships world =
         sourceDiagnostics
             ++ targetDiagnostics
             ++ temporalScopeDiagnostics
+            ++ causalOrderDiagnostics
       where
         sourceDiagnostics =
             [ validationDiagnostic
@@ -190,6 +191,25 @@ validateRelationships world =
                 )
             | Just rangeValue <- [relTemporalScope relationship]
             , timePointOrdinal (rangeStart rangeValue) > timePointOrdinal (rangeEnd rangeValue)
+            ]
+        causalOrderDiagnostics =
+            [ validationDiagnostic
+                (relSourceSpan relationship)
+                DiagnosticWarning
+                ( "causal relationship '"
+                    <> relSource relationship
+                    <> " -> "
+                    <> relTarget relationship
+                    <> "' has source appearing after target (temporal ordering violation)"
+                )
+            | relCausalKind relationship /= CausalNone
+            , Just sourceEntity <- [findEntity (relSource relationship) world]
+            , Just targetEntity <- [findEntity (relTarget relationship) world]
+            , not (null (entityAppearances sourceEntity))
+            , not (null (entityAppearances targetEntity))
+            , let sourceEnd = minimum [timePointOrdinal (rangeEnd (appearanceRange a)) | a <- entityAppearances sourceEntity]
+                  targetStart = maximum [timePointOrdinal (rangeStart (appearanceRange a)) | a <- entityAppearances targetEntity]
+            , sourceEnd > targetStart
             ]
 
 flattenTypeFields :: World -> TypeDef -> Map.Map Text TypeField

@@ -18,6 +18,7 @@ module Euclid.Lang.AST
     , Program(..)
     , pattern Program
     , RepeatDecl(..)
+    , CausalDeclKind(..)
     , RelationshipDecl(..)
     , Stmt(..)
     , pattern StmtAssign
@@ -108,11 +109,15 @@ data ConstraintDecl = ConstraintDecl
     }
     deriving (Eq, Show)
 
+data CausalDeclKind = CausalDeclNone | CausalDeclCauses | CausalDeclEnables
+    deriving (Eq, Show)
+
 data RelationshipDecl = RelationshipDecl
     { relationshipDeclSource :: Text
     , relationshipDeclLabel :: Maybe Text
     , relationshipDeclTarget :: Text
     , relationshipDeclDirected :: Bool
+    , relationshipDeclCausalKind :: CausalDeclKind
     , relationshipDeclTemporalScope :: Maybe (Expr, Expr)
     }
     deriving (Eq, Show)

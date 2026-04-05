@@ -371,7 +371,10 @@ entityDeclParser = do
             }
 
 relationshipDeclParser :: Parser RelationshipDecl
-relationshipDeclParser = do
+relationshipDeclParser = try causalRelParser <|> standardRelParser
+
+standardRelParser :: Parser RelationshipDecl
+standardRelParser = do
     _ <- symbol "rel"
     source <- identifier
     (labelValue, directedValue) <-
@@ -390,8 +393,27 @@ relationshipDeclParser = do
             , relationshipDeclLabel = labelValue
             , relationshipDeclTarget = target
             , relationshipDeclDirected = directedValue
+            , relationshipDeclCausalKind = CausalDeclNone
             , relationshipDeclTemporalScope = temporalScope
             }
+
+causalRelParser :: Parser RelationshipDecl
+causalRelParser = do
+    source <- identifier
+    (causalKind, label) <- choice
+        [ (CausalDeclCauses, "causes") <$ symbol "causes"
+        , (CausalDeclEnables, "enables") <$ symbol "enables"
+        ]
+    target <- identifier
+    _ <- symbol ";"
+    pure RelationshipDecl
+        { relationshipDeclSource = source
+        , relationshipDeclLabel = Just label
+        , relationshipDeclTarget = target
+        , relationshipDeclDirected = True
+        , relationshipDeclCausalKind = causalKind
+        , relationshipDeclTemporalScope = Nothing
+        }
 
 constraintDeclParser :: Parser ConstraintDecl
 constraintDeclParser = do

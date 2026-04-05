@@ -132,7 +132,11 @@ evalStmt state (StmtData currentSpan statement) =
                                 (state', startValue) <- exprToTimePoint scopedState startExpr
                                 (state'', endValue) <- exprToTimePoint state' endExpr
                                 pure (state'', Just (TimeRange startValue endValue))
-                    let world' =
+                    let causalKind = case relationshipDeclCausalKind decl of
+                            CausalDeclNone -> CausalNone
+                            CausalDeclCauses -> CausalCauses
+                            CausalDeclEnables -> CausalEnables
+                        world' =
                             (evalWorld state1)
                                 { worldRelationships =
                                     worldRelationships (evalWorld state1)
@@ -141,6 +145,7 @@ evalStmt state (StmtData currentSpan statement) =
                                                 , relLabel = relationshipDeclLabel decl
                                                 , relTarget = relationshipDeclTarget decl
                                                 , relDirected = relationshipDeclDirected decl
+                                                , relCausalKind = causalKind
                                                 , relTemporalScope = scope
                                                 , relSourceSpan = evalCurrentSpan scopedState
                                                 }
