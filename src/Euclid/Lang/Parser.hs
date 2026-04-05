@@ -6,6 +6,7 @@ module Euclid.Lang.Parser
     ) where
 
 import Data.Char (isAlphaNum)
+import qualified Data.Set as Set
 import Data.Functor (($>))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as Map
@@ -349,19 +350,20 @@ entityDeclParser = do
     name <- identifier
     entityTypeName <- optional (symbol ":" *> identifier)
     fields <- braces (many entityFieldParser)
-    let customFields =
-            Map.fromList
-                [ (fieldName, expr)
-                | EntityField fieldName expr <- fields
-                ]
-        appearances =
-            [ appearance
-            | AppearanceField appearance <- fields
-            ]
-        stateChanges =
-            [ sc
-            | StateChangeField sc <- fields
-            ]
+    let allFields = [(fieldName, expr) | EntityField fieldName expr <- fields]
+        annotationFieldNames = Set.fromList ["note", "source", "confidence", "tags"]
+        customFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.notMember n annotationFieldNames]
+        annotFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.member n annotationFieldNames]
+        appearances = [appearance | AppearanceField appearance <- fields]
+        stateChanges = [sc | StateChangeField sc <- fields]
+        annot = AnnotationDecl
+            { annotationDeclNote = Map.lookup "note" annotFields
+            , annotationDeclSource = Map.lookup "source" annotFields
+            , annotationDeclConfidence = Map.lookup "confidence" annotFields
+            , annotationDeclTags = case Map.lookup "tags" annotFields of
+                Just (ExprList ts) -> ts
+                _ -> []
+            }
     pure
         EntityDecl
             { entityDeclName = name
@@ -369,6 +371,7 @@ entityDeclParser = do
             , entityDeclFields = customFields
             , entityDeclAppearances = appearances
             , entityDeclStateChanges = stateChanges
+            , entityDeclAnnotation = annot
             }
 
 relationshipDeclParser :: Parser RelationshipDecl

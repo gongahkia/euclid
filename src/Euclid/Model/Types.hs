@@ -8,6 +8,8 @@ module Euclid.Model.Types
     , DiagnosticLevel(..)
     , Constraint(..)
     , View(..)
+    , Annotation(..)
+    , emptyAnnotation
     , Entity(..)
     , StateChange(..)
     , entityFieldAt
@@ -148,12 +150,24 @@ data StateChange = StateChange
     }
     deriving (Eq, Show)
 
+data Annotation = Annotation
+    { annotationNote :: Maybe Text
+    , annotationSource :: Maybe Text
+    , annotationConfidence :: Maybe Double
+    , annotationTags :: [Text]
+    }
+    deriving (Eq, Show)
+
+emptyAnnotation :: Annotation
+emptyAnnotation = Annotation Nothing Nothing Nothing []
+
 data Entity = Entity
     { entityName :: Text
     , entityType :: Text
     , entityFields :: Map Text Value
     , entityAppearances :: [Appearance]
     , entityStateChanges :: [StateChange]
+    , entityAnnotation :: Annotation
     , entitySourceSpan :: Maybe SourceSpan
     }
     deriving (Eq, Show)

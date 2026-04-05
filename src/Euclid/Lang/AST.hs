@@ -2,7 +2,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 
 module Euclid.Lang.AST
-    ( AppearanceDecl(..)
+    ( AnnotationDecl(..)
+    , AppearanceDecl(..)
     , ConstraintDecl(..)
     , ViewDecl(..)
     , EntityDecl(..)
@@ -96,12 +97,21 @@ data StateChangeDecl = StateChangeDecl
     }
     deriving (Eq, Show)
 
+data AnnotationDecl = AnnotationDecl
+    { annotationDeclNote :: Maybe Expr
+    , annotationDeclSource :: Maybe Expr
+    , annotationDeclConfidence :: Maybe Expr
+    , annotationDeclTags :: [Expr]
+    }
+    deriving (Eq, Show)
+
 data EntityDecl = EntityDecl
     { entityDeclName :: Text
     , entityDeclType :: Maybe Text
     , entityDeclFields :: Map Text Expr
     , entityDeclAppearances :: [AppearanceDecl]
     , entityDeclStateChanges :: [StateChangeDecl]
+    , entityDeclAnnotation :: AnnotationDecl
     }
     deriving (Eq, Show)
 

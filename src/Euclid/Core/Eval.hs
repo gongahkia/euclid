@@ -108,8 +108,19 @@ evalStmt state (StmtData currentSpan statement) =
                     (state1, fieldValues) <- evalExprMap scopedState (entityDeclFields decl)
                     (state2, appearances) <- evalAppearances state1 (entityDeclAppearances decl)
                     (state3, stateChanges) <- evalStateChanges state2 (entityDeclStateChanges decl)
-                    let world' =
-                            (evalWorld state3)
+                    let ad = entityDeclAnnotation decl
+                    (state4, noteVal) <- evalOptionalExpr state3 (annotationDeclNote ad)
+                    (state5, sourceVal) <- evalOptionalExpr state4 (annotationDeclSource ad)
+                    (state6, confVal) <- evalOptionalExpr state5 (annotationDeclConfidence ad)
+                    (state7, tagVals) <- evalExprList state6 (annotationDeclTags ad)
+                    let annotation = Annotation
+                            { annotationNote = case noteVal of {Just (VString t) -> Just t; _ -> Nothing}
+                            , annotationSource = case sourceVal of {Just (VString t) -> Just t; _ -> Nothing}
+                            , annotationConfidence = case confVal of {Just (VInt n) -> Just (fromInteger n / 100.0); _ -> Nothing}
+                            , annotationTags = [t | VString t <- tagVals]
+                            }
+                        world' =
+                            (evalWorld state7)
                                 { worldEntities =
                                     Map.insert
                                         (entityDeclName decl)
@@ -119,11 +130,12 @@ evalStmt state (StmtData currentSpan statement) =
                                             , entityFields = fieldValues
                                             , entityAppearances = appearances
                                             , entityStateChanges = stateChanges
+                                            , entityAnnotation = annotation
                                             , entitySourceSpan = evalCurrentSpan scopedState
                                             }
-                                        (worldEntities (evalWorld state3))
+                                        (worldEntities (evalWorld state7))
                                 }
-                    pure state3{evalWorld = world'}
+                    pure state7{evalWorld = world'}
                 StmtRelationshipNode decl -> do
                     (state1, scope) <-
                         case relationshipDeclTemporalScope decl of
@@ -773,6 +785,10 @@ evalFieldAccess state objectValue fieldName =
                     case fieldName of
                         "name" -> Right (VString (entityName entity))
                         "type" -> Right (VString (entityType entity))
+                        "note" -> Right (maybe VNull VString (annotationNote (entityAnnotation entity)))
+                        "source" -> Right (maybe VNull VString (annotationSource (entityAnnotation entity)))
+                        "confidence" -> Right (maybe VNull (\c -> VInt (round (c * 100))) (annotationConfidence (entityAnnotation entity)))
+                        "tags" -> Right (VList (map VString (annotationTags (entityAnnotation entity))))
                         _ ->
                             maybe
                                 ( maybe
@@ -889,6 +905,12 @@ evalStateChanges state decls =
         )
         (state, [])
         decls
+
+evalOptionalExpr :: EvalState -> Maybe Expr -> Either Diagnostic (EvalState, Maybe Value)
+evalOptionalExpr state Nothing = pure (state, Nothing)
+evalOptionalExpr state (Just expr) = do
+    (nextState, value) <- evalExpr state expr
+    pure (nextState, Just value)
 
 evalOptionalInteger :: EvalState -> Maybe Expr -> Either Diagnostic (EvalState, Maybe Integer)
 evalOptionalInteger state Nothing = pure (state, Nothing)
