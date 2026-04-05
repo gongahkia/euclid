@@ -43,6 +43,7 @@ statementParser =
         , withStatementSpan (StmtEntityNode <$> entityDeclParser)
         , withStatementSpan (StmtRelationshipNode <$> relationshipDeclParser)
         , withStatementSpan (StmtConstraintNode <$> constraintDeclParser)
+        , withStatementSpan (StmtViewNode <$> viewDeclParser)
         , withStatementSpan (StmtImportNode <$> importStmtParser)
         , withStatementSpan (StmtLetNode <$> letDeclParser)
         , withStatementSpan (StmtForNode <$> forDeclParser)
@@ -414,6 +415,29 @@ causalRelParser = do
         , relationshipDeclCausalKind = causalKind
         , relationshipDeclTemporalScope = Nothing
         }
+
+viewDeclParser :: Parser ViewDecl
+viewDeclParser = do
+    _ <- symbol "view"
+    name <- stringLiteral
+    entries <- braces (many viewEntryParser)
+    pure ViewDecl
+        { viewDeclName = name
+        , viewDeclTimelines = [t | ViewTimelines ts <- entries, t <- ts]
+        , viewDeclFilter = case [f | ViewFilter f <- entries] of {(f:_) -> Just f; _ -> Nothing}
+        , viewDeclTimeRange = case [r | ViewTimeRange r <- entries] of {(r:_) -> Just r; _ -> Nothing}
+        , viewDeclHighlight = [h | ViewHighlight hs <- entries, h <- hs]
+        }
+
+data ViewEntry = ViewTimelines [Text] | ViewFilter Text | ViewTimeRange (Expr, Expr) | ViewHighlight [Text]
+
+viewEntryParser :: Parser ViewEntry
+viewEntryParser = choice
+    [ try $ do { _ <- symbol "timelines"; _ <- symbol ":"; ts <- between (symbol "[") (symbol "]") (identifier `sepBy` symbol ","); _ <- optional (symbol ","); pure (ViewTimelines ts) }
+    , try $ do { _ <- symbol "filter"; _ <- symbol ":"; t <- identifier; _ <- optional (symbol ","); pure (ViewFilter t) }
+    , try $ do { _ <- symbol "time_range"; _ <- symbol ":"; s <- nonRangeExprParser; _ <- symbol ".."; e <- exprParser; _ <- optional (symbol ","); pure (ViewTimeRange (s, e)) }
+    , try $ do { _ <- symbol "highlight"; _ <- symbol ":"; hs <- between (symbol "[") (symbol "]") (identifier `sepBy` symbol ","); _ <- optional (symbol ","); pure (ViewHighlight hs) }
+    ]
 
 constraintDeclParser :: Parser ConstraintDecl
 constraintDeclParser = do

@@ -7,6 +7,7 @@ module Euclid.Model.Types
     , Diagnostic(..)
     , DiagnosticLevel(..)
     , Constraint(..)
+    , View(..)
     , Entity(..)
     , StateChange(..)
     , entityFieldAt
@@ -201,6 +202,16 @@ data Diagnostic = Diagnostic
     }
     deriving (Eq, Show)
 
+data View = View
+    { viewName :: Text
+    , viewTimelines :: [Text]
+    , viewEntityFilter :: Maybe Text -- type filter
+    , viewTimeRange :: Maybe TimeRange
+    , viewHighlight :: [Text] -- entity names to highlight
+    , viewSourceSpan :: Maybe SourceSpan
+    }
+    deriving (Eq, Show)
+
 data Constraint = Constraint
     { constraintName :: Text
     , constraintSourceSpan :: Maybe SourceSpan
@@ -214,6 +225,7 @@ data World = World
     , worldRelationships :: [Relationship]
     , worldFunctions :: Map Text FunctionSig
     , worldConstraints :: [Constraint]
+    , worldViews :: Map Text View
     }
     deriving (Eq, Show)
 
@@ -226,6 +238,7 @@ emptyWorld =
         , worldRelationships = []
         , worldFunctions = Map.empty
         , worldConstraints = []
+        , worldViews = Map.empty
         }
 
 builtInTypes :: Set Text

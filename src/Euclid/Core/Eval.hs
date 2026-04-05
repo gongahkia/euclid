@@ -152,6 +152,26 @@ evalStmt state (StmtData currentSpan statement) =
                                            ]
                                 }
                     pure state1{evalWorld = world'}
+                StmtViewNode decl -> do
+                    (state1, timeRange) <- case viewDeclTimeRange decl of
+                        Nothing -> pure (scopedState, Nothing)
+                        Just (startExpr, endExpr) -> do
+                            (s1, sv) <- exprToTimePoint scopedState startExpr
+                            (s2, ev) <- exprToTimePoint s1 endExpr
+                            pure (s2, Just (TimeRange sv ev))
+                    let world' = (evalWorld state1)
+                            { worldViews = Map.insert (viewDeclName decl)
+                                View
+                                    { viewName = viewDeclName decl
+                                    , viewTimelines = viewDeclTimelines decl
+                                    , viewEntityFilter = viewDeclFilter decl
+                                    , viewTimeRange = timeRange
+                                    , viewHighlight = viewDeclHighlight decl
+                                    , viewSourceSpan = evalCurrentSpan scopedState
+                                    }
+                                (worldViews (evalWorld state1))
+                            }
+                    pure state1{evalWorld = world'}
                 StmtConstraintNode decl ->
                     let world' = (evalWorld scopedState)
                             { worldConstraints = worldConstraints (evalWorld scopedState)
