@@ -23,6 +23,7 @@ import Euclid.Lang.AST (Program(..), Stmt, pattern Program)
 import Euclid.Lang.Parser
 import Euclid.Model.Types
 import Euclid.Render.Layout
+import Euclid.Render.HTML
 import Euclid.Render.SVG
 import Euclid.Tooling.LSP
 import Euclid.TUI.App
@@ -87,6 +88,12 @@ runExport configValue themeOverride exportOptions = do
                 outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "svg") (exportOutput exportOptions)
                 svgDocument = renderSvg svgOptions (computeLayout (loadedWorld loaded))
             TIO.writeFile outputPath svgDocument
+            reportDiagnostics (loadedDiagnostics loaded)
+            putStrLn ("Wrote " <> outputPath)
+        ExportHtml -> do
+            let outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "html") (exportOutput exportOptions)
+                htmlDocument = renderInteractiveHtml (computeLayout (loadedWorld loaded))
+            TIO.writeFile outputPath htmlDocument
             reportDiagnostics (loadedDiagnostics loaded)
             putStrLn ("Wrote " <> outputPath)
 

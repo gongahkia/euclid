@@ -18,6 +18,7 @@ import Options.Applicative
 
 data ExportFormat
     = ExportSvg
+    | ExportHtml
     deriving (Eq, Show)
 
 data ImportFormat
@@ -132,7 +133,8 @@ parseExportFormat :: String -> Either String ExportFormat
 parseExportFormat raw =
     case map toLower raw of
         "svg" -> Right ExportSvg
-        other -> Left ("unknown export format: " <> other <> " (supported: svg)")
+        "html" -> Right ExportHtml
+        other -> Left ("unknown export format: " <> other <> " (supported: svg, html)")
 
 parseImportFormat :: String -> Either String ImportFormat
 parseImportFormat raw =
