@@ -147,6 +147,15 @@ evalStmt state (StmtData currentSpan statement) =
                                            ]
                                 }
                     pure state1{evalWorld = world'}
+                StmtConstraintNode decl ->
+                    let world' = (evalWorld scopedState)
+                            { worldConstraints = worldConstraints (evalWorld scopedState)
+                                ++ [Constraint (constraintDeclName decl) (evalCurrentSpan scopedState)]
+                            }
+                    in do
+                        -- evaluate constraint body in current world to check it passes
+                        constraintState <- foldM evalStmt scopedState (constraintDeclBody decl)
+                        pure constraintState{evalWorld = world'}
                 StmtImportNode _ ->
                     pure state
                 StmtLetNode decl -> do

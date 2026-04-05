@@ -42,6 +42,7 @@ statementParser =
         , withStatementSpan (StmtTimelineNode <$> timelineDeclParser)
         , withStatementSpan (StmtEntityNode <$> entityDeclParser)
         , withStatementSpan (StmtRelationshipNode <$> relationshipDeclParser)
+        , withStatementSpan (StmtConstraintNode <$> constraintDeclParser)
         , withStatementSpan (StmtImportNode <$> importStmtParser)
         , withStatementSpan (StmtLetNode <$> letDeclParser)
         , withStatementSpan (StmtForNode <$> forDeclParser)
@@ -391,6 +392,16 @@ relationshipDeclParser = do
             , relationshipDeclDirected = directedValue
             , relationshipDeclTemporalScope = temporalScope
             }
+
+constraintDeclParser :: Parser ConstraintDecl
+constraintDeclParser = do
+    _ <- symbol "constraint"
+    name <- stringLiteral
+    body <- braces (many statementParser)
+    pure ConstraintDecl
+        { constraintDeclName = name
+        , constraintDeclBody = body
+        }
 
 importStmtParser :: Parser Text
 importStmtParser = do

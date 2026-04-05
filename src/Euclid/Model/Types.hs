@@ -6,6 +6,7 @@ module Euclid.Model.Types
     , UnaryOp(..)
     , Diagnostic(..)
     , DiagnosticLevel(..)
+    , Constraint(..)
     , Entity(..)
     , StateChange(..)
     , entityFieldAt
@@ -195,12 +196,19 @@ data Diagnostic = Diagnostic
     }
     deriving (Eq, Show)
 
+data Constraint = Constraint
+    { constraintName :: Text
+    , constraintSourceSpan :: Maybe SourceSpan
+    }
+    deriving (Eq, Show)
+
 data World = World
     { worldTypes :: Map Text TypeDef
     , worldTimelines :: Map Text Timeline
     , worldEntities :: Map Text Entity
     , worldRelationships :: [Relationship]
     , worldFunctions :: Map Text FunctionSig
+    , worldConstraints :: [Constraint]
     }
     deriving (Eq, Show)
 
@@ -212,6 +220,7 @@ emptyWorld =
         , worldEntities = Map.empty
         , worldRelationships = []
         , worldFunctions = Map.empty
+        , worldConstraints = []
         }
 
 builtInTypes :: Set Text

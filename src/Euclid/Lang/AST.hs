@@ -3,6 +3,7 @@
 
 module Euclid.Lang.AST
     ( AppearanceDecl(..)
+    , ConstraintDecl(..)
     , EntityDecl(..)
     , StateChangeDecl(..)
     , Expr(..)
@@ -20,6 +21,7 @@ module Euclid.Lang.AST
     , RelationshipDecl(..)
     , Stmt(..)
     , pattern StmtAssign
+    , pattern StmtConstraint
     , pattern StmtEntity
     , pattern StmtExpr
     , pattern StmtFor
@@ -97,6 +99,12 @@ data EntityDecl = EntityDecl
     , entityDeclFields :: Map Text Expr
     , entityDeclAppearances :: [AppearanceDecl]
     , entityDeclStateChanges :: [StateChangeDecl]
+    }
+    deriving (Eq, Show)
+
+data ConstraintDecl = ConstraintDecl
+    { constraintDeclName :: Text
+    , constraintDeclBody :: [Stmt]
     }
     deriving (Eq, Show)
 
@@ -181,6 +189,7 @@ data StmtNode
     | StmtTimelineNode TimelineDecl
     | StmtEntityNode EntityDecl
     | StmtRelationshipNode RelationshipDecl
+    | StmtConstraintNode ConstraintDecl
     | StmtImportNode Text
     | StmtLetNode LetDecl
     | StmtForNode ForDecl
@@ -222,6 +231,11 @@ pattern StmtRelationship :: RelationshipDecl -> Stmt
 pattern StmtRelationship decl <- StmtData _ (StmtRelationshipNode decl)
   where
     StmtRelationship decl = StmtData noSourceSpan (StmtRelationshipNode decl)
+
+pattern StmtConstraint :: ConstraintDecl -> Stmt
+pattern StmtConstraint decl <- StmtData _ (StmtConstraintNode decl)
+  where
+    StmtConstraint decl = StmtData noSourceSpan (StmtConstraintNode decl)
 
 pattern StmtImport :: Text -> Stmt
 pattern StmtImport pathValue <- StmtData _ (StmtImportNode pathValue)
@@ -283,6 +297,7 @@ pattern StmtExpr expr <- StmtData _ (StmtExprNode expr)
     StmtTimeline,
     StmtEntity,
     StmtRelationship,
+    StmtConstraint,
     StmtImport,
     StmtLet,
     StmtFor,
