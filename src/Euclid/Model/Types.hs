@@ -256,6 +256,7 @@ data World = World
     , worldFunctions :: Map Text FunctionSig
     , worldConstraints :: [Constraint]
     , worldViews :: Map Text View
+    , worldScenarios :: Map Text World -- alternate what-if worlds
     }
     deriving (Eq, Show)
 
@@ -269,6 +270,7 @@ emptyWorld =
         , worldFunctions = Map.empty
         , worldConstraints = []
         , worldViews = Map.empty
+        , worldScenarios = Map.empty
         }
 
 builtInTypes :: Set Text

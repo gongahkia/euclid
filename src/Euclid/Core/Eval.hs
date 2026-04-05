@@ -186,6 +186,15 @@ evalStmt state (StmtData currentSpan statement) =
                                 (worldViews (evalWorld state1))
                             }
                     pure state1{evalWorld = world'}
+                StmtScenarioNode decl -> do
+                    -- fork current world state, evaluate body in fork, store as scenario
+                    let baseWorld = evalWorld scopedState
+                        forkState = scopedState -- inherits all current state
+                    scenarioState <- foldM evalStmt forkState (scenarioDeclBody decl)
+                    let scenarioWorld = evalWorld scenarioState
+                        world' = baseWorld
+                            { worldScenarios = Map.insert (scenarioDeclName decl) scenarioWorld (worldScenarios baseWorld) }
+                    pure scopedState{evalWorld = world'}
                 StmtConstraintNode decl ->
                     let world' = (evalWorld scopedState)
                             { worldConstraints = worldConstraints (evalWorld scopedState)

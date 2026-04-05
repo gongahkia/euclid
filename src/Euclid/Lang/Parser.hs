@@ -45,6 +45,7 @@ statementParser =
         , withStatementSpan (StmtRelationshipNode <$> relationshipDeclParser)
         , withStatementSpan (StmtConstraintNode <$> constraintDeclParser)
         , withStatementSpan (StmtViewNode <$> viewDeclParser)
+        , withStatementSpan (StmtScenarioNode <$> scenarioDeclParser)
         , withStatementSpan (StmtImportNode <$> importStmtParser)
         , withStatementSpan (StmtLetNode <$> letDeclParser)
         , withStatementSpan (StmtForNode <$> forDeclParser)
@@ -445,6 +446,18 @@ viewEntryParser = choice
     , try $ do { _ <- symbol "time_range"; _ <- symbol ":"; s <- nonRangeExprParser; _ <- symbol ".."; e <- exprParser; _ <- optional (symbol ","); pure (ViewTimeRange (s, e)) }
     , try $ do { _ <- symbol "highlight"; _ <- symbol ":"; hs <- between (symbol "[") (symbol "]") (identifier `sepBy` symbol ","); _ <- optional (symbol ","); pure (ViewHighlight hs) }
     ]
+
+scenarioDeclParser :: Parser ScenarioDecl
+scenarioDeclParser = do
+    _ <- symbol "scenario"
+    name <- stringLiteral
+    forkFrom <- optional (symbol "from" *> identifier)
+    body <- braces (many statementParser)
+    pure ScenarioDecl
+        { scenarioDeclName = name
+        , scenarioDeclForkFrom = forkFrom
+        , scenarioDeclBody = body
+        }
 
 constraintDeclParser :: Parser ConstraintDecl
 constraintDeclParser = do

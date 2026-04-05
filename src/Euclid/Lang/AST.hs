@@ -5,6 +5,7 @@ module Euclid.Lang.AST
     ( AnnotationDecl(..)
     , AppearanceDecl(..)
     , ConstraintDecl(..)
+    , ScenarioDecl(..)
     , ViewDecl(..)
     , EntityDecl(..)
     , StateChangeDecl(..)
@@ -26,6 +27,7 @@ module Euclid.Lang.AST
     , pattern StmtAssign
     , pattern StmtConstraint
     , pattern StmtView
+    , pattern StmtScenario
     , pattern StmtEntity
     , pattern StmtExpr
     , pattern StmtFor
@@ -126,6 +128,13 @@ data ViewDecl = ViewDecl
     }
     deriving (Eq, Show)
 
+data ScenarioDecl = ScenarioDecl
+    { scenarioDeclName :: Text
+    , scenarioDeclForkFrom :: Maybe Text -- timeline to fork from
+    , scenarioDeclBody :: [Stmt]
+    }
+    deriving (Eq, Show)
+
 data ConstraintDecl = ConstraintDecl
     { constraintDeclName :: Text
     , constraintDeclBody :: [Stmt]
@@ -219,6 +228,7 @@ data StmtNode
     | StmtRelationshipNode RelationshipDecl
     | StmtConstraintNode ConstraintDecl
     | StmtViewNode ViewDecl
+    | StmtScenarioNode ScenarioDecl
     | StmtImportNode Text
     | StmtLetNode LetDecl
     | StmtForNode ForDecl
@@ -270,6 +280,11 @@ pattern StmtView :: ViewDecl -> Stmt
 pattern StmtView decl <- StmtData _ (StmtViewNode decl)
   where
     StmtView decl = StmtData noSourceSpan (StmtViewNode decl)
+
+pattern StmtScenario :: ScenarioDecl -> Stmt
+pattern StmtScenario decl <- StmtData _ (StmtScenarioNode decl)
+  where
+    StmtScenario decl = StmtData noSourceSpan (StmtScenarioNode decl)
 
 pattern StmtImport :: Text -> Stmt
 pattern StmtImport pathValue <- StmtData _ (StmtImportNode pathValue)
@@ -333,6 +348,7 @@ pattern StmtExpr expr <- StmtData _ (StmtExprNode expr)
     StmtRelationship,
     StmtConstraint,
     StmtView,
+    StmtScenario,
     StmtImport,
     StmtLet,
     StmtFor,
