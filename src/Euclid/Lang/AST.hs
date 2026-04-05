@@ -41,7 +41,7 @@ module Euclid.Lang.AST
 
 import Data.Map.Strict (Map)
 import Data.Text (Text)
-import Euclid.Model.Types (BinaryOp(..), SourceSpan, TypeField(..), Value(..), noSourceSpan)
+import Euclid.Model.Types (BinaryOp(..), UnaryOp(..), SourceSpan, TypeField(..), Value(..), noSourceSpan)
 
 data Expr
     = ExprValue Value
@@ -53,6 +53,7 @@ data Expr
     | ExprCall Expr [Expr]
     | ExprClosure [(Text, Text)] Expr
     | ExprBinary BinaryOp Expr Expr
+    | ExprUnary UnaryOp Expr
     deriving (Eq, Show)
 
 data TypeDecl = TypeDecl

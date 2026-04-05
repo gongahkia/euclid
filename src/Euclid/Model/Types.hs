@@ -3,6 +3,7 @@
 module Euclid.Model.Types
     ( Appearance(..)
     , BinaryOp(..)
+    , UnaryOp(..)
     , Diagnostic(..)
     , DiagnosticLevel(..)
     , Entity(..)
@@ -51,6 +52,10 @@ data Value
 data BinaryOp
     = OpAdd
     | OpSub
+    | OpMul
+    | OpDiv
+    | OpMod
+    | OpConcat
     | OpGt
     | OpLt
     | OpGte
@@ -59,6 +64,11 @@ data BinaryOp
     | OpNeq
     | OpAnd
     | OpOr
+    deriving (Eq, Ord, Show)
+
+data UnaryOp
+    = OpNeg
+    | OpNot
     deriving (Eq, Ord, Show)
 
 data TimelineKind

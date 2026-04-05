@@ -213,7 +213,9 @@ literalValueParser =
 
 operatorTable :: [[Operator Parser Expr]]
 operatorTable =
-    [ [binary "+" (ExprBinary OpAdd), binary "-" (ExprBinary OpSub)]
+    [ [prefix "-" (ExprUnary OpNeg), prefix "!" (ExprUnary OpNot)]
+    , [binary "*" (ExprBinary OpMul), binary "/" (ExprBinary OpDiv), binary "%" (ExprBinary OpMod)]
+    , [binary "+" (ExprBinary OpAdd), binary "-" (ExprBinary OpSub), binary "++" (ExprBinary OpConcat)]
     , [ binary ">=" (ExprBinary OpGte)
       , binary "<=" (ExprBinary OpLte)
       , binary ">" (ExprBinary OpGt)
@@ -227,6 +229,9 @@ operatorTable =
 
 binary :: Text -> (Expr -> Expr -> Expr) -> Operator Parser Expr
 binary name f = InfixL (f <$ symbol name)
+
+prefix :: Text -> (Expr -> Expr) -> Operator Parser Expr
+prefix name f = Prefix (f <$ symbol name)
 
 typeDeclParser :: Parser TypeDecl
 typeDeclParser = do

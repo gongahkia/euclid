@@ -6,12 +6,14 @@ module Euclid.Core.Eval
 
 import Control.Monad (foldM, unless)
 import Data.Foldable (traverse_)
+import qualified Data.List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isJust)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time (toModifiedJulianDay)
 import Euclid.Lang.AST
 import Euclid.Model.Types
 
@@ -277,15 +279,38 @@ evalExpr state (ExprClosure params bodyExpr) =
                 , evalNextClosureId = closureId + 1
                 }
      in Right (nextState, VClosureRef closureId)
+evalExpr state (ExprUnary op operand) = do
+    (state1, value) <- evalExpr state operand
+    resultValue <- evalUnary op value
+    pure (state1, resultValue)
 evalExpr state (ExprBinary op lhs rhs) = do
     (state1, leftValue) <- evalExpr state lhs
     (state2, rightValue) <- evalExpr state1 rhs
     resultValue <- evalBinary op leftValue rightValue
     pure (state2, resultValue)
 
+evalUnary :: UnaryOp -> Value -> Either Diagnostic Value
+evalUnary OpNeg (VInt value) = Right (VInt (negate value))
+evalUnary OpNot (VBool value) = Right (VBool (not value))
+evalUnary op value =
+    Left $ Diagnostic
+        { diagnosticLevel = DiagnosticError
+        , diagnosticSource = "evaluator"
+        , diagnosticMessage = "unsupported operand for " <> T.pack (show op) <> ": " <> T.pack (show value)
+        , diagnosticSpan = Nothing
+        }
+
 evalBinary :: BinaryOp -> Value -> Value -> Either Diagnostic Value
 evalBinary OpAdd (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue + rightValue))
+evalBinary OpAdd (VString leftValue) (VString rightValue) = Right (VString (leftValue <> rightValue))
 evalBinary OpSub (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue - rightValue))
+evalBinary OpMul (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue * rightValue))
+evalBinary OpDiv _ (VInt 0) = Left $ Diagnostic DiagnosticError "evaluator" "division by zero" Nothing
+evalBinary OpDiv (VInt leftValue) (VInt rightValue) = Right (VInt (div leftValue rightValue))
+evalBinary OpMod _ (VInt 0) = Left $ Diagnostic DiagnosticError "evaluator" "modulo by zero" Nothing
+evalBinary OpMod (VInt leftValue) (VInt rightValue) = Right (VInt (mod leftValue rightValue))
+evalBinary OpConcat (VString leftValue) (VString rightValue) = Right (VString (leftValue <> rightValue))
+evalBinary OpConcat (VList leftValue) (VList rightValue) = Right (VList (leftValue ++ rightValue))
 evalBinary OpGt (VInt leftValue) (VInt rightValue) = Right (VBool (leftValue > rightValue))
 evalBinary OpGt (VDate leftValue) (VDate rightValue) = Right (VBool (leftValue > rightValue))
 evalBinary OpLt (VInt leftValue) (VInt rightValue) = Right (VBool (leftValue < rightValue))
@@ -470,7 +495,64 @@ evalBuiltin state name args =
                 [VString entityNameValue] ->
                     VString . entityType <$> findEntity entityNameValue (evalWorld state)
                 _ -> Nothing
+        -- math builtins
+        "abs" -> case args of [VInt v] -> Just (VInt (Prelude.abs v)); _ -> Nothing
+        "min" -> case args of [VInt a, VInt b] -> Just (VInt (Prelude.min a b)); _ -> Nothing
+        "max" -> case args of [VInt a, VInt b] -> Just (VInt (Prelude.max a b)); _ -> Nothing
+        "clamp" -> case args of [VInt v, VInt lo, VInt hi] -> Just (VInt (Prelude.max lo (Prelude.min hi v))); _ -> Nothing
+        -- string builtins
+        "contains" -> case args of [VString haystack, VString needle] -> Just (VBool (T.isInfixOf needle haystack)); _ -> Nothing
+        "starts_with" -> case args of [VString text, VString pfx] -> Just (VBool (T.isPrefixOf pfx text)); _ -> Nothing
+        "ends_with" -> case args of [VString text, VString sfx] -> Just (VBool (T.isSuffixOf sfx text)); _ -> Nothing
+        "to_upper" -> case args of [VString text] -> Just (VString (T.toUpper text)); _ -> Nothing
+        "to_lower" -> case args of [VString text] -> Just (VString (T.toLower text)); _ -> Nothing
+        "trim" -> case args of [VString text] -> Just (VString (T.strip text)); _ -> Nothing
+        "split" -> case args of [VString text, VString delim] -> Just (VList (map VString (T.splitOn delim text))); _ -> Nothing
+        "replace" -> case args of [VString text, VString old, VString new] -> Just (VString (T.replace old new text)); _ -> Nothing
+        "substring" -> case args of
+            [VString text, VInt start, VInt end] ->
+                let s = fromInteger start; e = fromInteger end
+                in Just (VString (T.take (e - s) (T.drop s text)))
+            _ -> Nothing
+        "to_string" -> case args of
+            [VInt v] -> Just (VString (T.pack (show v)))
+            [VBool v] -> Just (VString (if v then "true" else "false"))
+            [VString v] -> Just (VString v)
+            [VNull] -> Just (VString "null")
+            [VDate d] -> Just (VString (T.pack (show d)))
+            _ -> Nothing
+        -- list builtins
+        "head" -> case args of [VList (x:_)] -> Just x; _ -> Nothing
+        "tail" -> case args of [VList (_:xs)] -> Just (VList xs); _ -> Nothing
+        "last" -> case args of [VList xs] | not (null xs) -> Just (Prelude.last xs); _ -> Nothing
+        "reverse" -> case args of [VList xs] -> Just (VList (Prelude.reverse xs)); _ -> Nothing
+        "flatten" -> case args of [VList xs] -> Just (VList (concatMap flattenValue xs)); _ -> Nothing
+        "range" -> case args of [VInt a, VInt b] -> Just (VList (map VInt [a..b])); _ -> Nothing
+        "sort" -> case args of [VList xs] -> Just (VList (sortValues xs)); _ -> Nothing
+        "unique" -> case args of [VList xs] -> Just (VList (uniqueValues xs)); _ -> Nothing
         _ -> Nothing
+
+flattenValue :: Value -> [Value]
+flattenValue (VList xs) = concatMap flattenValue xs
+flattenValue x = [x]
+
+sortValues :: [Value] -> [Value]
+sortValues xs = Data.List.sortOn valueOrdKey xs
+
+valueOrdKey :: Value -> (Int, Integer, Text)
+valueOrdKey (VInt v) = (0, v, "")
+valueOrdKey (VString v) = (1, 0, v)
+valueOrdKey (VBool v) = (2, if v then 1 else 0, "")
+valueOrdKey (VDate d) = (3, toModifiedJulianDay d, "")
+valueOrdKey _ = (9, 0, "")
+
+uniqueValues :: [Value] -> [Value]
+uniqueValues = go Set.empty
+  where
+    go _ [] = []
+    go seen (x:xs)
+        | Set.member x seen = go seen xs
+        | otherwise = x : go (Set.insert x seen) xs
 
 valueToOrdinal :: Value -> Maybe Integer
 valueToOrdinal (VInt value) = Just value
