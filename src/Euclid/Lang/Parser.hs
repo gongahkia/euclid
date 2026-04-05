@@ -177,14 +177,24 @@ data PostfixSuffix
     = PostfixIndex Expr
     | PostfixField Text
     | PostfixCall [Expr]
+    | PostfixTemporalField Text Expr -- .field @ time
 
 postfixSuffixParser :: Parser PostfixSuffix
 postfixSuffixParser =
     choice
         [ PostfixIndex <$> indexSuffixParser
+        , try temporalFieldSuffixParser
         , PostfixField <$> fieldSuffixParser
         , PostfixCall <$> callSuffixParser
         ]
+
+temporalFieldSuffixParser :: Parser PostfixSuffix
+temporalFieldSuffixParser = do
+    _ <- symbol "."
+    field <- identifier
+    _ <- symbol "@"
+    timeExpr <- nonRangeExprParser
+    pure (PostfixTemporalField field timeExpr)
 
 fieldSuffixParser :: Parser Text
 fieldSuffixParser = try $ do
@@ -201,6 +211,7 @@ applyPostfixSuffix expr suffix =
         PostfixIndex indexExpr -> ExprIndex expr indexExpr
         PostfixField fieldName -> ExprField expr fieldName
         PostfixCall args -> ExprCall expr args
+        PostfixTemporalField fieldName timeExpr -> ExprTemporalAccess expr fieldName timeExpr
 
 durationLiteral :: Parser Value
 durationLiteral = lexeme $ try $ do
@@ -345,12 +356,17 @@ entityDeclParser = do
             [ appearance
             | AppearanceField appearance <- fields
             ]
+        stateChanges =
+            [ sc
+            | StateChangeField sc <- fields
+            ]
     pure
         EntityDecl
             { entityDeclName = name
             , entityDeclType = entityTypeName
             , entityDeclFields = customFields
             , entityDeclAppearances = appearances
+            , entityDeclStateChanges = stateChanges
             }
 
 relationshipDeclParser :: Parser RelationshipDecl
@@ -556,10 +572,29 @@ elseBlockParser = do
 data EntityFieldEntry
     = EntityField Text Expr
     | AppearanceField AppearanceDecl
+    | StateChangeField StateChangeDecl
 
 entityFieldParser :: Parser EntityFieldEntry
 entityFieldParser =
-    try appearanceFieldParser <|> genericFieldParser
+    try stateChangeFieldParser <|> try appearanceFieldParser <|> genericFieldParser
+
+stateChangeFieldParser :: Parser EntityFieldEntry
+stateChangeFieldParser = do
+    _ <- symbol "at"
+    timeExpr <- exprParser
+    fields <- braces (many stateChangeEntryParser)
+    pure $ StateChangeField StateChangeDecl
+        { stateChangeDeclTime = timeExpr
+        , stateChangeDeclFields = Map.fromList fields
+        }
+
+stateChangeEntryParser :: Parser (Text, Expr)
+stateChangeEntryParser = do
+    fieldName <- identifier
+    _ <- symbol "="
+    value <- exprParser
+    _ <- optional (symbol ",")
+    pure (fieldName, value)
 
 genericFieldParser :: Parser EntityFieldEntry
 genericFieldParser = do

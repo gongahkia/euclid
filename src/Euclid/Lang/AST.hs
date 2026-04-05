@@ -4,6 +4,7 @@
 module Euclid.Lang.AST
     ( AppearanceDecl(..)
     , EntityDecl(..)
+    , StateChangeDecl(..)
     , Expr(..)
     , FnDecl(..)
     , ForDecl(..)
@@ -54,6 +55,7 @@ data Expr
     | ExprClosure [(Text, Text)] Expr
     | ExprBinary BinaryOp Expr Expr
     | ExprUnary UnaryOp Expr
+    | ExprTemporalAccess Expr Text Expr -- obj.field @ time
     deriving (Eq, Show)
 
 data TypeDecl = TypeDecl
@@ -83,11 +85,18 @@ data AppearanceDecl = AppearanceDecl
     }
     deriving (Eq, Show)
 
+data StateChangeDecl = StateChangeDecl
+    { stateChangeDeclTime :: Expr
+    , stateChangeDeclFields :: Map Text Expr
+    }
+    deriving (Eq, Show)
+
 data EntityDecl = EntityDecl
     { entityDeclName :: Text
     , entityDeclType :: Maybe Text
     , entityDeclFields :: Map Text Expr
     , entityDeclAppearances :: [AppearanceDecl]
+    , entityDeclStateChanges :: [StateChangeDecl]
     }
     deriving (Eq, Show)
 

@@ -107,8 +107,9 @@ evalStmt state (StmtData currentSpan statement) =
                     rejectDuplicate scopedState "entity" (entityDeclName decl) (worldEntities (evalWorld scopedState))
                     (state1, fieldValues) <- evalExprMap scopedState (entityDeclFields decl)
                     (state2, appearances) <- evalAppearances state1 (entityDeclAppearances decl)
+                    (state3, stateChanges) <- evalStateChanges state2 (entityDeclStateChanges decl)
                     let world' =
-                            (evalWorld state2)
+                            (evalWorld state3)
                                 { worldEntities =
                                     Map.insert
                                         (entityDeclName decl)
@@ -117,11 +118,12 @@ evalStmt state (StmtData currentSpan statement) =
                                             , entityType = maybe "entity" id (entityDeclType decl)
                                             , entityFields = fieldValues
                                             , entityAppearances = appearances
+                                            , entityStateChanges = stateChanges
                                             , entitySourceSpan = evalCurrentSpan scopedState
                                             }
-                                        (worldEntities (evalWorld state2))
+                                        (worldEntities (evalWorld state3))
                                 }
-                    pure state2{evalWorld = world'}
+                    pure state3{evalWorld = world'}
                 StmtRelationshipNode decl -> do
                     (state1, scope) <-
                         case relationshipDeclTemporalScope decl of
@@ -279,6 +281,19 @@ evalExpr state (ExprClosure params bodyExpr) =
                 , evalNextClosureId = closureId + 1
                 }
      in Right (nextState, VClosureRef closureId)
+evalExpr state (ExprTemporalAccess objExpr fieldName timeExpr) = do
+    (state1, objValue) <- evalExpr state objExpr
+    (state2, timeValue) <- evalExpr state1 timeExpr
+    case timePointFromValue timeValue of
+        Left msg -> Left (evaluatorDiagnostic state2 msg)
+        Right tp -> case objValue of
+            VEntityRef name ->
+                case findEntity name (evalWorld state2) of
+                    Just entity -> case entityFieldAt entity fieldName tp of
+                        Just v -> Right (state2, v)
+                        Nothing -> unknownField "entity" fieldName
+                    Nothing -> Left (evaluatorDiagnostic state2 ("unknown entity: " <> name))
+            _ -> Left (evaluatorDiagnostic state2 "temporal access requires an entity reference")
 evalExpr state (ExprUnary op operand) = do
     (state1, value) <- evalExpr state operand
     resultValue <- evalUnary op value
@@ -772,6 +787,17 @@ evalAppearances state appearanceDecls =
         )
         (state, [])
         appearanceDecls
+
+evalStateChanges :: EvalState -> [StateChangeDecl] -> Either Diagnostic (EvalState, [StateChange])
+evalStateChanges state decls =
+    foldM
+        ( \(currentState, changes) decl -> do
+            (state1, tp) <- exprToTimePoint currentState (stateChangeDeclTime decl)
+            (state2, fields) <- evalExprMap state1 (stateChangeDeclFields decl)
+            pure (state2, changes ++ [StateChange tp fields])
+        )
+        (state, [])
+        decls
 
 evalOptionalInteger :: EvalState -> Maybe Expr -> Either Diagnostic (EvalState, Maybe Integer)
 evalOptionalInteger state Nothing = pure (state, Nothing)

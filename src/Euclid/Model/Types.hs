@@ -7,6 +7,8 @@ module Euclid.Model.Types
     , Diagnostic(..)
     , DiagnosticLevel(..)
     , Entity(..)
+    , StateChange(..)
+    , entityFieldAt
     , FunctionSig(..)
     , Relationship(..)
     , TimePoint(..)
@@ -30,6 +32,7 @@ module Euclid.Model.Types
     , daysBetween
     ) where
 
+import qualified Data.List
 import Data.List (intercalate)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -136,14 +139,30 @@ data Appearance = Appearance
     }
     deriving (Eq, Show)
 
+data StateChange = StateChange
+    { stateChangeTime :: TimePoint
+    , stateChangeFields :: Map Text Value
+    }
+    deriving (Eq, Show)
+
 data Entity = Entity
     { entityName :: Text
     , entityType :: Text
     , entityFields :: Map Text Value
     , entityAppearances :: [Appearance]
+    , entityStateChanges :: [StateChange]
     , entitySourceSpan :: Maybe SourceSpan
     }
     deriving (Eq, Show)
+
+entityFieldAt :: Entity -> Text -> TimePoint -> Maybe Value
+entityFieldAt entity field tp =
+    let applicable = filter (\sc -> timePointOrdinal (stateChangeTime sc) <= timePointOrdinal tp) (entityStateChanges entity)
+        sorted = Data.List.sortOn (negate . timePointOrdinal . stateChangeTime) applicable
+        fromChanges = Data.List.find (\sc -> Map.member field (stateChangeFields sc)) sorted >>= Map.lookup field . stateChangeFields
+    in case fromChanges of
+        Just v -> Just v
+        Nothing -> Map.lookup field (entityFields entity)
 
 data Relationship = Relationship
     { relSource :: Text
