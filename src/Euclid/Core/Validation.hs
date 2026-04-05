@@ -215,6 +215,7 @@ valueMatchesDeclaredType _ (VDate _) "date" = True
 valueMatchesDeclaredType _ (VList _) "list" = True
 valueMatchesDeclaredType _ (VTimelineRef _) "timeline" = True
 valueMatchesDeclaredType _ (VClosureRef _) "closure" = True
+valueMatchesDeclaredType _ (VDuration _ _ _) "duration" = True
 valueMatchesDeclaredType _ (VEntityRef _) "entity" = True
 valueMatchesDeclaredType world (VEntityRef referencedEntity) expectedType =
     case findEntity referencedEntity world of

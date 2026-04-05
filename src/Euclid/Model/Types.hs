@@ -26,6 +26,8 @@ module Euclid.Model.Types
     , SourceSpan(..)
     , timePointFromValue
     , timePointOrdinal
+    , addDurationToDay
+    , daysBetween
     ) where
 
 import Data.List (intercalate)
@@ -35,7 +37,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (Day, toModifiedJulianDay)
+import Data.Time (Day, toModifiedJulianDay, addGregorianMonthsClip, addDays, diffDays)
 
 data Value
     = VNull
@@ -43,6 +45,7 @@ data Value
     | VInt Integer
     | VBool Bool
     | VDate Day
+    | VDuration Integer Integer Integer -- years months days
     | VList [Value]
     | VEntityRef Text
     | VTimelineRef Text
@@ -254,6 +257,13 @@ renderSourceSpan sourceSpan =
         <> T.pack (show (spanStartLine sourceSpan))
         <> ":"
         <> T.pack (show (spanStartColumn sourceSpan))
+
+addDurationToDay :: Day -> Integer -> Integer -> Integer -> Day
+addDurationToDay day years months days =
+    addDays days $ addGregorianMonthsClip (years * 12 + months) day
+
+daysBetween :: Day -> Day -> Integer
+daysBetween = diffDays
 
 _unusedTextHelper :: [Text] -> Text
 _unusedTextHelper = T.pack . intercalate ", " . map T.unpack

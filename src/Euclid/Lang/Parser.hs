@@ -202,10 +202,28 @@ applyPostfixSuffix expr suffix =
         PostfixField fieldName -> ExprField expr fieldName
         PostfixCall args -> ExprCall expr args
 
+durationLiteral :: Parser Value
+durationLiteral = lexeme $ try $ do
+    components <- some durationComponent
+    let (y, m, d) = foldl (\(ay, am, ad) (vy, vm, vd) -> (ay+vy, am+vm, ad+vd)) (0,0,0) components
+    pure (VDuration y m d)
+
+durationComponent :: Parser (Integer, Integer, Integer)
+durationComponent = do
+    n <- L.decimal
+    sc
+    unit <- choice
+        [ (n, 0, 0) <$ (symbol "years" <|> symbol "year")
+        , (0, n, 0) <$ (symbol "months" <|> symbol "month")
+        , (0, 0, n) <$ (symbol "days" <|> symbol "day")
+        ]
+    pure unit
+
 literalValueParser :: Parser Value
 literalValueParser =
     choice
         [ VDate <$> try dateLiteral
+        , try durationLiteral
         , VBool <$> boolLiteral
         , VInt <$> try integerLiteral
         , VString <$> stringLiteral

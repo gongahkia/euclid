@@ -291,6 +291,7 @@ evalExpr state (ExprBinary op lhs rhs) = do
 
 evalUnary :: UnaryOp -> Value -> Either Diagnostic Value
 evalUnary OpNeg (VInt value) = Right (VInt (negate value))
+evalUnary OpNeg (VDuration y m d) = Right (VDuration (negate y) (negate m) (negate d))
 evalUnary OpNot (VBool value) = Right (VBool (not value))
 evalUnary op value =
     Left $ Diagnostic
@@ -303,6 +304,12 @@ evalUnary op value =
 evalBinary :: BinaryOp -> Value -> Value -> Either Diagnostic Value
 evalBinary OpAdd (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue + rightValue))
 evalBinary OpAdd (VString leftValue) (VString rightValue) = Right (VString (leftValue <> rightValue))
+evalBinary OpAdd (VDate d) (VDuration y m days) = Right (VDate (addDurationToDay d y m days))
+evalBinary OpAdd (VDuration y m days) (VDate d) = Right (VDate (addDurationToDay d y m days))
+evalBinary OpAdd (VDuration y1 m1 d1) (VDuration y2 m2 d2) = Right (VDuration (y1+y2) (m1+m2) (d1+d2))
+evalBinary OpSub (VDate d) (VDuration y m days) = Right (VDate (addDurationToDay d (negate y) (negate m) (negate days)))
+evalBinary OpSub (VDate d1) (VDate d2) = Right (VDuration 0 0 (daysBetween d1 d2))
+evalBinary OpSub (VDuration y1 m1 d1) (VDuration y2 m2 d2) = Right (VDuration (y1-y2) (m1-m2) (d1-d2))
 evalBinary OpSub (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue - rightValue))
 evalBinary OpMul (VInt leftValue) (VInt rightValue) = Right (VInt (leftValue * rightValue))
 evalBinary OpDiv _ (VInt 0) = Left $ Diagnostic DiagnosticError "evaluator" "division by zero" Nothing
@@ -530,6 +537,39 @@ evalBuiltin state name args =
         "range" -> case args of [VInt a, VInt b] -> Just (VList (map VInt [a..b])); _ -> Nothing
         "sort" -> case args of [VList xs] -> Just (VList (sortValues xs)); _ -> Nothing
         "unique" -> case args of [VList xs] -> Just (VList (uniqueValues xs)); _ -> Nothing
+        -- temporal builtins: duration constructors
+        "years" -> case args of [VInt n] -> Just (VDuration n 0 0); _ -> Nothing
+        "months" -> case args of [VInt n] -> Just (VDuration 0 n 0); _ -> Nothing
+        "days" -> case args of [VInt n] -> Just (VDuration 0 0 n); _ -> Nothing
+        "duration_days" -> case args of [VDuration _ _ d] -> Just (VInt d); _ -> Nothing
+        "duration_months" -> case args of [VDuration _ m _] -> Just (VInt m); _ -> Nothing
+        "duration_years" -> case args of [VDuration y _ _] -> Just (VInt y); _ -> Nothing
+        -- Allen's interval algebra (operating on pairs of date ranges)
+        "overlaps" -> allenRelation args (\s1 e1 s2 e2 -> s1 < s2 && e1 > s2 && e1 < e2)
+        "during" -> allenRelation args (\s1 e1 s2 e2 -> s1 > s2 && e1 < e2)
+        "contains" -> allenRelation args (\s1 e1 s2 e2 -> s1 < s2 && e1 > e2)
+        "meets" -> allenRelation args (\s1 e1 s2 _e2 -> e1 == s2)
+        "starts" -> allenRelation args (\s1 e1 s2 e2 -> s1 == s2 && e1 < e2)
+        "finishes" -> allenRelation args (\s1 e1 _s2 e2 -> e1 == e2 && s1 > _s2)
+        "equals" -> allenRelation args (\s1 e1 s2 e2 -> s1 == s2 && e1 == e2)
+        -- temporal utilities
+        "midpoint" -> case args of
+            [VDate d1, VDate d2] ->
+                let diff = daysBetween d2 d1
+                in Just (VDate (addDurationToDay d1 0 0 (diff `div` 2)))
+            _ -> Nothing
+        "duration_between" -> case args of
+            [VDate d1, VDate d2] -> Just (VDuration 0 0 (Prelude.abs (daysBetween d1 d2)))
+            _ -> Nothing
+        _ -> Nothing
+
+allenRelation :: [Value] -> (Integer -> Integer -> Integer -> Integer -> Bool) -> Maybe Value
+allenRelation args relation =
+    case args of
+        [VEntityRef _, VEntityRef _] -> Nothing -- needs world context, handled elsewhere
+        [VDate s1, VDate e1, VDate s2, VDate e2] ->
+            let o = toModifiedJulianDay
+            in Just (VBool (relation (o s1) (o e1) (o s2) (o e2)))
         _ -> Nothing
 
 flattenValue :: Value -> [Value]
@@ -588,6 +628,7 @@ valueMatchesType state (VEntityRef entityNameValue) expectedType =
                 || hasTypeAncestor (evalWorld state) (entityType entity) expectedType
 valueMatchesType _ (VTimelineRef _) "timeline" = True
 valueMatchesType _ (VClosureRef _) "closure" = True
+valueMatchesType _ (VDuration _ _ _) "duration" = True
 valueMatchesType _ _ _ = False
 
 renderValueType :: EvalState -> Value -> Text
@@ -601,6 +642,7 @@ renderValueType state (VEntityRef entityNameValue) =
     maybe "entity" entityType (findEntity entityNameValue (evalWorld state))
 renderValueType _ (VTimelineRef _) = "timeline"
 renderValueType _ (VClosureRef _) = "closure"
+renderValueType _ (VDuration _ _ _) = "duration"
 
 hasTypeAncestor :: World -> Text -> Text -> Bool
 hasTypeAncestor worldValue currentType expectedType =
