@@ -1,0 +1,10 @@
+__pycache__/
+*.swp
+*.swo
+
+/target
+/dist-newstyle/
+/.ghc.environment.*
+/cabal.project.local
+/cabal.project.local~
+/euclid.cabal.project.local
