@@ -8,6 +8,8 @@ module Euclid.Model.Types
     , DiagnosticLevel(..)
     , Constraint(..)
     , View(..)
+    , RecurrencePattern(..)
+    , Recurrence(..)
     , Annotation(..)
     , emptyAnnotation
     , Entity(..)
@@ -150,6 +152,19 @@ data StateChange = StateChange
     }
     deriving (Eq, Show)
 
+data RecurrencePattern
+    = RecurDaily Integer -- every N days
+    | RecurWeekly Integer -- every N weeks
+    | RecurMonthly Integer -- every N months
+    | RecurYearly Integer -- every N years
+    deriving (Eq, Ord, Show)
+
+data Recurrence = Recurrence
+    { recurrencePattern :: RecurrencePattern
+    , recurrenceSkip :: [Day] -- dates to skip
+    }
+    deriving (Eq, Show)
+
 data Annotation = Annotation
     { annotationNote :: Maybe Text
     , annotationSource :: Maybe Text
@@ -168,6 +183,7 @@ data Entity = Entity
     , entityAppearances :: [Appearance]
     , entityStateChanges :: [StateChange]
     , entityAnnotation :: Annotation
+    , entityRecurrence :: Maybe Recurrence
     , entitySourceSpan :: Maybe SourceSpan
     }
     deriving (Eq, Show)

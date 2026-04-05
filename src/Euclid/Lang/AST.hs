@@ -112,6 +112,8 @@ data EntityDecl = EntityDecl
     , entityDeclAppearances :: [AppearanceDecl]
     , entityDeclStateChanges :: [StateChangeDecl]
     , entityDeclAnnotation :: AnnotationDecl
+    , entityDeclRecurrence :: Maybe Expr -- e.g. ExprCall "every" [interval]
+    , entityDeclSkip :: [Expr]
     }
     deriving (Eq, Show)
 

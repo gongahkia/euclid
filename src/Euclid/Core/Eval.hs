@@ -113,6 +113,7 @@ evalStmt state (StmtData currentSpan statement) =
                     (state5, sourceVal) <- evalOptionalExpr state4 (annotationDeclSource ad)
                     (state6, confVal) <- evalOptionalExpr state5 (annotationDeclConfidence ad)
                     (state7, tagVals) <- evalExprList state6 (annotationDeclTags ad)
+                    (state8, recurrence) <- evalRecurrence state7 (entityDeclRecurrence decl) (entityDeclSkip decl)
                     let annotation = Annotation
                             { annotationNote = case noteVal of {Just (VString t) -> Just t; _ -> Nothing}
                             , annotationSource = case sourceVal of {Just (VString t) -> Just t; _ -> Nothing}
@@ -120,7 +121,7 @@ evalStmt state (StmtData currentSpan statement) =
                             , annotationTags = [t | VString t <- tagVals]
                             }
                         world' =
-                            (evalWorld state7)
+                            (evalWorld state8)
                                 { worldEntities =
                                     Map.insert
                                         (entityDeclName decl)
@@ -131,11 +132,12 @@ evalStmt state (StmtData currentSpan statement) =
                                             , entityAppearances = appearances
                                             , entityStateChanges = stateChanges
                                             , entityAnnotation = annotation
+                                            , entityRecurrence = recurrence
                                             , entitySourceSpan = evalCurrentSpan scopedState
                                             }
-                                        (worldEntities (evalWorld state7))
+                                        (worldEntities (evalWorld state8))
                                 }
-                    pure state7{evalWorld = world'}
+                    pure state8{evalWorld = world'}
                 StmtRelationshipNode decl -> do
                     (state1, scope) <-
                         case relationshipDeclTemporalScope decl of
@@ -905,6 +907,22 @@ evalStateChanges state decls =
         )
         (state, [])
         decls
+
+evalRecurrence :: EvalState -> Maybe Expr -> [Expr] -> Either Diagnostic (EvalState, Maybe Recurrence)
+evalRecurrence state Nothing _ = pure (state, Nothing)
+evalRecurrence state (Just expr) skipExprs = do
+    (state1, value) <- evalExpr state expr
+    (state2, skipVals) <- evalExprList state1 skipExprs
+    let skipDays = [d | VDate d <- skipVals]
+    case value of
+        VDuration y m d -> do
+            let pattern
+                    | y > 0 = RecurYearly y
+                    | m > 0 = RecurMonthly m
+                    | d >= 7 && d `mod` 7 == 0 = RecurWeekly (d `div` 7)
+                    | otherwise = RecurDaily (Prelude.max 1 d)
+            pure (state2, Just (Recurrence pattern skipDays))
+        _ -> Left (evaluatorDiagnostic state2 "recurrence must be a duration value")
 
 evalOptionalExpr :: EvalState -> Maybe Expr -> Either Diagnostic (EvalState, Maybe Value)
 evalOptionalExpr state Nothing = pure (state, Nothing)

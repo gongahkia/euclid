@@ -351,9 +351,9 @@ entityDeclParser = do
     entityTypeName <- optional (symbol ":" *> identifier)
     fields <- braces (many entityFieldParser)
     let allFields = [(fieldName, expr) | EntityField fieldName expr <- fields]
-        annotationFieldNames = Set.fromList ["note", "source", "confidence", "tags"]
-        customFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.notMember n annotationFieldNames]
-        annotFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.member n annotationFieldNames]
+        reservedFieldNames = Set.fromList ["note", "source", "confidence", "tags", "recurrence", "skip"]
+        customFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.notMember n reservedFieldNames]
+        annotFields = Map.fromList [(n, e) | (n, e) <- allFields, Set.member n (Set.fromList ["note", "source", "confidence", "tags"])]
         appearances = [appearance | AppearanceField appearance <- fields]
         stateChanges = [sc | StateChangeField sc <- fields]
         annot = AnnotationDecl
@@ -372,6 +372,10 @@ entityDeclParser = do
             , entityDeclAppearances = appearances
             , entityDeclStateChanges = stateChanges
             , entityDeclAnnotation = annot
+            , entityDeclRecurrence = lookup "recurrence" allFields
+            , entityDeclSkip = case lookup "skip" allFields of
+                Just (ExprList es) -> es
+                _ -> []
             }
 
 relationshipDeclParser :: Parser RelationshipDecl
