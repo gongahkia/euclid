@@ -808,7 +808,7 @@ spec = do
                                 Nothing ->
                                     expectationFailure "expected scripted entity from function call"
                                 Just entityValue ->
-                                    Map.lookup "note" (entityFields entityValue) `shouldBe` Just (VString "alpha")
+                                    annotationNote (entityAnnotation entityValue) `shouldBe` Just "alpha"
 
         it "honors explicit early returns inside function control flow" $ do
             let source =
