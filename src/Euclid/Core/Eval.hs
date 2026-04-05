@@ -610,7 +610,64 @@ evalBuiltin state name args =
         "duration_between" -> case args of
             [VDate d1, VDate d2] -> Just (VDuration 0 0 (Prelude.abs (daysBetween d1 d2)))
             _ -> Nothing
+        -- temporal queries (world-aware)
+        "alive_at" -> case args of
+            [VDate d] ->
+                let tp = TimeDate d
+                    ord = timePointOrdinal tp
+                    matching = Map.elems (worldEntities (evalWorld state))
+                    alive = filter (\e -> any (\a ->
+                        timePointOrdinal (rangeStart (appearanceRange a)) <= ord &&
+                        ord <= timePointOrdinal (rangeEnd (appearanceRange a))) (entityAppearances e)) matching
+                in Just (VList (map (VEntityRef . entityName) alive))
+            [VInt i] ->
+                let ord = i
+                    matching = Map.elems (worldEntities (evalWorld state))
+                    alive = filter (\e -> any (\a ->
+                        timePointOrdinal (rangeStart (appearanceRange a)) <= ord &&
+                        ord <= timePointOrdinal (rangeEnd (appearanceRange a))) (entityAppearances e)) matching
+                in Just (VList (map (VEntityRef . entityName) alive))
+            _ -> Nothing
+        "active_on" -> case args of
+            [VTimelineRef tlName] ->
+                let matching = filter (\e -> any (\a -> appearanceTimeline a == tlName) (entityAppearances e))
+                        (Map.elems (worldEntities (evalWorld state)))
+                in Just (VList (map (VEntityRef . entityName) matching))
+            _ -> Nothing
+        "entities_where" -> case args of
+            [VString typeName] ->
+                let matching = filter (\e -> entityType e == typeName)
+                        (Map.elems (worldEntities (evalWorld state)))
+                in Just (VList (map (VEntityRef . entityName) matching))
+            _ -> Nothing
+        "causes_of" -> case args of
+            [VEntityRef target] ->
+                let rels = worldRelationships (evalWorld state)
+                    directCauses = [relSource r | r <- rels, relTarget r == target, relCausalKind r /= CausalNone]
+                in Just (VList (map VEntityRef directCauses))
+            _ -> Nothing
+        "effects_of" -> case args of
+            [VEntityRef source] ->
+                let rels = worldRelationships (evalWorld state)
+                    directEffects = [relTarget r | r <- rels, relSource r == source, relCausalKind r /= CausalNone]
+                in Just (VList (map VEntityRef directEffects))
+            _ -> Nothing
+        "related_to" -> case args of
+            [VEntityRef name] ->
+                let rels = worldRelationships (evalWorld state)
+                    related = [relTarget r | r <- rels, relSource r == name]
+                        ++ [relSource r | r <- rels, relTarget r == name]
+                in Just (VList (map VEntityRef (uniqueTexts related)))
+            _ -> Nothing
         _ -> Nothing
+
+uniqueTexts :: [Text] -> [Text]
+uniqueTexts = go Set.empty
+  where
+    go _ [] = []
+    go seen (x:xs)
+        | Set.member x seen = go seen xs
+        | otherwise = x : go (Set.insert x seen) xs
 
 allenRelation :: [Value] -> (Integer -> Integer -> Integer -> Integer -> Bool) -> Maybe Value
 allenRelation args relation =
