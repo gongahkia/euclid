@@ -47,7 +47,10 @@ library
         Euclid.Lang.Parser
         Euclid.Model.Types
         Euclid.Render.HTML
+        Euclid.Render.JSON
         Euclid.Render.Layout
+        Euclid.Render.Markdown
+        Euclid.Render.Mermaid
         Euclid.Render.SVG
         Euclid.Tooling.LSP
         Euclid.Tooling.Syntax

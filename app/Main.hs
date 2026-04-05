@@ -24,6 +24,9 @@ import Euclid.Lang.Parser
 import Euclid.Model.Types
 import Euclid.Render.Layout
 import Euclid.Render.HTML
+import Euclid.Render.JSON
+import Euclid.Render.Markdown
+import Euclid.Render.Mermaid
 import Euclid.Render.SVG
 import Euclid.Tooling.LSP
 import Euclid.TUI.App
@@ -94,6 +97,21 @@ runExport configValue themeOverride exportOptions = do
             let outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "html") (exportOutput exportOptions)
                 htmlDocument = renderInteractiveHtml (computeLayout (loadedWorld loaded))
             TIO.writeFile outputPath htmlDocument
+            reportDiagnostics (loadedDiagnostics loaded)
+            putStrLn ("Wrote " <> outputPath)
+        ExportJson -> do
+            let outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "json") (exportOutput exportOptions)
+            TIO.writeFile outputPath (renderJson (loadedWorld loaded))
+            reportDiagnostics (loadedDiagnostics loaded)
+            putStrLn ("Wrote " <> outputPath)
+        ExportMarkdown -> do
+            let outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "md") (exportOutput exportOptions)
+            TIO.writeFile outputPath (renderMarkdown (loadedWorld loaded))
+            reportDiagnostics (loadedDiagnostics loaded)
+            putStrLn ("Wrote " <> outputPath)
+        ExportMermaid -> do
+            let outputPath = fromMaybe (replaceExtension (exportFile exportOptions) "mmd") (exportOutput exportOptions)
+            TIO.writeFile outputPath (renderMermaid (computeLayout (loadedWorld loaded)))
             reportDiagnostics (loadedDiagnostics loaded)
             putStrLn ("Wrote " <> outputPath)
 

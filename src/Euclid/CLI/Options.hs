@@ -19,6 +19,9 @@ import Options.Applicative
 data ExportFormat
     = ExportSvg
     | ExportHtml
+    | ExportJson
+    | ExportMarkdown
+    | ExportMermaid
     deriving (Eq, Show)
 
 data ImportFormat
@@ -134,7 +137,11 @@ parseExportFormat raw =
     case map toLower raw of
         "svg" -> Right ExportSvg
         "html" -> Right ExportHtml
-        other -> Left ("unknown export format: " <> other <> " (supported: svg, html)")
+        "json" -> Right ExportJson
+        "md" -> Right ExportMarkdown
+        "markdown" -> Right ExportMarkdown
+        "mermaid" -> Right ExportMermaid
+        other -> Left ("unknown export format: " <> other <> " (supported: svg, html, json, md, mermaid)")
 
 parseImportFormat :: String -> Either String ImportFormat
 parseImportFormat raw =
