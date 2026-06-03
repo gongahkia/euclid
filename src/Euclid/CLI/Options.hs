@@ -60,6 +60,7 @@ data Command
     | CommandCheck FilePath
     | CommandContradict FilePath
     | CommandDiff FilePath FilePath
+    | CommandExhibits FilePath
     | CommandImport ImportOptions
     | CommandRepl
     | CommandLsp
@@ -91,6 +92,7 @@ optionsParser =
                 <> command "check" (info checkParser (progDesc "Parse and validate a .euclid file"))
                 <> command "contradict" (info contradictParser (progDesc "List contradiction edges with supporting evidence"))
                 <> command "diff" (info diffParser (progDesc "Semantic diff of two .euclid files"))
+                <> command "exhibits" (info exhibitsParser (progDesc "Emit exhibit list CSV"))
                 <> command "import" (info importParser (progDesc "Import external data into .euclid"))
                 <> command "repl" (info replParser (progDesc "Interactive REPL"))
                 <> command "lsp" (info lspParser (progDesc "Run the stdio language server"))
@@ -143,6 +145,11 @@ diffParser =
     CommandDiff
         <$> argument str (metavar "FILE1")
         <*> argument str (metavar "FILE2")
+
+exhibitsParser :: Parser Command
+exhibitsParser =
+    CommandExhibits
+        <$> argument str (metavar "FILE")
 
 importParser :: Parser Command
 importParser =

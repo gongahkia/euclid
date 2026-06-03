@@ -69,6 +69,7 @@ runCommand configValue options =
         CommandCheck filePath -> runCheck filePath
         CommandContradict filePath -> runContradict filePath
         CommandDiff leftPath rightPath -> runDiff leftPath rightPath
+        CommandExhibits filePath -> runExhibits filePath
         CommandImport importOpts -> runImport importOpts
         CommandRepl -> runRepl
         CommandLsp -> runLspServer
@@ -141,6 +142,14 @@ runDiff leftPath rightPath = do
     leftWorldValue <- loadEuclidFile leftPath
     rightWorldValue <- loadEuclidFile rightPath
     TIO.putStrLn (diffWorlds (loadedWorld leftWorldValue) (loadedWorld rightWorldValue))
+
+runExhibits :: FilePath -> IO ()
+runExhibits filePath = do
+    loaded <- loadEuclidFile filePath
+    when (hasErrors (loadedDiagnostics loaded)) $ do
+        reportDiagnostics (loadedDiagnostics loaded)
+        exitFailure
+    TIO.putStr (renderExhibitsCsv (loadedWorld loaded))
 
 runImport :: ImportOptions -> IO ()
 runImport importOptions = do

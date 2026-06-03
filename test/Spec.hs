@@ -119,7 +119,7 @@ spec = do
                             Map.member "case_file" (worldTimelines filtered) `shouldBe` True
                             map relTarget (worldRelationships filtered) `shouldBe` ["plaintiff_claim"]
 
-    describe "legal reports" $
+    describe "legal reports" $ do
         it "renders contradictions with supporting evidence" $ do
             let source =
                     T.unlines
@@ -166,6 +166,34 @@ spec = do
                             expectationFailure ("eval failed: " <> show diag)
                         Right worldValue ->
                             renderContradictions worldValue `shouldBe` expected
+
+        it "renders exhibit lists as CSV" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity exhibit_a : exhibit {"
+                        , "  number: \"Ex. 1\","
+                        , "  description: \"Email, notice record\","
+                        , "  appears_on: case_file @ 2..3,"
+                        , "}"
+                        ]
+                expected =
+                    T.unlines
+                        [ "number,entity,description,timeline,start,end"
+                        , "Ex. 1,exhibit_a,\"Email, notice record\",case_file,2,3"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue ->
+                            renderExhibitsCsv worldValue `shouldBe` expected
 
     describe "lsp tooling" $ do
         it "maps diagnostic source spans to concrete LSP ranges" $ do

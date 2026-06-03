@@ -2,6 +2,7 @@
 
 module Euclid.Core.Reports
     ( renderContradictions
+    , renderExhibitsCsv
     ) where
 
 import qualified Data.List as List
@@ -45,6 +46,41 @@ renderContradictions world
             , Just evidence <- [findEntity (relSource relationship) world]
             ]
 
+renderExhibitsCsv :: World -> Text
+renderExhibitsCsv world =
+    T.unlines $
+        csvRow ["number", "entity", "description", "timeline", "start", "end"]
+            : concatMap renderExhibitRows exhibits
+  where
+    exhibits =
+        List.sortOn
+            (\entity -> (fieldOrEmpty "number" entity, entityName entity))
+            [ entity
+            | entity <- Map.elems (worldEntities world)
+            , entityType entity == "exhibit"
+            ]
+    renderExhibitRows entity =
+        case entityAppearances entity of
+            [] -> [renderExhibitRow entity Nothing]
+            appearances ->
+                [ renderExhibitRow entity (Just appearance)
+                | appearance <- List.sortOn appearanceSortKey appearances
+                ]
+    renderExhibitRow entity maybeAppearance =
+        csvRow
+            [ fieldOrEmpty "number" entity
+            , entityName entity
+            , fieldOrEmpty "description" entity
+            , maybe "" appearanceTimeline maybeAppearance
+            , maybe "" (renderTimePointForReport . rangeStart . appearanceRange) maybeAppearance
+            , maybe "" (renderTimePointForReport . rangeEnd . appearanceRange) maybeAppearance
+            ]
+    appearanceSortKey appearance =
+        ( appearanceTimeline appearance
+        , timePointOrdinal (rangeStart (appearanceRange appearance))
+        , timePointOrdinal (rangeEnd (appearanceRange appearance))
+        )
+
 renderEvidenceList :: [Entity] -> [Text]
 renderEvidenceList [] = ["    (none)"]
 renderEvidenceList evidenceEntities =
@@ -83,6 +119,19 @@ valueToText (VList values) =
 valueToText (VEntityRef name) = name
 valueToText (VTimelineRef name) = name
 valueToText (VClosureRef closureId) = "<closure:" <> T.pack (show closureId) <> ">"
+
+renderTimePointForReport :: TimePoint -> Text
+renderTimePointForReport (TimeDate day) = T.pack (show day)
+renderTimePointForReport (TimeOrdinal value) = T.pack (show value)
+
+csvRow :: [Text] -> Text
+csvRow = T.intercalate "," . map csvField
+
+csvField :: Text -> Text
+csvField field
+    | T.any (`elem` [',', '"', '\n', '\r']) field =
+        "\"" <> T.replace "\"" "\"\"" field <> "\""
+    | otherwise = field
 
 sharedTimelineNames :: Entity -> Entity -> [Text]
 sharedTimelineNames source target =
