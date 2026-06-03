@@ -8,7 +8,14 @@ license-file:       LICENSE
 author:             gabriel ong
 maintainer:         gabriel ong
 build-type:         Simple
-extra-doc-files:    README.md
+extra-doc-files:
+    README.md
+    docs/LEGAL.md
+    docs/SYNTAX.md
+    docs/WASM.md
+extra-source-files:
+    playground/browser-host.mjs
+    scripts/build-wasm-playground.sh
 
 common common-settings
     default-language: Haskell2010
