@@ -22,6 +22,9 @@ import Euclid.Import.JSONLD
 import Euclid.Lang.AST
 import Euclid.Lang.Parser
 import Euclid.Model.Types
+import Euclid.Render.HTML
+import Euclid.Render.Layout
+import Euclid.Render.SVG
 import Euclid.Tooling.LSP
 import System.Directory (removeFile)
 import Test.Hspec
@@ -194,6 +197,41 @@ spec = do
                             expectationFailure ("eval failed: " <> show diag)
                         Right worldValue ->
                             renderExhibitsCsv worldValue `shouldBe` expected
+
+    describe "narrative-aware rendering" $
+        it "marks narrative entities and contradiction relationships in SVG and HTML" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity plaintiff_claim : claim {"
+                        , "  narrative: \"plaintiffs\","
+                        , "  appears_on: case_file @ 2..3,"
+                        , "}"
+                        , "entity board_claim : claim {"
+                        , "  narrative: \"board\","
+                        , "  appears_on: case_file @ 4..5,"
+                        , "}"
+                        , "rel plaintiff_claim -[\"contradicts\"]-> board_claim;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let layout = computeLayout worldValue
+                                svgOutput = renderSvg defaultSvgOptions layout
+                                htmlOutput = renderInteractiveHtml layout
+                            svgOutput `shouldSatisfy` T.isInfixOf "data-narrative=\"plaintiffs\""
+                            svgOutput `shouldSatisfy` T.isInfixOf "class=\"relationship contradiction\""
+                            svgOutput `shouldSatisfy` T.isInfixOf "stroke=\"#dc2626\""
+                            htmlOutput `shouldSatisfy` T.isInfixOf "\"narrative\":\"plaintiffs\""
+                            htmlOutput `shouldSatisfy` T.isInfixOf "rel-line contradiction"
 
     describe "lsp tooling" $ do
         it "maps diagnostic source spans to concrete LSP ranges" $ do
