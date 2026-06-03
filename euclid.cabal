@@ -48,6 +48,7 @@ library
         Euclid.Lang.AST
         Euclid.Lang.Parser
         Euclid.Model.Types
+        Euclid.Playground.API
         Euclid.Render.HTML
         Euclid.Render.Diff
         Euclid.Render.JSON
@@ -62,6 +63,13 @@ library
 executable euclid
     import: common-settings
     hs-source-dirs: app
+    main-is: Main.hs
+    build-depends:
+        euclid
+
+executable euclid-playground-wasi
+    import: common-settings
+    hs-source-dirs: playground
     main-is: Main.hs
     build-depends:
         euclid
