@@ -361,6 +361,72 @@ spec = do
                             any (T.isInfixOf "contradiction on timeline" . diagnosticMessage) (validateWorld worldValue)
                                 `shouldBe` False
 
+        it "accepts cited claims and witnesses with matching depositions" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity record : evidence {"
+                        , "  citation: \"Record A\","
+                        , "  source: \"Archive\","
+                        , "  appears_on: case_file @ 1..1,"
+                        , "}"
+                        , "entity supported_claim : claim {"
+                        , "  appears_on: case_file @ 2..2,"
+                        , "}"
+                        , "entity jane : witness {"
+                        , "  name: \"Jane Smith\","
+                        , "  appears_on: case_file @ 3..3,"
+                        , "}"
+                        , "entity jane_deposition : deposition {"
+                        , "  deponent: \"Jane Smith\","
+                        , "  date: 2024-01-05,"
+                        , "  appears_on: case_file @ 5..5,"
+                        , "}"
+                        , "rel record -[\"cites\"]-> supported_claim;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let messages = map diagnosticMessage (validateWorld worldValue)
+                            any (T.isInfixOf "has no inbound cites relationship") messages `shouldBe` False
+                            any (T.isInfixOf "has no matching deposition") messages `shouldBe` False
+
+        it "warns for uncited claims and witnesses without depositions" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity unsupported_claim : claim {"
+                        , "  appears_on: case_file @ 2..2,"
+                        , "}"
+                        , "entity jane : witness {"
+                        , "  appears_on: case_file @ 3..3,"
+                        , "}"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let diagnostics = validateWorld worldValue
+                                messages = map diagnosticMessage diagnostics
+                            any ((== DiagnosticError) . diagnosticLevel) diagnostics `shouldBe` False
+                            any (T.isInfixOf "claim unsupported_claim has no inbound cites relationship") messages `shouldBe` True
+                            any (T.isInfixOf "witness jane has no matching deposition") messages `shouldBe` True
+
     describe "declared entity type validation" $
         it "enforces required fields and declared field value types" $ do
             let source =

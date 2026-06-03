@@ -17,6 +17,7 @@ validateWorld world =
         [ validateTimelines world
         , validateEntities world
         , validateRelationships world
+        , validateLegalSupport world
         ]
 
 validationDiagnostic :: Maybe SourceSpan -> DiagnosticLevel -> Text -> Diagnostic
@@ -327,6 +328,51 @@ relationshipSatisfiesTemporalRule rule source target =
     sourceEnds = [timePointOrdinal (rangeEnd (appearanceRange appearance)) | appearance <- entityAppearances source]
     targetStarts = [timePointOrdinal (rangeStart (appearanceRange appearance)) | appearance <- entityAppearances target]
     targetEnds = [timePointOrdinal (rangeEnd (appearanceRange appearance)) | appearance <- entityAppearances target]
+
+validateLegalSupport :: World -> [Diagnostic]
+validateLegalSupport world =
+    concatMap entityDiagnostics (Map.elems (worldEntities world))
+  where
+    citedTargets =
+        Set.fromList
+            [ relTarget relationship
+            | relationship <- worldRelationships world
+            , relLabel relationship == Just "cites"
+            ]
+    depositionDeponents =
+        Set.fromList
+            [ deponent
+            | entity <- Map.elems (worldEntities world)
+            , entityType entity == "deposition"
+            , Just (VString deponent) <- [entityDeclaredFieldValue entity "deponent"]
+            ]
+    entityDiagnostics entity =
+        uncitedClaimDiagnostics entity
+            ++ witnessDepositionDiagnostics entity
+    uncitedClaimDiagnostics entity =
+        [ validationDiagnostic
+            (entitySourceSpan entity)
+            DiagnosticWarning
+            ("claim " <> entityName entity <> " has no inbound cites relationship")
+        | entityType entity == "claim"
+        , Set.notMember (entityName entity) citedTargets
+        ]
+    witnessDepositionDiagnostics entity =
+        [ validationDiagnostic
+            (entitySourceSpan entity)
+            DiagnosticWarning
+            ("witness " <> entityName entity <> " has no matching deposition")
+        | entityType entity == "witness"
+        , Set.null (witnessNames entity `Set.intersection` depositionDeponents)
+        ]
+
+witnessNames :: Entity -> Set.Set Text
+witnessNames entity =
+    Set.fromList $
+        entityName entity
+            : [ witnessName
+              | Just (VString witnessName) <- [entityDeclaredFieldValue entity "name"]
+              ]
 
 flattenTypeFields :: World -> TypeDef -> Map.Map Text TypeField
 flattenTypeFields world typeDef =
