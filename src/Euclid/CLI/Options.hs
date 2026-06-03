@@ -7,6 +7,7 @@ module Euclid.CLI.Options
     , ImportFormat(..)
     , ImportOptions(..)
     , Options(..)
+    , RunOptions(..)
     , parseExportFormat
     , optionsParserInfo
     ) where
@@ -36,6 +37,13 @@ data ExportOptions = ExportOptions
     , exportOutput :: Maybe FilePath
     , exportWidth :: Maybe Int
     , exportHeight :: Maybe Int
+    , exportNarrative :: Maybe Text
+    }
+    deriving (Eq, Show)
+
+data RunOptions = RunOptions
+    { runFile :: FilePath
+    , runNarrative :: Maybe Text
     }
     deriving (Eq, Show)
 
@@ -47,7 +55,7 @@ data ImportOptions = ImportOptions
     deriving (Eq, Show)
 
 data Command
-    = CommandRun FilePath
+    = CommandRun RunOptions
     | CommandExport ExportOptions
     | CommandCheck FilePath
     | CommandDiff FilePath FilePath
@@ -89,7 +97,10 @@ optionsParser =
 runParser :: Parser Command
 runParser =
     CommandRun
-        <$> argument str (metavar "FILE")
+        <$> ( RunOptions
+                <$> argument str (metavar "FILE")
+                <*> narrativeOption
+            )
 
 exportParser :: Parser Command
 exportParser =
@@ -102,7 +113,18 @@ exportParser =
                 <*> optional (strOption (short 'o' <> long "output" <> metavar "PATH"))
                 <*> optional (option auto (long "width" <> metavar "PIXELS"))
                 <*> optional (option auto (long "height" <> metavar "PIXELS"))
+                <*> narrativeOption
             )
+
+narrativeOption :: Parser (Maybe Text)
+narrativeOption =
+    optional $
+        T.pack
+            <$> strOption
+                ( long "narrative"
+                    <> metavar "NAME"
+                    <> help "Filter to entities for a narrative while retaining neutral shared context"
+                )
 
 checkParser :: Parser Command
 checkParser =

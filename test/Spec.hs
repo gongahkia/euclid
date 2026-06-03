@@ -13,6 +13,7 @@ import Euclid.CLI.Options
 import Euclid.Config.Loader
 import Euclid.Core.Diff
 import Euclid.Core.Eval
+import Euclid.Core.Filter
 import Euclid.Core.Validation
 import Euclid.Import.CSV
 import Euclid.Import.GEDCOM
@@ -72,6 +73,50 @@ spec = do
                         Right worldValue ->
                             any ((== DiagnosticError) . diagnosticLevel) (validateWorld worldValue)
                                 `shouldBe` False
+
+    describe "narrative filtering" $
+        it "keeps matching narrative entities, shared context, and valid relationships" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity shared_record : evidence {"
+                        , "  citation: \"Record A\","
+                        , "  source: \"Archive\","
+                        , "  appears_on: case_file @ 1..1,"
+                        , "}"
+                        , "entity shared_fact : fact {"
+                        , "  appears_on: case_file @ 2..2,"
+                        , "}"
+                        , "entity plaintiff_claim : claim {"
+                        , "  narrative: \"plaintiff\","
+                        , "  appears_on: case_file @ 3..3,"
+                        , "}"
+                        , "entity defense_claim : claim {"
+                        , "  narrative: \"defense\","
+                        , "  appears_on: case_file @ 4..4,"
+                        , "}"
+                        , "rel shared_record -[\"cites\"]-> plaintiff_claim;"
+                        , "rel shared_record -[\"cites\"]-> defense_claim;"
+                        , "rel plaintiff_claim -[\"contradicts\"]-> defense_claim;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let filtered = filterWorldByNarrative "plaintiff" worldValue
+                            Map.member "shared_record" (worldEntities filtered) `shouldBe` True
+                            Map.member "shared_fact" (worldEntities filtered) `shouldBe` True
+                            Map.member "plaintiff_claim" (worldEntities filtered) `shouldBe` True
+                            Map.member "defense_claim" (worldEntities filtered) `shouldBe` False
+                            Map.member "case_file" (worldTimelines filtered) `shouldBe` True
+                            map relTarget (worldRelationships filtered) `shouldBe` ["plaintiff_claim"]
 
     describe "lsp tooling" $ do
         it "maps diagnostic source spans to concrete LSP ranges" $ do

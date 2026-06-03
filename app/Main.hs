@@ -15,6 +15,7 @@ import Euclid.CLI.Options
 import Euclid.Config.Loader
 import Euclid.Core.Diff
 import Euclid.Core.Eval
+import Euclid.Core.Filter
 import Euclid.Core.Validation
 import Euclid.Import.CSV
 import Euclid.Import.GEDCOM
@@ -58,10 +59,11 @@ main = do
 runCommand :: EuclidConfig -> Options -> IO ()
 runCommand configValue options =
     case optCommand options of
-        CommandRun filePath -> do
-            loaded <- loadEuclidFile filePath
-            reportDiagnostics (loadedDiagnostics loaded)
-            runEuclidTui filePath (loadedWorld loaded)
+        CommandRun runOpts -> do
+            loaded <- loadEuclidFile (runFile runOpts)
+            let filtered = applyNarrativeFilter (runNarrative runOpts) loaded
+            reportDiagnostics (loadedDiagnostics filtered)
+            runEuclidTui (runFile runOpts) (loadedWorld filtered)
         CommandExport exportOpts -> runExport configValue (optTheme options) exportOpts
         CommandCheck filePath -> runCheck filePath
         CommandDiff leftPath rightPath -> runDiff leftPath rightPath
@@ -71,7 +73,7 @@ runCommand configValue options =
 
 runExport :: EuclidConfig -> Maybe Text -> ExportOptions -> IO ()
 runExport configValue themeOverride exportOptions = do
-    loaded <- loadEuclidFile (exportFile exportOptions)
+    loaded <- applyNarrativeFilter (exportNarrative exportOptions) <$> loadEuclidFile (exportFile exportOptions)
     themeValue <- resolveSvgTheme themeOverride configValue
     case effectiveExportFormat configValue exportOptions of
         ExportSvg -> do
@@ -258,6 +260,16 @@ loadEuclidFile filePath = do
                             , loadedDiagnostics = diagnostics
                             , loadedProgram = program
                             }
+
+applyNarrativeFilter :: Maybe Text -> LoadedWorld -> LoadedWorld
+applyNarrativeFilter Nothing loaded = loaded
+applyNarrativeFilter (Just narrativeName) loaded =
+    loaded
+        { loadedWorld = filteredWorld
+        , loadedDiagnostics = validateWorld filteredWorld
+        }
+  where
+    filteredWorld = filterWorldByNarrative narrativeName (loadedWorld loaded)
 
 loadSourceWithImports :: [FilePath] -> FilePath -> IO Text
 loadSourceWithImports visited filePath = do
