@@ -168,6 +168,7 @@ validateRelationships world =
             ++ temporalScopeDiagnostics
             ++ causalOrderDiagnostics
             ++ builtInRelationshipDiagnostics
+            ++ contradictionDiagnostics
       where
         labelText = relLabel relationship
         sourceEntity = findEntity (relSource relationship) world
@@ -265,6 +266,37 @@ validateRelationships world =
             , Just target <- [targetEntity]
             , not (relationshipSatisfiesTemporalRule rule source target)
             ]
+        contradictionDiagnostics =
+            [ validationDiagnostic
+                (relSourceSpan relationship)
+                DiagnosticWarning
+                ( "contradiction on timeline "
+                    <> renderTimelineNames sharedTimelines
+                    <> ": "
+                    <> relSource relationship
+                    <> " contradicts "
+                    <> relTarget relationship
+                )
+            | labelText == Just "contradicts"
+            , Just source <- [sourceEntity]
+            , Just target <- [targetEntity]
+            , let sharedTimelines = sharedAppearanceTimelines source target
+            , not (null sharedTimelines)
+            ]
+
+sharedAppearanceTimelines :: Entity -> Entity -> [Text]
+sharedAppearanceTimelines leftEntity rightEntity =
+    Set.toAscList $
+        entityTimelineNames leftEntity `Set.intersection` entityTimelineNames rightEntity
+  where
+    entityTimelineNames entity =
+        Set.fromList [appearanceTimeline appearance | appearance <- entityAppearances entity]
+
+renderTimelineNames :: [Text] -> Text
+renderTimelineNames [] = "none"
+renderTimelineNames [singleTimeline] = singleTimeline
+renderTimelineNames timelineNames =
+    T.intercalate ", " (init timelineNames) <> ", and " <> last timelineNames
 
 renderExpectedTypes :: [Text] -> Text
 renderExpectedTypes [] = "any"

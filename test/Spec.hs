@@ -303,6 +303,64 @@ spec = do
                             any (T.isInfixOf "legal relationship 'preceded' expects source to appear before target") messages `shouldBe` True
                             any (T.isInfixOf "legal relationship 'supersedes' expects source to appear after target") messages `shouldBe` True
 
+        it "warns when contradiction edges share a timeline" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity claim_a : claim {"
+                        , "  appears_on: case_file @ 1..3,"
+                        , "}"
+                        , "entity claim_b : claim {"
+                        , "  appears_on: case_file @ 2..4,"
+                        , "}"
+                        , "rel claim_a -[\"contradicts\"]-> claim_b;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let diagnostics = validateWorld worldValue
+                                messages = map diagnosticMessage diagnostics
+                            any ((== DiagnosticError) . diagnosticLevel) diagnostics `shouldBe` False
+                            any (T.isInfixOf "contradiction on timeline case_file: claim_a contradicts claim_b") messages `shouldBe` True
+
+        it "does not warn for contradiction edges without a shared timeline" $ do
+            let source =
+                    T.unlines
+                        [ "timeline left_case {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "timeline right_case {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity claim_a : claim {"
+                        , "  appears_on: left_case @ 1..3,"
+                        , "}"
+                        , "entity claim_b : claim {"
+                        , "  appears_on: right_case @ 2..4,"
+                        , "}"
+                        , "rel claim_a -[\"contradicts\"]-> claim_b;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue ->
+                            any (T.isInfixOf "contradiction on timeline" . diagnosticMessage) (validateWorld worldValue)
+                                `shouldBe` False
+
     describe "declared entity type validation" $
         it "enforces required fields and declared field value types" $ do
             let source =
