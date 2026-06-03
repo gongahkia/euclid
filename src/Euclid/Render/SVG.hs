@@ -119,23 +119,7 @@ renderSvg options layout =
                          in
                         T.concat
                             [ "<g>"
-                            , "<line x1=\""
-                            , showDouble sourceX
-                            , "\" y1=\""
-                            , showDouble sourceY
-                            , "\" x2=\""
-                            , showDouble targetX
-                            , "\" y2=\""
-                            , showDouble targetY
-                            , "\" stroke=\""
-                            , strokeColor
-                            , "\" stroke-width=\""
-                            , strokeWidth
-                            , "\" class=\""
-                            , relClass
-                            , "\""
-                            , dashArray
-                            , "/>"
+                            , renderRelationshipShape relClass strokeColor strokeWidth dashArray sourceX sourceY targetX targetY
                             , "<text x=\""
                             , showDouble ((sourceX + targetX) / 2)
                             , "\" y=\""
@@ -154,6 +138,56 @@ renderSvg options layout =
                 let x1 = scaleX (layoutEntityStart entity)
                     x2 = scaleX (layoutEntityEnd entity)
                  in Just ((x1 + x2) / 2, laneY (layoutEntityLane entity) - 2)
+
+    renderRelationshipShape relClass strokeColor strokeWidth dashArray sourceX sourceY targetX targetY
+        | abs (sourceX - targetX) < 1 && abs (sourceY - targetY) < 1 =
+            T.concat
+                [ "<path d=\"M "
+                , showDouble sourceX
+                , " "
+                , showDouble sourceY
+                , " C "
+                , showDouble sourceX
+                , " "
+                , showDouble (sourceY - 42)
+                , " "
+                , showDouble (sourceX + 72)
+                , " "
+                , showDouble (sourceY - 42)
+                , " "
+                , showDouble (sourceX + 72)
+                , " "
+                , showDouble sourceY
+                , "\" fill=\"none\" stroke=\""
+                , strokeColor
+                , "\" stroke-width=\""
+                , strokeWidth
+                , "\" class=\""
+                , relClass
+                , "\""
+                , dashArray
+                , "/>"
+                ]
+        | otherwise =
+            T.concat
+                [ "<line x1=\""
+                , showDouble sourceX
+                , "\" y1=\""
+                , showDouble sourceY
+                , "\" x2=\""
+                , showDouble targetX
+                , "\" y2=\""
+                , showDouble targetY
+                , "\" stroke=\""
+                , strokeColor
+                , "\" stroke-width=\""
+                , strokeWidth
+                , "\" class=\""
+                , relClass
+                , "\""
+                , dashArray
+                , "/>"
+                ]
 
 showText :: Show a => a -> Text
 showText = T.pack . show

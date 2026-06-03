@@ -24,6 +24,7 @@ import Euclid.Lang.Parser
 import Euclid.Model.Types
 import Euclid.Render.HTML
 import Euclid.Render.Layout
+import Euclid.Render.Diff
 import Euclid.Render.SVG
 import Euclid.Tooling.LSP
 import System.Directory (removeFile)
@@ -198,7 +199,12 @@ spec = do
                         Right worldValue ->
                             renderExhibitsCsv worldValue `shouldBe` expected
 
-    describe "narrative-aware rendering" $
+        it "parses visual diff formats" $ do
+            parseDiffFormat "svg" `shouldBe` Right DiffSvg
+            parseDiffFormat "html" `shouldBe` Right DiffHtml
+            parseDiffFormat "json" `shouldSatisfy` either (T.isInfixOf "supported: svg, html" . T.pack) (const False)
+
+    describe "narrative-aware rendering" $ do
         it "marks narrative entities and contradiction relationships in SVG and HTML" $ do
             let source =
                     T.unlines
@@ -232,6 +238,41 @@ spec = do
                             svgOutput `shouldSatisfy` T.isInfixOf "stroke=\"#dc2626\""
                             htmlOutput `shouldSatisfy` T.isInfixOf "\"narrative\":\"plaintiffs\""
                             htmlOutput `shouldSatisfy` T.isInfixOf "rel-line contradiction"
+
+        it "renders side-by-side visual diffs" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity plaintiff_claim : claim {"
+                        , "  narrative: \"plaintiffs\","
+                        , "  appears_on: case_file @ 2..3,"
+                        , "}"
+                        , "entity board_claim : claim {"
+                        , "  narrative: \"board\","
+                        , "  appears_on: case_file @ 4..5,"
+                        , "}"
+                        , "rel plaintiff_claim -[\"contradicts\"]-> board_claim;"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let layout = computeLayout worldValue
+                                svgOutput = renderDiffSvg defaultSvgOptions "left" layout "right" layout
+                                htmlOutput = renderDiffHtml defaultSvgOptions "left" layout "right" layout
+                            svgOutput `shouldSatisfy` T.isInfixOf "class=\"euclid-diff-svg\""
+                            svgOutput `shouldSatisfy` T.isInfixOf "left"
+                            svgOutput `shouldSatisfy` T.isInfixOf "right"
+                            svgOutput `shouldSatisfy` T.isInfixOf "class=\"diff-relationship contradiction\""
+                            htmlOutput `shouldSatisfy` T.isInfixOf "Side-by-side Euclid diff"
+                            htmlOutput `shouldSatisfy` T.isInfixOf "euclid-diff-svg"
 
     describe "lsp tooling" $ do
         it "maps diagnostic source spans to concrete LSP ranges" $ do
