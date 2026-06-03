@@ -4,6 +4,7 @@ module Euclid.Core.Validation
     ( validateWorld
     ) where
 
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
@@ -18,6 +19,7 @@ validateWorld world =
         , validateEntities world
         , validateRelationships world
         , validateLegalSupport world
+        , validateContinuousCoverage world
         ]
 
 validationDiagnostic :: Maybe SourceSpan -> DiagnosticLevel -> Text -> Diagnostic
@@ -373,6 +375,57 @@ witnessNames entity =
             : [ witnessName
               | Just (VString witnessName) <- [entityDeclaredFieldValue entity "name"]
               ]
+
+validateContinuousCoverage :: World -> [Diagnostic]
+validateContinuousCoverage world =
+    concatMap continuousEntityDiagnostics (Map.elems (worldEntities world))
+  where
+    continuousEntityDiagnostics entity =
+        [ validationDiagnostic
+            (entitySourceSpan entity)
+            DiagnosticWarning
+            ( "continuous entity "
+                <> entityName entity
+                <> " has coverage gap on timeline "
+                <> timelineId
+                <> " after "
+                <> renderTimePointForDiagnostic (rangeEnd (appearanceRange previousAppearance))
+                <> " before "
+                <> renderTimePointForDiagnostic (rangeStart (appearanceRange nextAppearance))
+            )
+        | entityIsContinuous entity
+        , (timelineId, appearances) <- appearancesByTimeline entity
+        , (previousAppearance, nextAppearance) <- coverageGaps appearances
+        ]
+
+entityIsContinuous :: Entity -> Bool
+entityIsContinuous entity =
+    entityDeclaredFieldValue entity "continuous" == Just (VBool True)
+
+appearancesByTimeline :: Entity -> [(Text, [Appearance])]
+appearancesByTimeline entity =
+    Map.toAscList $
+        Map.fromListWith
+            (++)
+            [ (appearanceTimeline appearance, [appearance])
+            | appearance <- entityAppearances entity
+            ]
+
+coverageGaps :: [Appearance] -> [(Appearance, Appearance)]
+coverageGaps appearances =
+    [ (previousAppearance, nextAppearance)
+    | (previousAppearance, nextAppearance) <- zip sortedAppearances (drop 1 sortedAppearances)
+    , let previousEnd = timePointOrdinal (rangeEnd (appearanceRange previousAppearance))
+          nextStart = timePointOrdinal (rangeStart (appearanceRange nextAppearance))
+    , nextStart > previousEnd + 1
+    ]
+  where
+    sortedAppearances =
+        List.sortOn (timePointOrdinal . rangeStart . appearanceRange) appearances
+
+renderTimePointForDiagnostic :: TimePoint -> Text
+renderTimePointForDiagnostic (TimeDate day) = T.pack (show day)
+renderTimePointForDiagnostic (TimeOrdinal value) = T.pack (show value)
 
 flattenTypeFields :: World -> TypeDef -> Map.Map Text TypeField
 flattenTypeFields world typeDef =

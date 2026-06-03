@@ -427,6 +427,60 @@ spec = do
                             any (T.isInfixOf "claim unsupported_claim has no inbound cites relationship") messages `shouldBe` True
                             any (T.isInfixOf "witness jane has no matching deposition") messages `shouldBe` True
 
+        it "accepts continuous entities with adjacent coverage" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity chain_of_custody : event {"
+                        , "  continuous: true,"
+                        , "  appears_on: case_file @ 1..3,"
+                        , "  appears_on: case_file @ 4..6,"
+                        , "}"
+                        , "entity intermittent_log : event {"
+                        , "  appears_on: case_file @ 1..2,"
+                        , "  appears_on: case_file @ 5..6,"
+                        , "}"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue ->
+                            any (T.isInfixOf "has coverage gap" . diagnosticMessage) (validateWorld worldValue)
+                                `shouldBe` False
+
+        it "warns for continuous entity coverage gaps" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity chain_of_custody : event {"
+                        , "  continuous: true,"
+                        , "  appears_on: case_file @ 1..2,"
+                        , "  appears_on: case_file @ 5..6,"
+                        , "}"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue -> do
+                            let diagnostics = validateWorld worldValue
+                                messages = map diagnosticMessage diagnostics
+                            any ((== DiagnosticError) . diagnosticLevel) diagnostics `shouldBe` False
+                            any (T.isInfixOf "continuous entity chain_of_custody has coverage gap on timeline case_file after 2 before 5") messages `shouldBe` True
+
     describe "declared entity type validation" $
         it "enforces required fields and declared field value types" $ do
             let source =
