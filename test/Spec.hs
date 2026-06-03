@@ -14,6 +14,7 @@ import Euclid.Config.Loader
 import Euclid.Core.Diff
 import Euclid.Core.Eval
 import Euclid.Core.Filter
+import Euclid.Core.Reports
 import Euclid.Core.Validation
 import Euclid.Import.CSV
 import Euclid.Import.GEDCOM
@@ -117,6 +118,54 @@ spec = do
                             Map.member "defense_claim" (worldEntities filtered) `shouldBe` False
                             Map.member "case_file" (worldTimelines filtered) `shouldBe` True
                             map relTarget (worldRelationships filtered) `shouldBe` ["plaintiff_claim"]
+
+    describe "legal reports" $
+        it "renders contradictions with supporting evidence" $ do
+            let source =
+                    T.unlines
+                        [ "timeline case_file {"
+                        , "  start: 1,"
+                        , "  end: 10,"
+                        , "}"
+                        , "entity record_a : evidence {"
+                        , "  citation: \"Record A\","
+                        , "  source: \"Archive A\","
+                        , "  appears_on: case_file @ 1..1,"
+                        , "}"
+                        , "entity record_b : evidence {"
+                        , "  citation: \"Record B\","
+                        , "  source: \"Archive B\","
+                        , "  appears_on: case_file @ 1..1,"
+                        , "}"
+                        , "entity claim_a : claim {"
+                        , "  appears_on: case_file @ 2..2,"
+                        , "}"
+                        , "entity claim_b : claim {"
+                        , "  appears_on: case_file @ 3..3,"
+                        , "}"
+                        , "rel record_a -[\"cites\"]-> claim_a;"
+                        , "rel record_b -[\"cites\"]-> claim_b;"
+                        , "rel claim_a -[\"contradicts\"]-> claim_b;"
+                        ]
+                expected =
+                    T.unlines
+                        [ "Contradictions:"
+                        , "- claim_a contradicts claim_b"
+                        , "  timelines: case_file"
+                        , "  source evidence:"
+                        , "    - record_a | citation=Record A | source=Archive A"
+                        , "  target evidence:"
+                        , "    - record_b | citation=Record B | source=Archive B"
+                        ]
+            case parseProgram "<inline>" source of
+                Left diags ->
+                    expectationFailure ("parse failed: " <> show diags)
+                Right program ->
+                    case evalProgram program of
+                        Left diag ->
+                            expectationFailure ("eval failed: " <> show diag)
+                        Right worldValue ->
+                            renderContradictions worldValue `shouldBe` expected
 
     describe "lsp tooling" $ do
         it "maps diagnostic source spans to concrete LSP ranges" $ do

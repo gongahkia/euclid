@@ -16,6 +16,7 @@ import Euclid.Config.Loader
 import Euclid.Core.Diff
 import Euclid.Core.Eval
 import Euclid.Core.Filter
+import Euclid.Core.Reports
 import Euclid.Core.Validation
 import Euclid.Import.CSV
 import Euclid.Import.GEDCOM
@@ -66,6 +67,7 @@ runCommand configValue options =
             runEuclidTui (runFile runOpts) (loadedWorld filtered)
         CommandExport exportOpts -> runExport configValue (optTheme options) exportOpts
         CommandCheck filePath -> runCheck filePath
+        CommandContradict filePath -> runContradict filePath
         CommandDiff leftPath rightPath -> runDiff leftPath rightPath
         CommandImport importOpts -> runImport importOpts
         CommandRepl -> runRepl
@@ -125,6 +127,14 @@ runCheck filePath = do
         else do
             reportDiagnostics (loadedDiagnostics loaded)
             when (hasErrors (loadedDiagnostics loaded)) exitFailure
+
+runContradict :: FilePath -> IO ()
+runContradict filePath = do
+    loaded <- loadEuclidFile filePath
+    when (hasErrors (loadedDiagnostics loaded)) $ do
+        reportDiagnostics (loadedDiagnostics loaded)
+        exitFailure
+    TIO.putStr (renderContradictions (loadedWorld loaded))
 
 runDiff :: FilePath -> FilePath -> IO ()
 runDiff leftPath rightPath = do

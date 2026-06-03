@@ -58,6 +58,7 @@ data Command
     = CommandRun RunOptions
     | CommandExport ExportOptions
     | CommandCheck FilePath
+    | CommandContradict FilePath
     | CommandDiff FilePath FilePath
     | CommandImport ImportOptions
     | CommandRepl
@@ -88,6 +89,7 @@ optionsParser =
             ( command "run" (info runParser (progDesc "Run the analytical terminal UI"))
                 <> command "export" (info exportParser (progDesc "Export a .euclid file"))
                 <> command "check" (info checkParser (progDesc "Parse and validate a .euclid file"))
+                <> command "contradict" (info contradictParser (progDesc "List contradiction edges with supporting evidence"))
                 <> command "diff" (info diffParser (progDesc "Semantic diff of two .euclid files"))
                 <> command "import" (info importParser (progDesc "Import external data into .euclid"))
                 <> command "repl" (info replParser (progDesc "Interactive REPL"))
@@ -129,6 +131,11 @@ narrativeOption =
 checkParser :: Parser Command
 checkParser =
     CommandCheck
+        <$> argument str (metavar "FILE")
+
+contradictParser :: Parser Command
+contradictParser =
+    CommandContradict
         <$> argument str (metavar "FILE")
 
 diffParser :: Parser Command
